@@ -12,7 +12,6 @@
     </div>
 
 <input type="text" id="searchBox" placeholder="🔍 Buscar código, nome, marca, modelo..." style="width: 100%; padding: 15px; border: 2px solid #007bff; border-radius: 8px; margin-bottom: 30px; font-size: 16px;">
-       style="width: 100%; padding: 15px; border: 2px solid #007bff; border-radius: 8px; margin-bottom: 30px; font-size: 16px;">
 
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 30px;">
     <button onclick="filterCategory('')" class="cat-btn"
@@ -214,4 +213,4 @@ document.getElementById('searchBox').addEventListener('input', function() {
         card.style.display = text.includes(search) ? 'block' : 'none';
     });
 });
-</script>
+</script>{% endblock %}
