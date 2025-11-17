@@ -1,5 +1,5 @@
 from datetime import datetime
-from main import db
+from extensions import db
 
 class Tour(db.Model):
     __tablename__ = 'tour'

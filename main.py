@@ -1,13 +1,8 @@
 from flask import Flask, render_template, redirect, url_for
-from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager, current_user
-from flask_bcrypt import Bcrypt
+from flask_login import current_user
 from config import Config
+from extensions import db, login_manager, bcrypt
 import os
-
-db = SQLAlchemy()
-login_manager = LoginManager()
-bcrypt = Bcrypt()
 
 def create_models():
     """Importa todos os models na ordem correta"""

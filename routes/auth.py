@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for, request, flash
 from flask_login import login_user, logout_user, current_user
-from main import db, bcrypt
+from extensions import db, bcrypt
 from models.company import Company
 from models.user import User
 from models.category import Category

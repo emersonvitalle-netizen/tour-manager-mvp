@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, request, flash
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
-from main import db
+from extensions import db
 from models.company import Company
 import os
 
