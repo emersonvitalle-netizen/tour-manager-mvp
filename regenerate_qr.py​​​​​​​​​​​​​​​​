@@ -1,0 +1,22 @@
+from main import app, db
+from models.equipment import Equipment
+
+with app.app_context():
+print(“Regenerando QR Codes com novo formato…”)
+print(”-” * 50)
+
+```
+equipments = Equipment.query.all()
+
+if not equipments:
+    print("Nenhum equipamento encontrado.")
+else:
+    for eq in equipments:
+        eq.generate_qr_code()
+        print(f"OK: {eq.code}")
+
+    db.session.commit()
+    print("-" * 50)
+    print(f"{len(equipments)} QR Codes regenerados!")
+    print("\nNovo formato: https://tourmanager.app/eq/[CODIGO]")
+```

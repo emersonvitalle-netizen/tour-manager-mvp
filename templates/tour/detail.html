@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+
+{% block title %}{{ tour.name }} - Tour{% endblock %}
+
+{% block content %}
+<div style="max-width: 1000px; margin: 30px auto; padding: 0 20px;">
+    <div style="margin-bottom: 20px;">
+        <a href="{{ url_for('tour.list_tours') }}" style="color: #6c757d; text-decoration: none;">
+            ← Voltar para Tours
+        </a>
+    </div>
+
+    <div style="background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+            <div>
+                <h1 style="margin: 0 0 10px 0;">{{ tour.name }}</h1>
+                {% if tour.artist %}
+                <p style="color: #6c757d; margin: 0;">{{ tour.artist }}</p>
+                {% endif %}
+            </div>
+            {% if tour.status == 'planned' %}
+                <span style="background: #ffc107; color: #000; padding: 8px 15px; border-radius: 5px;">Planejada</span>
+            {% elif tour.status == 'active' %}
+                <span style="background: #28a745; color: white; padding: 8px 15px; border-radius: 5px;">Ativa</span>
+            {% elif tour.status == 'completed' %}
+                <span style="background: #6c757d; color: white; padding: 8px 15px; border-radius: 5px;">Concluída</span>
+            {% endif %}
+        </div>
+
+        {% if tour.description %}
+        <p style="color: #333; margin-bottom: 20px;">{{ tour.description }}</p>
+        {% endif %}
+
+        {% if tour.start_date %}
+        <p style="color: #6c757d; margin-bottom: 30px;">
+            <strong>Período:</strong> {{ tour.start_date.strftime('%d/%m/%Y') }}
+            {% if tour.end_date %} até {{ tour.end_date.strftime('%d/%m/%Y') }}{% endif %}
+        </p>
+        {% endif %}
+
+        <!-- Checkpoints (4 Bipes) -->
+        {% if tour.status != 'completed' %}
+        <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 30px;">
+            <h3 style="margin-bottom: 15px;">🎯 Checkpoints</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+                <a href="{{ url_for('tour.checkpoint_scanner', tour_id=tour.id, checkpoint_type='load_truck') }}"
+                   style="padding: 15px; background: #007bff; color: white; border-radius: 5px; text-decoration: none; text-align: center; font-weight: bold;">
+                    🚛 Carregar Caminhão
+                </a>
+                <a href="{{ url_for('tour.checkpoint_scanner', tour_id=tour.id, checkpoint_type='unload_show') }}"
+                   style="padding: 15px; background: #28a745; color: white; border-radius: 5px; text-decoration: none; text-align: center; font-weight: bold;">
+                    📦 Descarregar Show
+                </a>
+                <a href="{{ url_for('tour.checkpoint_scanner', tour_id=tour.id, checkpoint_type='load_truck_return') }}"
+                   style="padding: 15px; background: #ffc107; color: #000; border-radius: 5px; text-decoration: none; text-align: center; font-weight: bold;">
+                    🚛 Carregar Retorno
+                </a>
+                <a href="{{ url_for('tour.checkpoint_scanner', tour_id=tour.id, checkpoint_type='unload_company') }}"
+                   style="padding: 15px; background: #dc3545; color: white; border-radius: 5px; text-decoration: none; text-align: center; font-weight: bold;">
+                    🏢 Descarregar Empresa
+                </a>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Shows -->
+        <div style="margin-bottom: 30px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3 style="margin: 0;">🎤 Shows ({{ shows|length }})</h3>
+                <button onclick="document.getElementById('show-form').style.display='block'" 
+                        style="padding: 8px 15px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                    + Adicionar Show
+                </button>
+            </div>
+
+            <div id="show-form" style="display: none; background: #f8f9fa; padding: 20px; border-radius: 5px; margin-bottom: 15px;">
+                <h4>Adicionar Show</h4>
+                <form method="POST" action="{{ url_for('tour.add_show', tour_id=tour.id) }}">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                        <input type="date" name="date" required style="padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                        <input type="time" name="time" style="padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                    </div>
+                    <input type="text" name="venue" required placeholder="Local" 
+                           style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 10px;">
+                    <input type="text" name="city" placeholder="Cidade" 
+                           style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 10px;">
+                    <div style="display: flex; gap: 10px;">
+                        <button type="submit" style="flex: 1; padding: 10px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                            Adicionar
+                        </button>
+                        <button type="button" onclick="document.getElementById('show-form').style.display='none'" 
+                                style="flex: 1; padding: 10px; background: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                            Cancelar
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            {% if shows %}
+            <div style="display: grid; gap: 10px;">
+                {% for show in shows %}
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; border-left: 4px solid #007bff;">
+                    <div style="display: flex; justify-content: space-between; align-items: start; flex-wrap: wrap; gap: 10px;">
+                        <div>
+                            <strong style="font-size: 16px;">{{ show.venue }}</strong>
+                            <p style="color: #6c757d; margin: 5px 0 0 0; font-size: 14px;">
+                                📅 {{ show.date.strftime('%d/%m/%Y') }}
+                                {% if show.time %} às {{ show.time.strftime('%H:%M') }}{% endif %}
+                                {% if show.city %}<br>📍 {{ show.city }}{% endif %}
+                            </p>
+                        </div>
+                        <span style="background: #cce5ff; color: #004085; padding: 5px 10px; border-radius: 5px; font-size: 12px;">
+                            {{ show.status }}
+                        </span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p style="color: #6c757d; text-align: center; padding: 20px; background: #f8f9fa; border-radius: 5px;">Nenhum show adicionado ainda</p>
+            {% endif %}
+        </div>
+
+        <!-- Requisição de Equipamentos -->
+        <div style="border-top: 2px solid #dee2e6; padding-top: 20px; margin-bottom: 30px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3 style="margin: 0;">📋 Requisição ({{ requirements|length }})</h3>
+                <a href="{{ url_for('tour.add_requirement', tour_id=tour.id) }}" 
+                   style="padding: 8px 15px; background: #17a2b8; color: white; border-radius: 5px; text-decoration: none;">
+                    + Adicionar
+                </a>
+            </div>
+
+            {% if requirements %}
+            <div style="display: grid; gap: 10px;">
+                {% for req in requirements %}
+                <div style="background: #fff3cd; padding: 15px; border-radius: 5px; border-left: 4px solid #ffc107;">
+                    <strong style="font-size: 15px;">{{ req.quantity }}x {{ req.equipment_name }}</strong>
+                    {% if req.brand or req.model %}
+                    <p style="color: #856404; margin: 5px 0 0 0; font-size: 14px;">
+                        {{ req.brand }} {{ req.model }}
+                    </p>
+                    {% endif %}
+                    {% if req.specifications %}
+                    <p style="color: #6c757d; margin: 5px 0 0 0; font-size: 13px;">
+                        {{ req.specifications }}
+                    </p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p style="color: #6c757d; text-align: center; padding: 20px; background: #f8f9fa; border-radius: 5px;">Nenhum equipamento requisitado</p>
+            {% endif %}
+        </div>
+
+        <!-- Equipamentos Alocados -->
+        <div style="border-top: 2px solid #dee2e6; padding-top: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3 style="margin: 0;">📦 Equipamentos Alocados ({{ allocated_equipment|length }})</h3>
+                <a href="{{ url_for('tour.scan_equipment', tour_id=tour.id) }}" 
+                   style="padding: 8px 15px; background: #28a745; color: white; border-radius: 5px; text-decoration: none;">
+                    📷 Escanear
+                </a>
+            </div>
+
+            {% if allocated_equipment %}
+            <div style="display: grid; gap: 10px;">
+                {% for alloc in allocated_equipment %}
+                <div style="background: #d4edda; padding: 12px; border-radius: 5px; border-left: 4px solid #28a745;">
+                    <strong style="font-size: 15px;">{{ alloc.equipment.code }}</strong> - {{ alloc.equipment.name }}
+                    {% if alloc.equipment.brand %}
+                    <span style="color: #155724; font-size: 14px;"> | {{ alloc.equipment.brand }}</span>
+                    {% endif %}
+                    <small style="color: #155724; display: block; margin-top: 5px;">
+                        Status: {{ alloc.current_status }} | 📅 {{ alloc.allocated_at.strftime('%d/%m/%Y %H:%M') }}
+                    </small>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p style="color: #6c757d; text-align: center; padding: 20px; background: #f8f9fa; border-radius: 5px;">Nenhum equipamento alocado</p>
+            {% endif %}
+        </div>
+
+        <!-- Concluir Tour -->
+        {% if tour.status != 'completed' %}
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #dee2e6;">
+            <form method="POST" action="{{ url_for('tour.complete_tour', tour_id=tour.id) }}" 
+                  onsubmit="return confirm('⚠️ Concluir tour?\n\nTodos os equipamentos serão liberados e retornarão ao status disponível.')">
+                <button type="submit" 
+                        style="width: 100%; padding: 15px; background: #dc3545; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold;">
+                    ✅ Concluir Tour e Liberar Todos os Equipamentos
+                </button>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+@media (max-width: 768px) {
+    div[style*="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr))"] {
+        grid-template-columns: 1fr !important;
+    }
+    div[style*="display: flex"] {
+        flex-direction: column !important;
+    }
+}
+</style>
+{% endblock %}

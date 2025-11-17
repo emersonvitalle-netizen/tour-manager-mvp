@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "tour-manager-mvp"
+version = "0.1.0"
+description = ""
+authors = ["Your Name <you@example.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+Flask = "^3.0.0"
+Flask-SQLAlchemy = "^3.1.1"
+Flask-Login = "^0.6.3"
+Flask-Bcrypt = "^1.0.1"
+python-dotenv = "^1.0.0"
+qrcode = "^7.4.2"
+Pillow = "^10.1.0"
+sqlalchemy = "^2.0.43"
+flask-migrate = "^4.1.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

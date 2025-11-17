@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="max-width: 100%; padding: 0; margin: 0;">
+    <button onclick="window.location.href='{{ url_for('dashboard') }}'"
+            style="position: fixed; top: 20px; left: 20px; z-index: 2000; background: rgba(255,255,255,0.95); color: #000; padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
+        ← Voltar
+    </button>
+
+    <div style="position: relative; width: 100vw; height: 100vh; background: #000;">
+        <video id="video" playsinline autoplay style="width: 100%; height: 100%; object-fit: cover;"></video>
+
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 280px; height: 280px; border: 4px solid #00ff00; border-radius: 20px; box-shadow: 0 0 0 99999px rgba(0,0,0,0.5);"></div>
+
+        <div id="instructions" style="position: absolute; bottom: 40px; left: 20px; right: 20px; background: rgba(0,0,0,0.85); color: white; padding: 24px; border-radius: 12px; text-align: center;">
+            <h3 style="margin: 0 0 10px 0;">📱 Posicione o QR Code na área verde</h3>
+            <p style="margin: 0;">Aguarde a detecção automática</p>
+        </div>
+
+        <div id="result" style="display: none; position: absolute; bottom: 40px; left: 20px; right: 20px; background: rgba(40, 167, 69, 0.95); color: white; padding: 24px; border-radius: 12px; text-align: center;">
+            <h3 style="margin: 0 0 10px 0;">✓ QR Code Detectado!</h3>
+            <p id="result-text" style="margin: 0 0 10px 0;"></p>
+            <p style="margin: 0;">Redirecionando...</p>
+        </div>
+
+        <div id="error" style="display: none; position: absolute; top: 80px; left: 20px; right: 20px; background: rgba(220, 53, 69, 0.95); color: white; padding: 16px; border-radius: 8px; text-align: center;"></div>
+    </div>
+</div>
+
+<canvas id="canvas" style="display: none;"></canvas>
+
+<script src="https://unpkg.com/jsqr@1.4.0/dist/jsQR.js"></script>
+
+<script>
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const context = canvas.getContext('2d');
+    const instructionsDiv = document.getElementById('instructions');
+    const resultDiv = document.getElementById('result');
+    const resultText = document.getElementById('result-text');
+    const errorDiv = document.getElementById('error');
+
+    let isProcessing = false;
+    let cameraActive = false;
+
+    function showError(msg) {
+        errorDiv.textContent = msg;
+        errorDiv.style.display = 'block';
+        setTimeout(() => errorDiv.style.display = 'none', 3000);
+    }
+
+    navigator.mediaDevices.getUserMedia({ 
+        video: { 
+            facingMode: { ideal: 'environment' },
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+        }
+    })
+    .then(stream => {
+        video.srcObject = stream;
+        video.play();
+        cameraActive = true;
+        requestAnimationFrame(scan);
+    })
+    .catch(err => {
+        console.error('Erro câmera:', err);
+        instructionsDiv.innerHTML = '<h3 style="color: #ff4444;">❌ Erro ao acessar câmera</h3><p>Verifique as permissões do navegador</p>';
+    });
+
+    function scan() {
+        if (!cameraActive) return;
+
+        if (video.readyState === video.HAVE_ENOUGH_DATA) {
+            canvas.height = video.videoHeight;
+            canvas.width = video.videoWidth;
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+            const code = jsQR(imageData.data, imageData.width, imageData.height);
+
+            if (code && !isProcessing) {
+                processQRCode(code.data);
+            }
+        }
+
+        requestAnimationFrame(scan);
+    }
+
+    function processQRCode(data) {
+        isProcessing = true;
+        cameraActive = false;
+
+        instructionsDiv.style.display = 'none';
+        resultDiv.style.display = 'block';
+        resultText.textContent = data;
+
+        const match = data.match(/\/equipment\/(\d+)/);
+
+        if (match) {
+            setTimeout(() => {
+                window.location.href = `/equipment/${match[1]}`;
+            }, 1500);
+        } else {
+            showError('QR Code inválido');
+            setTimeout(() => {
+                resultDiv.style.display = 'none';
+                instructionsDiv.style.display = 'block';
+                isProcessing = false;
+                cameraActive = true;
+            }, 2000);
+        }
+    }
+</script>
+
+{% endblock %}

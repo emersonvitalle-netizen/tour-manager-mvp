@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div id="individual-list" style="display: grid; gap: 10px;">
+    {% if equipments %}
+        {% for equipment in equipments %}
+        <a href="{{ url_for('equipment.detail_equipment', id=equipment.id) }}"
+           style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #f8f9fa; border-radius: 5px; text-decoration: none; color: inherit; transition: background 0.2s;"
+           onmouseover="this.style.background='#e9ecef'" 
+           onmouseout="this.style.background='#f8f9fa'">
+            <div>
+                <div style="font-weight: bold; font-size: 16px;">{{ equipment.code }}</div>
+                <div style="font-size: 12px; color: #666;">{{ equipment.name }}</div>
+            </div>
+            <div style="text-align: right;">
+                {% if equipment.status == 'available' %}
+                <span style="padding: 5px 10px; background: #28a745; color: white; border-radius: 3px; font-size: 12px;">
+                    ✅ Disponível
+                </span>
+                {% elif equipment.status == 'maintenance' %}
+                <span style="padding: 5px 10px; background: #ffc107; color: #000; border-radius: 3px; font-size: 12px;">
+                    ⚠️ Manutenção
+                </span>
+                {% elif equipment.status == 'in_tour' %}
+                <span style="padding: 5px 10px; background: #007bff; color: white; border-radius: 3px; font-size: 12px;">
+                    🎸 Em Tour
+                </span>
+                {% endif %}
+            </div>
+        </a>
+        {% endfor %}
+    {% else %}
+        <div style="padding: 20px; text-align: center; color: #999;">
+            Nenhum equipamento encontrado
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

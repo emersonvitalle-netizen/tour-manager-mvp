@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+
+{% block title %}Novo Equipamento{% endblock %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 30px auto; padding: 0 20px;">
+
+    <h1 style="margin-bottom: 30px;">📦 Novo Equipamento</h1>
+
+    <form method="POST" enctype="multipart/form-data" style="background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: bold;">Categoria *</label>
+            <select name="category_id" id="category-select" required onchange="loadTypes()"
+                    style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 16px;">
+                <option value="">Selecione...</option>
+                {% for category in categories %}
+                <option value="{{ category.id }}">{{ category.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: bold;">Tipo *</label>
+            <select name="type_id" id="type-select" required onchange="checkCustomType()"
+                    style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 16px;">
+                <option value="">Primeiro selecione a categoria</option>
+            </select>
+        </div>
+
+        <div id="custom-type-field" style="margin-bottom: 20px; display: none;">
+            <label style="display: block; margin-bottom: 8px; font-weight: bold;">Novo Tipo</label>
+            <input type="text" name="custom_type_name" id="custom-type-input"
+                   style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 16px;"
+                   placeholder="Digite o nome do novo tipo">
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: bold;">Nome do Equipamento *</label>
+            <input type="text" name="name" required 
+                   style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 16px;"
+                   placeholder="Ex: Caixa Ativa 12 polegadas">
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: bold;">Marca</label>
+            <input type="text" name="brand"
+                   style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 16px;"
+                   placeholder="Ex: Electro-Voice, Shure, Martin">
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: bold;">Modelo</label>
+            <input type="text" name="model"
+                   style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 16px;"
+                   placeholder="Ex: ZLX-12P, SM58, Mac Quantum">
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: bold;">Prefixo (Opcional)</label>
+            <input type="text" name="custom_prefix" maxlength="5"
+                   style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 16px; text-transform: uppercase;"
+                   placeholder="Ex: MIC, CAB, AMP (deixe vazio para gerar automaticamente)">
+            <small style="color: #666;">Se não preencher, será gerado automaticamente</small>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: bold;">Quantidade</label>
+            <input type="number" name="quantity" value="1" min="1" max="100"
+                   style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 16px;">
+            <small style="color: #666;">Para criar múltiplos equipamentos de uma vez</small>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: bold;">Número de Série</label>
+            <input type="text" name="serial_number"
+                   style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 16px;">
+        </div>
+
+        <div style="margin-bottom: 30px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: bold;">Observações</label>
+            <textarea name="notes" rows="4"
+                      style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 16px;"></textarea>
+        </div>
+
+        <div style="display: flex; gap: 15px;">
+            <button type="submit" 
+                    style="flex: 1; padding: 15px; background: #4caf50; color: white; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer;">
+                ✅ Criar Equipamento
+            </button>
+            <a href="{{ url_for('equipment.list_equipment') }}" 
+               style="flex: 1; padding: 15px; background: #757575; color: white; text-align: center; text-decoration: none; border-radius: 5px; font-size: 16px; font-weight: bold;">
+                ❌ Cancelar
+            </a>
+        </div>
+
+    </form>
+
+</div>
+
+<script>
+async function loadTypes() {
+    const categoryId = document.getElementById('category-select').value;
+    const typeSelect = document.getElementById('type-select');
+
+    typeSelect.innerHTML = '<option value="">Carregando...</option>';
+
+    if (!categoryId) {
+        typeSelect.innerHTML = '<option value="">Primeiro selecione a categoria</option>';
+        return;
+    }
+
+    try {
+        const response = await fetch(`/equipment/get-types/${categoryId}`);
+        const types = await response.json();
+
+        typeSelect.innerHTML = '<option value="">Selecione o tipo...</option>';
+
+        types.forEach(type => {
+            const option = document.createElement('option');
+            option.value = type.id;
+            option.textContent = type.name;
+            typeSelect.appendChild(option);
+        });
+
+        const customOption = document.createElement('option');
+        customOption.value = 'custom';
+        customOption.textContent = '➕ Adicionar Novo Tipo';
+        typeSelect.appendChild(customOption);
+
+    } catch (error) {
+        console.error('Erro ao carregar tipos:', error);
+        typeSelect.innerHTML = '<option value="">Erro ao carregar tipos</option>';
+    }
+
+    document.getElementById('custom-type-field').style.display = 'none';
+}
+
+function checkCustomType() {
+    const typeSelect = document.getElementById('type-select');
+    const customField = document.getElementById('custom-type-field');
+    const customInput = document.getElementById('custom-type-input');
+
+    if (typeSelect.value === 'custom') {
+        customField.style.display = 'block';
+        customInput.required = true;
+        typeSelect.removeAttribute('required');
+    } else {
+        customField.style.display = 'none';
+        customInput.required = false;
+        typeSelect.setAttribute('required', 'required');
+    }
+}
+</script>
+{% endblock %}

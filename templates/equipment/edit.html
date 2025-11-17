@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}Editar {{ equipment.code }}{% endblock %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 30px auto; padding: 0 20px;">
+
+    <!-- Voltar -->
+    <div style="margin-bottom: 20px;">
+        <a href="{{ url_for('equipment.detail_equipment', id=equipment.id) }}" 
+           style="color: #2196f3; text-decoration: none; font-weight: bold;">
+            ← Voltar para Detalhes
+        </a>
+    </div>
+
+    <h1 style="margin-bottom: 30px;">✏️ Editar Equipamento</h1>
+
+    <form method="POST" enctype="multipart/form-data" style="background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+
+        <!-- Código (Apenas visualização) -->
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: bold;">Código</label>
+            <input type="text" value="{{ equipment.code }}" disabled
+                   style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 16px; background: #f5f5f5; color: #666;">
+            <small style="color: #666;">O código não pode ser alterado</small>
+        </div>
+
+        <!-- Nome -->
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: bold;">Nome do Equipamento *</label>
+            <input type="text" name="name" value="{{ equipment.name }}" required 
+                   style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 16px;">
+        </div>
+
+        <!-- Categoria (Apenas visualização) -->
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: bold;">Categoria</label>
+            <input type="text" value="{{ equipment.category.name if equipment.category else 'Sem categoria' }}" disabled
+                   style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 16px; background: #f5f5f5; color: #666;">
+            <small style="color: #666;">A categoria não pode ser alterada</small>
+        </div>
+
+        <!-- Marca -->
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: bold;">Marca</label>
+            <input type="text" name="brand" value="{{ equipment.brand or '' }}"
+                   style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 16px;">
+        </div>
+
+        <!-- Modelo -->
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: bold;">Modelo</label>
+            <input type="text" name="model" value="{{ equipment.model or '' }}"
+                   style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 16px;">
+        </div>
+
+        <!-- Número de Série -->
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: bold;">Número de Série</label>
+            <input type="text" name="serial_number" value="{{ equipment.serial_number or '' }}"
+                   style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 16px;">
+        </div>
+
+        <!-- Grid de 2 colunas para Valor e Data -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+            <!-- Valor -->
+            <div>
+                <label style="display: block; margin-bottom: 8px; font-weight: bold;">Valor (R$)</label>
+                <input type="number" name="value" step="0.01" value="{{ equipment.value or '' }}"
+                       style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 16px;">
+            </div>
+
+            <!-- Data de Compra -->
+            <div>
+                <label style="display: block; margin-bottom: 8px; font-weight: bold;">Data de Compra</label>
+                <input type="date" name="purchase_date" value="{{ equipment.purchase_date.strftime('%Y-%m-%d') if equipment.purchase_date else '' }}"
+                       style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 16px;">
+            </div>
+        </div>
+
+        <!-- Foto Atual -->
+        {% if equipment.primary_photo_url %}
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: bold;">Foto Atual</label>
+            <img src="{{ equipment.primary_photo_url }}" 
+                 style="max-width: 200px; border-radius: 8px; border: 2px solid #ddd;">
+        </div>
+        {% endif %}
+
+        <!-- Nova Foto -->
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: bold;">
+                {% if equipment.primary_photo_url %}Trocar Foto{% else %}Adicionar Foto{% endif %}
+            </label>
+            <input type="file" name="photo" accept="image/*"
+                   style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px;">
+        </div>
+
+        <!-- Observações -->
+        <div style="margin-bottom: 30px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: bold;">Observações</label>
+            <textarea name="notes" rows="4"
+                      style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 16px;">{{ equipment.notes or '' }}</textarea>
+        </div>
+
+        <!-- Botões -->
+        <div style="display: flex; gap: 15px;">
+            <button type="submit" 
+                    style="flex: 1; padding: 15px; background: #2196f3; color: white; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer;">
+                ✅ Salvar Alterações
+            </button>
+            <a href="{{ url_for('equipment.detail_equipment', id=equipment.id) }}" 
+               style="flex: 1; padding: 15px; background: #757575; color: white; text-align: center; text-decoration: none; border-radius: 5px; font-size: 16px; font-weight: bold;">
+                ❌ Cancelar
+            </a>
+        </div>
+
+    </form>
+
+</div>
+
+<style>
+@media (max-width: 768px) {
+    div[style*="grid-template-columns: 1fr 1fr"] {
+        grid-template-columns: 1fr !important;
+    }
+}
+</style>
+{% endblock %}

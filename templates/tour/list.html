@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}Tours{% endblock %}
+
+{% block content %}
+<div style="max-width: 1200px; margin: 30px auto; padding: 0 20px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 15px;">
+        <h1>Tours</h1>
+        {% if current_user.role == 'admin' %}
+        <a href="{{ url_for('tour.new_tour') }}" 
+           style="padding: 12px 24px; background: #ffc107; color: #000; text-decoration: none; border-radius: 5px; font-weight: bold;">
+            + Nova Tour
+        </a>
+        {% endif %}
+    </div>
+
+    {% if tours %}
+    <div style="display: grid; gap: 20px;">
+        {% for tour in tours %}
+        <a href="{{ url_for('tour.detail_tour', id=tour.id) }}" 
+           style="background: white; padding: 25px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); text-decoration: none; color: inherit; display: block; transition: transform 0.2s;"
+           onmouseover="this.style.transform='translateY(-3px)'" 
+           onmouseout="this.style.transform='translateY(0)'">
+            <div style="display: flex; justify-content: space-between; align-items: start; gap: 20px; flex-wrap: wrap;">
+                <div style="flex: 1;">
+                    <h2 style="margin-bottom: 10px;">🎸 {{ tour.name }}</h2>
+                    {% if tour.artist %}
+                    <p style="color: #666; margin-bottom: 10px; font-size: 18px;">{{ tour.artist }}</p>
+                    {% endif %}
+                    {% if tour.description %}
+                    <p style="color: #999; margin-bottom: 10px;">{{ tour.description }}</p>
+                    {% endif %}
+                    <div style="color: #999; font-size: 14px;">
+                        {% if tour.start_date %}
+                        {{ tour.start_date.strftime('%d/%m/%Y') }}
+                        {% if tour.end_date %} ate {{ tour.end_date.strftime('%d/%m/%Y') }}{% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div style="text-align: right;">
+                    {% if tour.status == 'planned' %}
+                    <span style="background: #ffc107; color: #000; padding: 8px 15px; border-radius: 5px; white-space: nowrap;">Planejada</span>
+                    {% elif tour.status == 'active' %}
+                    <span style="background: #28a745; color: white; padding: 8px 15px; border-radius: 5px; white-space: nowrap;">Ativa</span>
+                    {% elif tour.status == 'completed' %}
+                    <span style="background: #6c757d; color: white; padding: 8px 15px; border-radius: 5px; white-space: nowrap;">Concluida</span>
+                    {% endif %}
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div style="background: #f8f9fa; padding: 60px 20px; border-radius: 10px; text-align: center;">
+        <h3 style="color: #6c757d; margin-bottom: 10px;">Nenhuma tour cadastrada</h3>
+        <p style="color: #999; margin-bottom: 20px;">Crie sua primeira tour para comecar!</p>
+        {% if current_user.role == 'admin' %}
+        <a href="{{ url_for('tour.new_tour') }}" 
+           style="display: inline-block; padding: 12px 24px; background: #ffc107; color: #000; text-decoration: none; border-radius: 5px; font-weight: bold;">
+            + Criar Primeira Tour
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

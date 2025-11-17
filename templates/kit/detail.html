@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}{{ kit.name }} - Kit{% endblock %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 30px auto; padding: 0 20px;">
+    <div style="margin-bottom: 20px;">
+        <a href="{{ url_for('kit.list_kits') }}" style="color: #6c757d; text-decoration: none;">
+            &larr; Voltar para kits
+        </a>
+    </div>
+
+    <div style="background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+            <div style="font-size: 48px;">&#127890;</div>
+            <div>
+                <h1 style="margin-bottom: 5px;">{{ kit.name }}</h1>
+                {% if kit.description %}
+                <p style="color: #666;">{{ kit.description }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 30px;">
+            <h3 style="margin-bottom: 15px;">Composicao do Kit ({{ kit.requirements|length }} itens)</h3>
+
+            {% if kit.requirements %}
+            <div style="display: grid; gap: 10px;">
+                {% for req in kit.requirements %}
+                <div style="background: white; padding: 15px; border-radius: 5px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid #28a745;">
+                    <div>
+                        <strong>{{ req.equipment_name }}</strong>
+                    </div>
+                    <div style="background: #d4edda; color: #155724; padding: 5px 15px; border-radius: 15px; font-weight: bold;">
+                        {{ req.quantity }}x
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p style="color: #999; text-align: center; padding: 20px;">
+                Este kit esta vazio
+            </p>
+            {% endif %}
+        </div>
+
+        <div style="background: #e7f3ff; border-left: 4px solid #007bff; padding: 20px; border-radius: 5px; margin-bottom: 30px;">
+            <h4 style="margin-bottom: 10px;">&#128161; Como usar este kit</h4>
+            <p style="color: #004085; margin: 0;">
+                Ao criar uma requisicao para uma tour, voce pode selecionar este kit para adicionar automaticamente todos os itens listados acima.
+            </p>
+        </div>
+
+        <div style="text-align: center; color: #999; font-size: 14px;">
+            <p>Criado por {{ kit.creator.name }} em {{ kit.created_at.strftime('%d/%m/%Y') }}</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

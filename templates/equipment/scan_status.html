@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}Scanner de Status{% endblock %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 30px auto; padding: 0 20px;">
+    <div style="margin-bottom: 20px;">
+        <a href="{{ url_for('dashboard') }}" style="color: #6c757d; text-decoration: none;">
+            ← Voltar ao Dashboard
+        </a>
+    </div>
+
+    <div style="background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+        <h1 style="margin-bottom: 30px; text-align: center;">📱 Scanner de Status</h1>
+
+        <div style="margin-bottom: 30px;">
+            <div id="reader" style="width: 100%; border-radius: 10px; overflow: hidden;"></div>
+        </div>
+
+        <div id="result" style="display: none; padding: 20px; background: #f8f9fa; border-radius: 5px; margin-bottom: 20px;">
+            <h3 id="equipment-code" style="margin-bottom: 10px;"></h3>
+            <p id="equipment-name" style="margin-bottom: 10px;"></p>
+            <div id="status-badge" style="margin-bottom: 20px;"></div>
+
+            <div id="action-buttons" style="display: grid; gap: 10px;">
+                <button onclick="changeStatus('available')" style="padding: 12px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                    ✓ Marcar Disponível
+                </button>
+                <button onclick="changeStatus('maintenance')" style="padding: 12px; background: #ffc107; color: #000; border: none; border-radius: 5px; cursor: pointer;">
+                    🔧 Enviar Manutenção
+                </button>
+                <button onclick="changeStatus('in_tour')" style="padding: 12px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                    🎸 Alocar em Tour
+                </button>
+                <button onclick="resetScanner()" style="padding: 12px; background: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                    Escanear Outro
+                </button>
+            </div>
+        </div>
+
+        <div style="background: #e7f3ff; padding: 20px; border-left: 4px solid #007bff; border-radius: 5px;">
+            <h3 style="margin-bottom: 10px;">ℹ️ Como usar:</h3>
+            <ol style="margin-left: 20px;">
+                <li>Aponte a câmera para o QR Code</li>
+                <li>Visualize o status atual</li>
+                <li>Altere o status se necessário</li>
+            </ol>
+        </div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+<script>
+let html5QrcodeScanner;
+let scannerRunning = false;
+let currentEquipmentId = null;
+
+function onScanSuccess(decodedText) {
+    if (scannerRunning) {
+        html5QrcodeScanner.clear();
+        scannerRunning = false;
+    }
+
+    try {
+        const data = JSON.parse(decodedText);
+        if (data.t === 'equipment' && data.i) {
+            fetchEquipmentDetails(data.i);
+        }
+    } catch(e) {
+        const match = decodedText.match(/\/equipment\/(\d+)/);
+        if (match) {
+            fetchEquipmentDetails(match[1]);
+        }
+    }
+}
+
+function fetchEquipmentDetails(equipmentId) {
+    currentEquipmentId = equipmentId;
+
+    fetch(`/equipment/${equipmentId}`)
+        .then(r => r.text())
+        .then(html => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+
+            const codeEl = doc.querySelector('h1');
+            const nameEl = doc.querySelector('h2');
+            const statusEl = doc.querySelector('[style*="background"][style*="color"]');
+
+            if (codeEl && nameEl) {
+                document.getElementById('equipment-code').textContent = codeEl.textContent.trim();
+                document.getElementById('equipment-name').textContent = nameEl.textContent.trim();
+
+                if (statusEl) {
+                    document.getElementById('status-badge').innerHTML = statusEl.outerHTML;
+                }
+
+                document.getElementById('result').style.display = 'block';
+            }
+        })
+        .catch(() => alert('Erro ao buscar equipamento'));
+}
+
+function changeStatus(newStatus) {
+    if (!currentEquipmentId) return;
+
+    alert(`Status alterado para: ${newStatus}`);
+    resetScanner();
+}
+
+function resetScanner() {
+    document.getElementById('result').style.display = 'none';
+    currentEquipmentId = null;
+    startScanner();
+}
+
+function startScanner() {
+    html5QrcodeScanner = new Html5QrcodeScanner(
+        "reader",
+        { 
+            fps: 10,
+            qrbox: { width: 250, height: 250 },
+            rememberLastUsedCamera: true
+        },
+        false
+    );
+
+    html5QrcodeScanner.render(onScanSuccess);
+    scannerRunning = true;
+}
+
+window.addEventListener('load', startScanner);
+
+window.addEventListener('beforeunload', () => {
+    if (scannerRunning) {
+        html5QrcodeScanner.clear();
+    }
+});
+</script>
+
+<style>
+#reader { border: 2px solid #007bff !important; }
+#reader__dashboard_section { display: none !important; }
+</style>
+{% endblock %}

@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="max-width: 100%; padding: 15px;">
+    <div style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2 style="margin: 0;">Escanear Equipamentos</h2>
+            <a href="{{ url_for('tour.detail_tour', id=tour.id) }}" 
+               style="background: #6c757d; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+                ← Voltar
+            </a>
+        </div>
+
+        <div style="background: #e7f3ff; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+            <strong>Tour:</strong> {{ tour.name }}<br>
+            <strong>Status:</strong> Alocando equipamentos
+        </div>
+
+        <!-- CÂMERA INTEGRADA -->
+        <div style="position: relative; margin-bottom: 20px;">
+            <video id="video" 
+                   autoplay 
+                   playsinline
+                   style="width: 100%; max-width: 500px; border-radius: 10px; display: block; margin: 0 auto;"></video>
+
+            <div id="overlay" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 250px; height: 250px; border: 3px solid #007bff; border-radius: 10px; pointer-events: none;"></div>
+        </div>
+
+        <div style="text-align: center; margin-bottom: 20px;">
+            <p style="font-size: 18px; color: #666;">
+                Posicione o QR Code na área azul
+            </p>
+            <p style="font-size: 24px; font-weight: bold; color: #007bff;">
+                Alocados: <span id="count">0</span>
+            </p>
+        </div>
+
+        <!-- LISTA DE EQUIPAMENTOS ALOCADOS -->
+        <div style="max-height: 300px; overflow-y: auto; background: #f8f9fa; padding: 15px; border-radius: 5px;">
+            <h3 style="margin-top: 0;">Equipamentos Alocados:</h3>
+            <div id="scanned-list"></div>
+        </div>
+
+    </div>
+</div>
+
+<canvas id="canvas" style="display: none;"></canvas>
+
+<script src="https://unpkg.com/jsqr@1.4.0/dist/jsQR.js"></script>
+
+<script>
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const context = canvas.getContext('2d');
+    const scannedList = document.getElementById('scanned-list');
+    const countSpan = document.getElementById('count');
+
+    let scannedCodes = new Set();
+    let isProcessing = false;
+
+    // Solicitar câmera traseira (mobile)
+    navigator.mediaDevices.getUserMedia({ 
+        video: { 
+            facingMode: { ideal: 'environment' },
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+        }
+    })
+    .then(stream => {
+        video.srcObject = stream;
+        video.play();
+        requestAnimationFrame(scanQR);
+    })
+    .catch(err => {
+        alert('Erro ao acessar câmera. Verifique as permissões.');
+        console.error(err);
+    });
+
+    function scanQR() {
+        if (video.readyState === video.HAVE_ENOUGH_DATA) {
+            canvas.height = video.videoHeight;
+            canvas.width = video.videoWidth;
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+            const code = jsQR(imageData.data, imageData.width, imageData.height);
+
+            if (code && !isProcessing) {
+                processQRCode(code.data);
+            }
+        }
+        requestAnimationFrame(scanQR);
+    }
+
+    function processQRCode(data) {
+        isProcessing = true;
+
+        // Extrair código do equipamento
+        let equipmentCode = null;
+
+        // Formato 1: URL completa
+        const urlMatch = data.match(/\/equipment\/(\d+)/);
+        if (urlMatch) {
+            fetch(`/equipment/${urlMatch[1]}`)
+                .then(r => r.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const codeEl = doc.querySelector('h1');
+                    equipmentCode = codeEl ? codeEl.textContent.trim() : null;
+
+                    if (equipmentCode) {
+                        allocateEquipment(equipmentCode);
+                    } else {
+                        showError('Erro ao ler código do equipamento');
+                        isProcessing = false;
+                    }
+                })
+                .catch(() => {
+                    showError('Erro ao processar QR Code');
+                    isProcessing = false;
+                });
+            return;
+        }
+
+        // Formato 2: Código direto
+        const codeMatch = data.match(/^[A-Z]+-\d+$/);
+        if (codeMatch) {
+            equipmentCode = data;
+            allocateEquipment(equipmentCode);
+            return;
+        }
+
+        // Formato 3: JSON
+        try {
+            const json = JSON.parse(data);
+            if (json.code) {
+                equipmentCode = json.code;
+                allocateEquipment(equipmentCode);
+                return;
+            }
+        } catch(e) {}
+
+        showError('QR Code inválido');
+        isProcessing = false;
+    }
+
+    function allocateEquipment(code) {
+        if (scannedCodes.has(code)) {
+            showError(`${code} já foi alocado`);
+            isProcessing = false;
+            return;
+        }
+
+        fetch('{{ url_for("tour.allocate_scanned", id=tour.id) }}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code: code })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                scannedCodes.add(code);
+                addScanned(data.equipment.code, data.equipment.name);
+                countSpan.textContent = scannedCodes.size;
+
+                // Vibração de sucesso (mobile)
+                if (navigator.vibrate) {
+                    navigator.vibrate(200);
+                }
+            } else {
+                showError(data.message);
+            }
+            isProcessing = false;
+        })
+        .catch(() => {
+            showError('Erro ao alocar equipamento');
+            isProcessing = false;
+        });
+    }
+
+    function addScanned(code, name) {
+        const div = document.createElement('div');
+        div.style.cssText = 'background: #cce5ff; padding: 10px; margin-bottom: 10px; border-radius: 5px; border-left: 4px solid #007bff;';
+        div.innerHTML = `<strong>${code}</strong> - ${name}`;
+        scannedList.insertBefore(div, scannedList.firstChild);
+    }
+
+    function showError(message) {
+        const div = document.createElement('div');
+        div.style.cssText = 'background: #f8d7da; padding: 10px; margin-bottom: 10px; border-radius: 5px; border-left: 4px solid #dc3545;';
+        div.textContent = message;
+        scannedList.insertBefore(div, scannedList.firstChild);
+
+        setTimeout(() => div.remove(), 3000);
+    }
+</script>
+
+<style>
+    @media (max-width: 768px) {
+        #video {
+            max-width: 100% !important;
+        }
+        #overlay {
+            width: 200px !important;
+            height: 200px !important;
+        }
+    }
+</style>
+
+{% endblock %}

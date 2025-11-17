@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}Configurações da Empresa - Tour Manager{% endblock %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 50px auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+    <div style="margin-bottom: 20px;">
+        <a href="{{ url_for('dashboard') }}" style="color: #6c757d; text-decoration: none;">
+            ← Voltar para Dashboard
+        </a>
+    </div>
+
+    <h1 style="margin-bottom: 30px;">⚙️ Configurações da Empresa</h1>
+
+    <form method="POST" action="{{ url_for('company.settings') }}" enctype="multipart/form-data">
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Nome da Empresa *</label>
+            <input type="text" name="name" value="{{ company.name }}" required 
+                   style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: bold;">CNPJ</label>
+            <input type="text" name="cnpj" value="{{ company.cnpj or '' }}" 
+                   style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Email</label>
+            <input type="email" name="email" value="{{ company.email or '' }}" 
+                   style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Telefone</label>
+            <input type="text" name="phone" value="{{ company.phone or '' }}" 
+                   style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Endereço</label>
+            <textarea name="address" rows="3" 
+                      style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">{{ company.address or '' }}</textarea>
+        </div>
+
+        <div style="margin-bottom: 30px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Logo da Empresa</label>
+            {% if company.logo_url %}
+            <div style="margin-bottom: 10px;">
+                <img src="{{ company.logo_url }}" alt="Logo atual" style="max-width: 200px; border: 1px solid #ddd; padding: 10px; border-radius: 5px;">
+                <p style="color: #6c757d; font-size: 14px; margin-top: 5px;">Logo atual</p>
+            </div>
+            {% endif %}
+            <input type="file" name="logo" accept=".png,.jpg,.jpeg" 
+                   style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+            <small style="color: #6c757d;">Formatos aceitos: PNG, JPG. Recomendado: fundo transparente (PNG).</small>
+        </div>
+
+        <button type="submit" 
+                style="width: 100%; padding: 12px; background: #007bff; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer;">
+            Salvar Configurações
+        </button>
+    </form>
+</div>
+{% endblock %}

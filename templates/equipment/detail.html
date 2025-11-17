@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+
+{% block title %}{{ equipment.code }} - {{ equipment.name }}{% endblock %}
+
+{% block content %}
+<div style="max-width: 1000px; margin: 30px auto; padding: 0 20px;">
+    <div style="margin-bottom: 20px;">
+        <a href="{{ url_for('equipment.list_equipment') }}" style="color: #6c757d; text-decoration: none;">
+            ← Voltar para lista
+        </a>
+    </div>
+
+    <div style="background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 30px; flex-wrap: wrap; gap: 20px;">
+            <div>
+                <h1 style="margin-bottom: 10px;">{{ equipment.code }}</h1>
+                <h2 style="color: #666; font-weight: normal; margin-bottom: 10px;">{{ equipment.name }}</h2>
+                {% if equipment.brand or equipment.model %}
+                <p style="color: #999;">{{ equipment.brand }} {{ equipment.model }}</p>
+                {% endif %}
+            </div>
+
+            <div style="text-align: right;">
+                {% if equipment.status == 'available' %}
+                <span style="background: #d4edda; color: #155724; padding: 8px 15px; border-radius: 5px; display: inline-block; margin-bottom: 10px;">✓ Disponível</span>
+                {% elif equipment.status == 'maintenance' %}
+                <span style="background: #fff3cd; color: #856404; padding: 8px 15px; border-radius: 5px; display: inline-block; margin-bottom: 10px;">🔧 Manutenção</span>
+                {% elif equipment.status == 'external_repair' %}
+                <span style="background: #f8d7da; color: #721c24; padding: 8px 15px; border-radius: 5px; display: inline-block; margin-bottom: 10px;">🔧 Conserto Externo</span>
+                {% elif equipment.status == 'in_tour' %}
+                <span style="background: #d1ecf1; color: #0c5460; padding: 8px 15px; border-radius: 5px; display: inline-block; margin-bottom: 10px;">🎸 Em Tour</span>
+                {% endif %}
+
+                {% if current_user.role == 'admin' %}
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <a href="{{ url_for('equipment.edit_equipment', id=equipment.id) }}" 
+                       style="padding: 8px 15px; background: #007bff; color: white; text-decoration: none; border-radius: 5px;">
+                        Editar
+                    </a>
+                    <a href="{{ url_for('equipment.print_qr', equipment_id=equipment.id) }}" target="_blank"
+                       style="padding: 8px 15px; background: #28a745; color: white; text-decoration: none; border-radius: 5px;">
+                        Imprimir QR
+                    </a>
+                    <button onclick="document.getElementById('photo-form').style.display='block'"
+                            style="padding: 8px 15px; background: #17a2b8; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                        Adicionar Foto
+                    </button>
+                    <button onclick="document.getElementById('serial-form').style.display='block'"
+                            style="padding: 8px 15px; background: #ffc107; color: #000; border: none; border-radius: 5px; cursor: pointer;">
+                        Adicionar Serial
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Formulário de Foto -->
+        <div id="photo-form" style="display: none; background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+            <h4>Adicionar Foto</h4>
+            <form method="POST" action="{{ url_for('equipment.upload_photo', id=equipment.id) }}" enctype="multipart/form-data">
+                <input type="file" name="photo" accept="image/*" required
+                       style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 10px;">
+                <div style="display: flex; gap: 10px;">
+                    <button type="submit" style="padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                        Upload
+                    </button>
+                    <button type="button" onclick="document.getElementById('photo-form').style.display='none'"
+                            style="padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Formulário de Serial -->
+        <div id="serial-form" style="display: none; background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+            <h4>Adicionar Número de Série</h4>
+            <form method="POST" action="{{ url_for('equipment.update_serial', id=equipment.id) }}">
+                <input type="text" name="serial_number" placeholder="Número de série" required
+                       style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 10px;">
+                <div style="display: flex; gap: 10px;">
+                    <button type="submit" style="padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                        Salvar
+                    </button>
+                    <button type="button" onclick="document.getElementById('serial-form').style.display='none'"
+                            style="padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Foto do Equipamento -->
+        {% if equipment.primary_photo_url %}
+        <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 30px; text-align: center;">
+            <h3 style="margin-bottom: 15px;">Foto do Equipamento</h3>
+            <img src="{{ equipment.primary_photo_url }}" alt="Foto do equipamento" 
+                 style="max-width: 400px; max-height: 400px; border-radius: 10px;">
+        </div>
+        {% endif %}
+
+        <!-- QR Code -->
+        <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 30px; text-align: center;">
+            <h3 style="margin-bottom: 15px;">QR Code</h3>
+            {% if equipment.qr_code_url %}
+            <img src="{{ equipment.qr_code_url }}" alt="QR Code" style="max-width: 200px; border: 2px solid #dee2e6; padding: 10px; background: white; border-radius: 10px;">
+            {% else %}
+            <p style="color: #666; margin-bottom: 15px;">QR Code não gerado</p>
+            {% endif %}
+        </div>
+
+        <!-- Informações -->
+        <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 30px;">
+            <h3 style="margin-bottom: 15px;">Informações</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div>
+                    <strong>Categoria:</strong>
+                    <p style="margin-top: 5px;">{{ equipment.category.name if equipment.category else 'N/A' }}</p>
+                </div>
+                <div>
+                    <strong>Número de Série:</strong>
+                    <p style="margin-top: 5px;">{{ equipment.serial_number or 'N/A' }}</p>
+                </div>
+                {% if equipment.value %}
+                <div>
+                    <strong>Valor:</strong>
+                    <p style="margin-top: 5px;">R$ {{ "%.2f"|format(equipment.value) }}</p>
+                </div>
+                {% endif %}
+                {% if equipment.purchase_date %}
+                <div>
+                    <strong>Data de Compra:</strong>
+                    <p style="margin-top: 5px;">{{ equipment.purchase_date.strftime('%d/%m/%Y') }}</p>
+                </div>
+                {% endif %}
+            </div>
+            {% if equipment.notes %}
+            <div style="margin-top: 15px;">
+                <strong>Observações:</strong>
+                <p style="margin-top: 5px;">{{ equipment.notes }}</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Manutenção -->
+        {% if equipment.status in ['maintenance', 'external_repair'] and current_user.role == 'admin' %}
+        <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 20px; border-radius: 5px; margin-bottom: 30px;">
+            <h3 style="margin-bottom: 15px;">🔧 Ações de Manutenção</h3>
+
+            {% if equipment.status == 'maintenance' %}
+            <details style="margin-bottom: 15px;">
+                <summary style="cursor: pointer; font-weight: bold;">Encaminhar para Conserto Externo</summary>
+                <form method="POST" action="{{ url_for('equipment.forward_to_external', id=equipment.id) }}" style="margin-top: 15px;">
+                    <input type="text" name="external_company" placeholder="Nome da empresa/técnico" required
+                           style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 10px;">
+                    <input type="text" name="external_contact" placeholder="Contato (opcional)"
+                           style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 10px;">
+                    <button type="submit"
+                            style="width: 100%; padding: 10px; background: #dc3545; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                        Encaminhar
+                    </button>
+                </form>
+            </details>
+            {% endif %}
+
+            <details>
+                <summary style="cursor: pointer; font-weight: bold;">Concluir Manutenção</summary>
+                <form method="POST" action="{{ url_for('equipment.complete_maintenance', id=equipment.id) }}" style="margin-top: 15px;">
+                    <textarea name="solution_description" placeholder="Descrição da solução" rows="3"
+                              style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 10px;"></textarea>
+                    <input type="number" name="cost" placeholder="Custo (R$)" step="0.01"
+                           style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 10px;">
+                    <button type="submit"
+                            style="width: 100%; padding: 10px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                        Concluir e Liberar
+                    </button>
+                </form>
+            </details>
+        </div>
+        {% elif equipment.status == 'available' and current_user.role == 'admin' %}
+        <div style="background: #d4edda; border-left: 4px solid #28a745; padding: 20px; border-radius: 5px; margin-bottom: 30px;">
+            <h3 style="margin-bottom: 15px;">Enviar para Manutenção</h3>
+            <form method="POST" action="{{ url_for('equipment.send_to_maintenance', id=equipment.id) }}">
+                <textarea name="problem_description" placeholder="Descrição do problema" rows="3" required
+                          style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 10px;"></textarea>
+                <button type="submit"
+                        style="width: 100%; padding: 10px; background: #ffc107; color: #000; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                    Enviar para Manutenção
+                </button>
+            </form>
+        </div>
+        {% endif %}
+
+        <!-- Histórico de Manutenções -->
+        {% if maintenances %}
+        <div style="border-top: 2px solid #dee2e6; padding-top: 30px;">
+            <h3 style="margin-bottom: 20px;">📋 Histórico de Manutenções</h3>
+            {% for m in maintenances %}
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 15px; border-left: 4px solid {% if m.status == 'completed' %}#28a745{% elif m.status == 'external_repair' %}#dc3545{% else %}#ffc107{% endif %};">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                    <strong>{{ m.created_at.strftime('%d/%m/%Y %H:%M') }}</strong>
+                    <span style="padding: 3px 10px; background: {% if m.status == 'completed' %}#d4edda{% elif m.status == 'external_repair' %}#f8d7da{% else %}#fff3cd{% endif %}; border-radius: 3px; font-size: 12px;">
+                        {% if m.status == 'completed' %}Concluída{% elif m.status == 'external_repair' %}Conserto Externo{% else %}Em Andamento{% endif %}
+                    </span>
+                </div>
+                <p style="margin-bottom: 10px;"><strong>Problema:</strong> {{ m.problem_description }}</p>
+                {% if m.solution_description %}
+                <p style="margin-bottom: 10px;"><strong>Solução:</strong> {{ m.solution_description }}</p>
+                {% endif %}
+                {% if m.external_company %}
+                <p style="margin-bottom: 10px;"><strong>Empresa Externa:</strong> {{ m.external_company }}
+                {% if m.external_contact %} - {{ m.external_contact }}{% endif %}</p>
+                {% endif %}
+                {% if m.cost %}
+                <p><strong>Custo:</strong> R$ {{ "%.2f"|format(m.cost) }}</p>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+@media (max-width: 768px) {
+    div[style*="grid-template-columns"] {
+        grid-template-columns: 1fr !important;
+    }
+}
+</style>
+{% endblock %}

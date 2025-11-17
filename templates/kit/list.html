@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Kits{% endblock %}
+
+{% block content %}
+<div style="max-width: 1000px; margin: 30px auto; padding: 0 20px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 15px;">
+        <h1>Kits</h1>
+        {% if current_user.role == 'admin' %}
+        <a href="{{ url_for('kit.new_kit') }}" 
+           style="padding: 12px 24px; background: #28a745; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">
+            + Novo Kit
+        </a>
+        {% endif %}
+    </div>
+
+    <p style="color: #666; margin-bottom: 30px;">
+        Kits sao conjuntos pre-definidos de equipamentos que facilitam a requisicao para tours e eventos.
+    </p>
+
+    {% if kits %}
+    <div style="display: grid; gap: 20px;">
+        {% for kit in kits %}
+        <div style="background: white; padding: 25px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: start; gap: 20px;">
+            <div style="flex: 1;">
+                <h2 style="margin-bottom: 10px; color: #28a745;">🎒 {{ kit.name }}</h2>
+                {% if kit.description %}
+                <p style="color: #666; margin-bottom: 15px;">{{ kit.description }}</p>
+                {% endif %}
+                <div style="color: #999; font-size: 14px;">
+                    {{ kit.requirements|length }} itens no kit
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 10px;">
+                <a href="{{ url_for('kit.detail_kit', id=kit.id) }}" 
+                   style="padding: 10px 20px; background: #d4edda; color: #155724; text-decoration: none; border-radius: 5px; font-size: 14px; font-weight: bold;">
+                    Ver detalhes →
+                </a>
+
+                {% if current_user.role == 'admin' %}
+                <form method="POST" action="{{ url_for('kit.delete_kit', id=kit.id) }}" 
+                      onsubmit="return confirm('Tem certeza que deseja deletar o kit {{ kit.name }}?')" 
+                      style="margin: 0;">
+                    <button type="submit"
+                            style="padding: 10px 20px; background: #dc3545; color: white; border: none; border-radius: 5px; font-size: 14px; cursor: pointer; font-weight: bold;">
+                        🗑️ Deletar
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div style="background: white; padding: 60px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); text-align: center;">
+        <div style="font-size: 64px; margin-bottom: 20px;">🎒</div>
+        <h3 style="margin-bottom: 15px; color: #666;">Nenhum kit cadastrado</h3>
+        <p style="color: #999; margin-bottom: 25px;">
+            Crie kits para agilizar a requisicao de equipamentos comuns.
+        </p>
+        {% if current_user.role == 'admin' %}
+        <a href="{{ url_for('kit.new_kit') }}" 
+           style="display: inline-block; padding: 12px 24px; background: #28a745; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">
+            + Criar Primeiro Kit
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,244 @@
+{% extends "base.html" %}
+
+{% block title %}Adicionar Requisições - {{ tour.name }}{% endblock %}
+
+{% block content %}
+<div style="max-width: 1200px; margin: 20px auto; padding: 0 15px;">
+    <div style="margin-bottom: 15px;">
+        <a href="{{ url_for('tour.detail_tour', id=tour.id) }}" style="color: #6c757d; text-decoration: none;">
+            ← Voltar
+        </a>
+    </div>
+
+    <div style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+        <h2 style="margin-bottom: 20px;">Requisição de Equipamentos</h2>
+
+        <div style="display: grid; grid-template-columns: 1fr 120px 80px; gap: 10px; margin-bottom: 20px;">
+            <div style="position: relative;">
+                <input type="text" id="search-input" placeholder="🔍 Buscar equipamento ou kit..."
+                       style="width: 100%; padding: 12px; border: 2px solid #007bff; border-radius: 5px; font-size: 16px;">
+
+                <div id="search-results" style="display: none; position: absolute; top: 100%; left: 0; right: 0; background: white; border: 2px solid #007bff; border-top: none; border-radius: 0 0 5px 5px; max-height: 300px; overflow-y: auto; z-index: 100;">
+                    {% for kit in kits %}
+                    <div class="kit-item" 
+                         data-name="🎒 {{ kit.name }}"
+                         data-type="kit"
+                         data-id="{{ kit.id }}"
+                         style="padding: 12px; border-bottom: 1px solid #e9ecef; cursor: pointer; background: #f0fff4;"
+                         onclick='selectKit({{ kit.id }}, "{{ kit.name }}")'>
+                        <strong>🎒 {{ kit.name }}</strong>
+                        <div style="color: #6c757d; font-size: 13px;">Kit com {{ kit.requirements|length }} itens</div>
+                    </div>
+                    {% endfor %}
+
+                    {% for eq in equipment_list %}
+                    <div class="equipment-item" 
+                         data-name="{{ eq.name }}"
+                         data-brand="{{ eq.brand or '' }}"
+                         data-model="{{ eq.model or '' }}"
+                         data-type="equipment"
+                         style="padding: 12px; border-bottom: 1px solid #e9ecef; cursor: pointer;"
+                         onclick="selectEquipment('{{ eq.name }}', '{{ eq.brand or '' }}', '{{ eq.model or '' }}')">
+                        <strong>{{ eq.name }}</strong>
+                        {% if eq.brand or eq.model %}
+                        <div style="color: #6c757d; font-size: 13px;">{{ eq.brand }} {{ eq.model }}</div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <input type="number" id="quantity-input" value="1" min="1" 
+                   style="padding: 12px; border: 2px solid #ddd; border-radius: 5px; font-size: 16px; text-align: center;">
+
+            <button id="add-btn" onclick="addItem()" disabled
+                    style="padding: 12px; background: #28a745; color: white; border: none; border-radius: 5px; font-size: 20px; cursor: pointer; font-weight: bold; opacity: 0.5;">
+                +
+            </button>
+        </div>
+
+        <div style="border-top: 2px solid #dee2e6; padding-top: 20px;">
+            <h3 style="margin-bottom: 15px;">Itens Adicionados (<span id="count">0</span>)</h3>
+
+            <div id="items-list">
+                <p style="color: #6c757d; text-align: center; padding: 30px;">Nenhum item adicionado</p>
+            </div>
+
+            <button id="save-btn" onclick="saveAll()" disabled
+                    style="width: 100%; padding: 15px; background: #007bff; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; font-weight: bold; margin-top: 20px;">
+                Salvar Requisição
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+let selectedEquipment = null;
+let items = [];
+
+const kitsData = {
+    {% for kit in kits %}
+    {{ kit.id }}: [
+        {% for req in kit.requirements %}
+        {name: "{{ req.equipment_name }}", quantity: {{ req.quantity }}}{% if not loop.last %},{% endif %}
+        {% endfor %}
+    ]{% if not loop.last %},{% endif %}
+    {% endfor %}
+};
+
+const searchInput = document.getElementById('search-input');
+const searchResults = document.getElementById('search-results');
+const addBtn = document.getElementById('add-btn');
+
+searchInput.addEventListener('focus', function() {
+    searchResults.style.display = 'block';
+});
+
+searchInput.addEventListener('input', function() {
+    const query = this.value.toLowerCase();
+    const allItems = document.querySelectorAll('.equipment-item, .kit-item');
+
+    allItems.forEach(item => {
+        const name = item.dataset.name.toLowerCase();
+        const brand = item.dataset.brand ? item.dataset.brand.toLowerCase() : '';
+        const model = item.dataset.model ? item.dataset.model.toLowerCase() : '';
+
+        if (name.includes(query) || brand.includes(query) || model.includes(query)) {
+            item.style.display = 'block';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+
+    searchResults.style.display = 'block';
+});
+
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('#search-input') && !e.target.closest('#search-results')) {
+        searchResults.style.display = 'none';
+    }
+});
+
+function selectKit(kitId, kitName) {
+    const kitItems = kitsData[kitId];
+
+    if (kitItems && kitItems.length > 0) {
+        kitItems.forEach(item => {
+            items.push({
+                name: item.name,
+                brand: '',
+                model: '',
+                quantity: item.quantity
+            });
+        });
+
+        renderList();
+        searchInput.value = '';
+        searchResults.style.display = 'none';
+    }
+}
+
+function selectEquipment(name, brand, model) {
+    selectedEquipment = { name, brand, model };
+    searchInput.value = name + (brand ? ' ' + brand : '') + (model ? ' ' + model : '');
+    searchResults.style.display = 'none';
+    addBtn.disabled = false;
+    addBtn.style.opacity = '1';
+}
+
+function addItem() {
+    if (!selectedEquipment) return;
+
+    const quantity = parseInt(document.getElementById('quantity-input').value);
+
+    items.push({
+        name: selectedEquipment.name,
+        brand: selectedEquipment.brand,
+        model: selectedEquipment.model,
+        quantity: quantity
+    });
+
+    renderList();
+
+    searchInput.value = '';
+    document.getElementById('quantity-input').value = '1';
+    selectedEquipment = null;
+    addBtn.disabled = true;
+    addBtn.style.opacity = '0.5';
+}
+
+function removeItem(index) {
+    items.splice(index, 1);
+    renderList();
+}
+
+function updateQuantity(index, value) {
+    if (value < 1) {
+        removeItem(index);
+    } else {
+        items[index].quantity = parseInt(value);
+        renderList();
+    }
+}
+
+function renderList() {
+    const listDiv = document.getElementById('items-list');
+    const countSpan = document.getElementById('count');
+    const saveBtn = document.getElementById('save-btn');
+
+    countSpan.textContent = items.length;
+
+    if (items.length === 0) {
+        listDiv.innerHTML = '<p style="color: #6c757d; text-align: center; padding: 30px;">Nenhum item adicionado</p>';
+        saveBtn.disabled = true;
+        saveBtn.style.opacity = '0.5';
+        return;
+    }
+
+    saveBtn.disabled = false;
+    saveBtn.style.opacity = '1';
+
+    listDiv.innerHTML = items.map((item, index) => `
+        <div style="background: #fff3cd; padding: 15px; border-radius: 5px; margin-bottom: 10px; border-left: 4px solid #ffc107; display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+            <div style="flex: 1;">
+                <strong>${item.name}</strong>
+                ${item.brand || item.model ? `<div style="color: #856404; font-size: 13px;">${item.brand} ${item.model}</div>` : ''}
+            </div>
+            <input type="number" value="${item.quantity}" min="1" 
+                   onchange="updateQuantity(${index}, this.value)"
+                   style="width: 80px; padding: 8px; border: 1px solid #ffc107; border-radius: 3px; text-align: center;">
+            <button type="button" onclick="removeItem(${index})"
+                    style="padding: 8px 12px; background: #dc3545; color: white; border: none; border-radius: 3px; cursor: pointer;">
+                ×
+            </button>
+        </div>
+    `).join('');
+}
+
+async function saveAll() {
+    if (items.length === 0) return;
+
+    try {
+        const response = await fetch('{{ url_for("tour.add_requirement", tour_id=tour.id) }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                requirements: items
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            window.location.href = '{{ url_for("tour.detail_tour", id=tour.id) }}';
+        } else {
+            alert('Erro ao salvar requisições');
+        }
+    } catch (error) {
+        alert('Erro ao salvar requisições');
+    }
+}
+</script>
+{% endblock %}

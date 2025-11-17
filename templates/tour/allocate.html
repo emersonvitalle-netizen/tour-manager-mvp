@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Alocar Equipamentos - {{ tour.name }}{% endblock %}
+
+{% block content %}
+<div style="max-width: 1000px; margin: 30px auto;">
+    <div style="margin-bottom: 20px;">
+        <a href="{{ url_for('tour.detail_tour', id=tour.id) }}" style="color: #6c757d; text-decoration: none;">
+            ← Voltar para Tour
+        </a>
+    </div>
+
+    <div style="background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+        <h1 style="margin-bottom: 10px;">Alocar Equipamentos</h1>
+        <p style="color: #6c757d; margin-bottom: 30px;">Tour: {{ tour.name }}</p>
+
+        <form method="POST" action="{{ url_for('tour.allocate_equipment', id=tour.id) }}">
+
+            <!-- Seleção por Kits -->
+            {% if kits %}
+            <div style="margin-bottom: 30px;">
+                <h3 style="margin-bottom: 15px;">Alocar por Kit</h3>
+                <p style="color: #6c757d; font-size: 14px; margin-bottom: 15px;">
+                    Selecione um kit para adicionar todos os seus equipamentos à tour
+                </p>
+                <div style="display: grid; gap: 10px;">
+                    {% for kit in kits %}
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 5px;">
+                        <strong>{{ kit.name }}</strong>
+                        <p style="color: #6c757d; margin: 5px 0 0 0; font-size: 14px;">
+                            {{ kit.requirements|length }} tipo(s) de equipamento
+                        </p>
+                        <button type="button" onclick="selectKit({{ kit.id }})" 
+                                style="margin-top: 10px; padding: 8px 15px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                            Selecionar Kit
+                        </button>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Seleção Individual -->
+            <div style="border-top: 2px solid #dee2e6; padding-top: 30px;">
+                <h3 style="margin-bottom: 15px;">Selecionar Equipamentos Individuais</h3>
+
+                {% if available_equipment %}
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
+                    <label style="display: flex; align-items: center; cursor: pointer;">
+                        <input type="checkbox" onclick="toggleAll(this)" style="margin-right: 10px;">
+                        <strong>Selecionar Todos ({{ available_equipment|length }} itens)</strong>
+                    </label>
+                </div>
+
+                <div style="max-height: 400px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 5px; padding: 10px;">
+                    {% for equipment in available_equipment %}
+                    <label style="display: block; padding: 10px; border-bottom: 1px solid #f0f0f0; cursor: pointer;">
+                        <input type="checkbox" name="equipment_ids[]" value="{{ equipment.id }}" class="equipment-checkbox" style="margin-right: 10px;">
+                        <strong>{{ equipment.code }}</strong> - {{ equipment.name }}
+                        {% if equipment.brand %} ({{ equipment.brand }}{% if equipment.model %} {{ equipment.model }}{% endif %}){% endif %}
+                    </label>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p style="color: #6c757d; text-align: center; padding: 40px;">
+                    Nenhum equipamento disponível para alocação
+                </p>
+                {% endif %}
+            </div>
+
+            {% if available_equipment %}
+            <div style="margin-top: 30px; display: flex; gap: 10px;">
+                <button type="submit" 
+                        style="flex: 1; padding: 12px; background: #28a745; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer;">
+                    Alocar Selecionados
+                </button>
+                <a href="{{ url_for('tour.detail_tour', id=tour.id) }}" 
+                   style="flex: 1; padding: 12px; background: #6c757d; color: white; border: none; border-radius: 5px; font-size: 16px; text-align: center; text-decoration: none; display: block;">
+                    Cancelar
+                </a>
+            </div>
+            {% endif %}
+        </form>
+    </div>
+</div>
+
+<script>
+function toggleAll(checkbox) {
+    const checkboxes = document.querySelectorAll('.equipment-checkbox');
+    checkboxes.forEach(cb => cb.checked = checkbox.checked);
+}
+
+function selectKit(kitId) {
+    alert('Funcionalidade de alocação por kit será implementada em breve!');
+}
+</script>
+{% endblock %}
