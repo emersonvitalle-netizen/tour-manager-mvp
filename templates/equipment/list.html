@@ -1,4 +1,4 @@
-{% extends “base.html” %}
+{% extends "base.html" %}
 {% block title %}Equipamentos{% endblock %}
 {% block content %}
 
@@ -22,17 +22,17 @@
     </button>
     <button onclick="filterCategory('Som')" class="cat-btn"
             style="padding: 20px; background: #28a745; color: white; border: none; border-radius: 10px; cursor: pointer;">
-        <div style="font-size: 32px; margin-bottom: 10px;">ðŸ”Š</div>
+        <div style="font-size: 32px; margin-bottom: 10px;">ðŸ"Š</div>
         <div style="font-weight: bold;">Som</div>
     </button>
     <button onclick="filterCategory('Luz')" class="cat-btn"
             style="padding: 20px; background: #ffc107; color: #000; border: none; border-radius: 10px; cursor: pointer;">
-        <div style="font-size: 32px; margin-bottom: 10px;">ðŸ’¡</div>
+        <div style="font-size: 32px; margin-bottom: 10px;">ðŸ'¡</div>
         <div style="font-weight: bold;">Luz</div>
     </button>
     <button onclick="filterCategory('Materiais')" class="cat-btn"
             style="padding: 20px; background: #17a2b8; color: white; border: none; border-radius: 10px; cursor: pointer;">
-        <div style="font-size: 32px; margin-bottom: 10px;">ðŸ”§</div>
+        <div style="font-size: 32px; margin-bottom: 10px;">ðŸ"§</div>
         <div style="font-weight: bold;">Materiais</div>
     </button>
     <button onclick="filterCategory('Instrumentos')" class="cat-btn"
@@ -102,7 +102,7 @@
                         <div style="margin-bottom: 20px; padding-left: 20px;">
                             <h4 onclick="toggleModelo('{{ categoria }}-{{ tipo }}-{{ marca }}-{{ modelo }}')"
                                 style="color: #555; margin-bottom: 10px; font-size: 16px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-left: 3px solid #007bff; padding-left: 10px;">
-                                <span>ðŸ“¦ {{ modelo }} ({{ equipamentos|length }})</span>
+                                <span>ðŸ"¦ {{ modelo }} ({{ equipamentos|length }})</span>
                                 <span id="icon-modelo-{{ categoria }}-{{ tipo }}-{{ marca }}-{{ modelo }}" style="font-size: 18px;">â–¼</span>
                             </h4>
 
@@ -115,7 +115,7 @@
                                         {% if eq.primary_photo_url %}
                                         <img src="{{ eq.primary_photo_url }}" style="width: 100%; height: 80px; object-fit: cover; border-radius: 5px; margin-bottom: 10px;">
                                         {% else %}
-                                        <div style="width: 100%; height: 80px; background: #e9ecef; border-radius: 5px; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; font-size: 32px;">ðŸ“¦</div>
+                                        <div style="width: 100%; height: 80px; background: #e9ecef; border-radius: 5px; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; font-size: 32px;">ðŸ"¦</div>
                                         {% endif %}
 
                                         <div style="font-size: 16px; font-weight: bold; color: #007bff; margin-bottom: 5px;">
@@ -127,9 +127,9 @@
                                         </div>
 
                                         {% if eq.status == 'available' %}
-                                        <span style="background: #28a745; color: white; padding: 4px 8px; border-radius: 3px; font-size: 11px; display: inline-block;">âœ“ DisponÃ­vel</span>
+                                        <span style="background: #28a745; color: white; padding: 4px 8px; border-radius: 3px; font-size: 11px; display: inline-block;">âœ" DisponÃ­vel</span>
                                         {% elif eq.status == 'maintenance' %}
-                                        <span style="background: #ffc107; color: #000; padding: 4px 8px; border-radius: 3px; font-size: 11px; display: inline-block;">ðŸ”§ ManutenÃ§Ã£o</span>
+                                        <span style="background: #ffc107; color: #000; padding: 4px 8px; border-radius: 3px; font-size: 11px; display: inline-block;">ðŸ"§ ManutenÃ§Ã£o</span>
                                         {% elif eq.status == 'external_repair' %}
                                         <span style="background: #dc3545; color: white; padding: 4px 8px; border-radius: 3px; font-size: 11px; display: inline-block;">âš ï¸ Conserto</span>
                                         {% elif eq.status == 'in_tour' %}
