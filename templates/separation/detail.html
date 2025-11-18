@@ -327,11 +327,11 @@
             <div class="category-header" onclick="toggleCategory('{{ category_name }}')">
                 <span>{{ data.icon }}</span>
                 <span class="category-name">{{ category_name }}</span>
-                <span class="category-count">({{ data.items|length }} itens)</span>
+                <span class="category-count">({{ data['items']|length }} itens)</span>
                 <span id="icon-{{ category_name }}">▼</span>
             </div>
             <div class="equipment-list" id="list-{{ category_name }}">
-                {% for item in data.items %}
+                {% for item in data['items'] %}
                 <div class="equipment-item">
                     <div class="equipment-info">
                         <div class="equipment-code">{{ item.equipment.code }}</div>
