@@ -114,7 +114,7 @@
             opacity: 1;
         }
 
-        /* Responsive */
+        /* Responsive Utilities */
         @media (max-width: 768px) {
             .nav-container {
                 flex-direction: column;
@@ -129,6 +129,70 @@
 
             .nav-links a {
                 width: 100%;
+            }
+            
+            /* Mobile text sizing */
+            h1 {
+                font-size: 24px !important;
+            }
+            
+            h2 {
+                font-size: 20px !important;
+            }
+            
+            h3 {
+                font-size: 18px !important;
+            }
+            
+            h4 {
+                font-size: 16px !important;
+            }
+            
+            /* Mobile button grids */
+            .category-grid {
+                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)) !important;
+                gap: 10px !important;
+            }
+            
+            .category-btn {
+                padding: 15px 10px !important;
+                font-size: 14px !important;
+            }
+            
+            .category-btn-icon {
+                font-size: 24px !important;
+            }
+            
+            /* Mobile cards */
+            .equipment-card-grid {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)) !important;
+                gap: 10px !important;
+            }
+            
+            .equipment-card {
+                padding: 10px !important;
+            }
+            
+            /* Mobile containers */
+            .container {
+                padding: 0 10px !important;
+                margin: 15px auto !important;
+            }
+            
+            /* Mobile search */
+            .search-box {
+                font-size: 14px !important;
+                padding: 12px !important;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .category-grid {
+                grid-template-columns: repeat(2, 1fr) !important;
+            }
+            
+            .equipment-card-grid {
+                grid-template-columns: repeat(2, 1fr) !important;
             }
         }
     </style>
