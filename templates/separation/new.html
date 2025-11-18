@@ -251,7 +251,7 @@
                     <span id="icon-{{ category_name }}">▼</span>
                 </div>
                 <div class="equipment-list" id="list-{{ category_name }}">
-                    {% for eq in data.items %}
+                    {% for eq in data['items'] %}
                     <div class="equipment-item" onclick="toggleEquipment({{ eq.id }}, this)">
                         <div class="checkbox" id="check-{{ eq.id }}"></div>
                         <div class="equipment-info">
