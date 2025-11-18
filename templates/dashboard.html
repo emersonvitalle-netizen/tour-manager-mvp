@@ -1,65 +1,208 @@
 {% extends "base.html" %}
 
+{% block title %}Dashboard - TOUR{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-header {
+        padding: var(--spacing-xl) var(--spacing-md) var(--spacing-md);
+        text-align: center;
+    }
+
+    .dashboard-logo {
+        font-family: var(--font-display);
+        font-size: 3rem;
+        font-weight: var(--font-weight-semibold);
+        color: var(--text-primary);
+        margin-bottom: var(--spacing-xs);
+        letter-spacing: 0.1em;
+    }
+
+    .dashboard-subtitle {
+        font-family: var(--font-body);
+        font-size: 0.95rem;
+        font-weight: var(--font-weight-light);
+        color: var(--text-secondary);
+        letter-spacing: 0.05em;
+    }
+
+    .dashboard-user {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+        padding: var(--spacing-md);
+        background-color: var(--bg-secondary);
+        margin: 0 var(--spacing-md) var(--spacing-md);
+        border-radius: var(--radius-md);
+    }
+
+    .user-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--accent-gold), var(--accent-gold-hover));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: var(--bg-primary);
+        font-weight: var(--font-weight-semibold);
+    }
+
+    .user-info {
+        flex: 1;
+    }
+
+    .user-name {
+        font-weight: var(--font-weight-medium);
+        color: var(--text-primary);
+        margin-bottom: 2px;
+    }
+
+    .user-role {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+    }
+
+    .user-notification {
+        position: relative;
+        color: var(--text-secondary);
+        font-size: 1.5rem;
+        cursor: pointer;
+    }
+
+    .notification-badge {
+        position: absolute;
+        top: -6px;
+        right: -6px;
+        background-color: #e74c3c;
+        color: white;
+        font-size: 0.75rem;
+        font-weight: var(--font-weight-semibold);
+        padding: 2px 6px;
+        border-radius: 10px;
+        min-width: 18px;
+        text-align: center;
+    }
+
+    .dashboard-cards {
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-md);
+        padding: 0 var(--spacing-md) var(--spacing-xl);
+    }
+
+    .alert {
+        padding: var(--spacing-md);
+        border-radius: var(--radius-sm);
+        margin-bottom: var(--spacing-md);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .alert-success {
+        background: rgba(46, 204, 113, 0.15);
+        color: var(--status-available);
+        border: 1px solid rgba(46, 204, 113, 0.3);
+    }
+
+    .alert-danger {
+        background: rgba(231, 76, 60, 0.15);
+        color: var(--status-repair);
+        border: 1px solid rgba(231, 76, 60, 0.3);
+    }
+
+    .alert-warning {
+        background: rgba(243, 156, 18, 0.15);
+        color: var(--status-maintenance);
+        border: 1px solid rgba(243, 156, 18, 0.3);
+    }
+
+    .alert-info {
+        background: rgba(52, 152, 219, 0.15);
+        color: var(--status-tour);
+        border: 1px solid rgba(52, 152, 219, 0.3);
+    }
+
+    .alert-close {
+        background: none;
+        border: none;
+        font-size: 1.25rem;
+        cursor: pointer;
+        color: inherit;
+        opacity: 0.7;
+        transition: opacity var(--transition-fast);
+    }
+
+    .alert-close:hover {
+        opacity: 1;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 480px) {
+        .dashboard-logo {
+            font-size: 2.5rem;
+        }
+
+        .dashboard-header {
+            padding: var(--spacing-lg) var(--spacing-md) var(--spacing-sm);
+        }
+    }
+
+    @media (min-width: 768px) {
+        .dashboard-cards {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div style="max-width: 1200px; margin: 0 auto; padding: 20px;">
-    <h1 style="margin-bottom: 30px;">Dashboard</h1>
+<!-- Dashboard Header -->
+<header class="dashboard-header">
+    <h1 class="dashboard-logo">TOUR</h1>
+    <p class="dashboard-subtitle">Gestão de Equipamentos e Logística</p>
+</header>
 
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
-
-        <a href="{{ url_for('equipment.list_equipment') }}" style="text-decoration: none; color: inherit;">
-            <div style="background: #007bff; color: white; padding: 30px; border-radius: 10px; text-align: center; transition: transform 0.2s;"
-                 onmouseover="this.style.transform='translateY(-5px)'" 
-                 onmouseout="this.style.transform='translateY(0)'">
-                <h2 style="margin: 0; font-size: 36px;">🎤</h2>
-                <h3 style="margin: 10px 0 0 0;">Equipamentos</h3>
-            </div>
-        </a>
-
-        <a href="{{ url_for('kit.list_kits') }}" style="text-decoration: none; color: inherit;">
-            <div style="background: #28a745; color: white; padding: 30px; border-radius: 10px; text-align: center; transition: transform 0.2s;"
-                 onmouseover="this.style.transform='translateY(-5px)'" 
-                 onmouseout="this.style.transform='translateY(0)'">
-                <h2 style="margin: 0; font-size: 36px;">📦</h2>
-                <h3 style="margin: 10px 0 0 0;">Kits</h3>
-            </div>
-        </a>
-
-        <a href="{{ url_for('tour.list_tours') }}" style="text-decoration: none; color: inherit;">
-            <div style="background: #dc3545; color: white; padding: 30px; border-radius: 10px; text-align: center; transition: transform 0.2s;"
-                 onmouseover="this.style.transform='translateY(-5px)'" 
-                 onmouseout="this.style.transform='translateY(0)'">
-                <h2 style="margin: 0; font-size: 36px;">🎸</h2>
-                <h3 style="margin: 10px 0 0 0;">Tours</h3>
-            </div>
-        </a>
-
-        <a href="{{ url_for('equipment.scan') }}" style="text-decoration: none; color: inherit;">
-            <div style="background: #ffc107; color: white; padding: 30px; border-radius: 10px; text-align: center; transition: transform 0.2s;"
-                 onmouseover="this.style.transform='translateY(-5px)'" 
-                 onmouseout="this.style.transform='translateY(0)'">
-                <h2 style="margin: 0; font-size: 36px;">📱</h2>
-                <h3 style="margin: 10px 0 0 0;">Escanear</h3>
-            </div>
-        </a>
-
-        {% if current_user.role == 'admin' %}
-        <a href="{{ url_for('company.settings') }}" style="text-decoration: none; color: inherit;">
-            <div style="background: #17a2b8; color: white; padding: 30px; border-radius: 10px; text-align: center; transition: transform 0.2s;"
-                 onmouseover="this.style.transform='translateY(-5px)'" 
-                 onmouseout="this.style.transform='translateY(0)'">
-                <h2 style="margin: 0; font-size: 36px;">⚙️</h2>
-                <h3 style="margin: 10px 0 0 0;">Configurações</h3>
-            </div>
-        </a>
-        {% endif %}
+<!-- User Profile Section -->
+<div class="dashboard-user">
+    <div class="user-avatar">
+        {{ current_user.name[0].upper() }}
+    </div>
+    <div class="user-info">
+        <div class="user-name">{{ current_user.name }}</div>
+        <div class="user-role">
+            {% if current_user.role == 'admin' %}Administrador{% else %}Usuário{% endif %}
+        </div>
+    </div>
+    <div class="user-notification">
+        <i class="fas fa-bell"></i>
+        <span class="notification-badge">3</span>
     </div>
 </div>
 
-<style>
-@media (max-width: 768px) {
-    div[style*="grid-template-columns"] {
-        grid-template-columns: 1fr !important;
-    }
-}
-</style>
+<!-- Main Dashboard Cards -->
+<div class="dashboard-cards">
+    <!-- HARDCASE Card -->
+    <a href="{{ url_for('equipment.list_equipment') }}" style="text-decoration: none;">
+        <div class="card card-cinematic" style="background-image: url('{{ url_for('static', filename='images/backgrounds/hardcase.jpg') }}');">
+            <div class="card-cinematic-content">
+                <h2 class="card-cinematic-title">HARDCASE</h2>
+                <p class="card-cinematic-subtitle">Gestão de Equipamentos</p>
+            </div>
+        </div>
+    </a>
+
+    <!-- TOUR Card -->
+    <a href="{{ url_for('tour.list_tours') }}" style="text-decoration: none;">
+        <div class="card card-cinematic" style="background-image: url('{{ url_for('static', filename='images/backgrounds/stage-lights.jpg') }}');">
+            <div class="card-cinematic-content">
+                <h2 class="card-cinematic-title">TOUR</h2>
+                <p class="card-cinematic-subtitle">Logística, Kits e Checkpoints</p>
+            </div>
+        </div>
+    </a>
+</div>
 {% endblock %}

@@ -3,240 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Hardcase Tour Manager{% endblock %}</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: #f5f5f5;
-            color: #333;
-            line-height: 1.6;
-        }
-
-        /* Navbar */
-        nav {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 15px 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-
-        .nav-container {
-            max-width: 1400px;
-            margin: 0 auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        .nav-brand {
-            font-size: 24px;
-            font-weight: bold;
-            color: white;
-            text-decoration: none;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 20px;
-            align-items: center;
-        }
-
-        .nav-links a {
-            color: white;
-            text-decoration: none;
-            padding: 8px 15px;
-            border-radius: 5px;
-            transition: background 0.2s;
-        }
-
-        .nav-links a:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-
-        /* Flash Messages */
-        .flash-messages {
-            max-width: 1400px;
-            margin: 20px auto;
-            padding: 0 20px;
-        }
-
-        .alert {
-            padding: 15px 20px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .alert-success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .alert-danger {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-
-        .alert-warning {
-            background: #fff3cd;
-            color: #856404;
-            border: 1px solid #ffeaa7;
-        }
-
-        .alert-info {
-            background: #d1ecf1;
-            color: #0c5460;
-            border: 1px solid #bee5eb;
-        }
-
-        .alert-close {
-            background: none;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            color: inherit;
-            opacity: 0.5;
-        }
-
-        .alert-close:hover {
-            opacity: 1;
-        }
-
-        /* Responsive Utilities */
-        @media (max-width: 768px) {
-            .nav-container {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-
-            .nav-links {
-                width: 100%;
-                flex-direction: column;
-                gap: 10px;
-            }
-
-            .nav-links a {
-                width: 100%;
-            }
-            
-            /* Mobile text sizing */
-            h1 {
-                font-size: 24px !important;
-            }
-            
-            h2 {
-                font-size: 20px !important;
-            }
-            
-            h3 {
-                font-size: 18px !important;
-            }
-            
-            h4 {
-                font-size: 16px !important;
-            }
-            
-            /* Mobile button grids */
-            .category-grid {
-                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)) !important;
-                gap: 10px !important;
-            }
-            
-            .category-btn {
-                padding: 15px 10px !important;
-                font-size: 14px !important;
-            }
-            
-            .category-btn-icon {
-                font-size: 24px !important;
-            }
-            
-            /* Mobile cards */
-            .equipment-card-grid {
-                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)) !important;
-                gap: 10px !important;
-            }
-            
-            .equipment-card {
-                padding: 10px !important;
-            }
-            
-            /* Mobile containers */
-            .container {
-                padding: 0 10px !important;
-                margin: 15px auto !important;
-            }
-            
-            /* Mobile search */
-            .search-box {
-                font-size: 14px !important;
-                padding: 12px !important;
-            }
-        }
-        
-        @media (max-width: 480px) {
-            .category-grid {
-                grid-template-columns: repeat(2, 1fr) !important;
-            }
-            
-            .equipment-card-grid {
-                grid-template-columns: repeat(2, 1fr) !important;
-            }
-        }
-    </style>
+    <title>{% block title %}TOUR Manager{% endblock %}</title>
+    
+    <!-- Dark Cinematic Theme CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dark-theme.css') }}">
+    
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <!-- Navbar -->
-    <nav>
-        <div class="nav-container">
-            <a href="{{ url_for('dashboard') }}" class="nav-brand">
-                🧳 HARDCASE
-            </a>
-
-            {% if current_user.is_authenticated %}
-            <div class="nav-links">
-                <a href="{{ url_for('dashboard') }}">Dashboard</a>
-                <a href="{{ url_for('equipment.list_equipment') }}">Equipamentos</a>
-                <a href="{{ url_for('tour.list_tours') }}">Tours</a>
-                <a href="{{ url_for('kit.list_kits') }}">Kits</a>
-                {% if current_user.role == 'admin' %}
-                <a href="{{ url_for('company.settings') }}">Configurações</a>
-                {% endif %}
-                <a href="{{ url_for('auth.logout') }}">Sair</a>
-            </div>
-            {% endif %}
-        </div>
-    </nav>
-
     <!-- Flash Messages -->
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
-        <div class="flash-messages">
+        <div class="container" style="margin-top: var(--spacing-md);">
             {% for category, message in messages %}
-            <div class="alert alert-{{ category }}">
+            <div class="alert alert-{{ category }}" role="alert">
                 <span>{{ message }}</span>
-                <button class="alert-close" onclick="this.parentElement.remove()">×</button>
+                <button class="alert-close" onclick="this.parentElement.remove()" aria-label="Fechar">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
             {% endfor %}
         </div>
         {% endif %}
     {% endwith %}
 
-    <!-- Content -->
-    {% block content %}{% endblock %}
+    <!-- Main Content -->
+    <main style="padding-bottom: 80px;">
+        {% block content %}{% endblock %}
+    </main>
 
+    <!-- Bottom Navigation (Mobile) -->
+    {% if current_user.is_authenticated %}
+    <nav class="bottom-nav">
+        <a href="{{ url_for('dashboard') }}" class="bottom-nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
+            <i class="fas fa-home bottom-nav-icon"></i>
+            <span>Início</span>
+        </a>
+        <a href="{{ url_for('equipment.list_equipment') }}" class="bottom-nav-item {% if 'equipment' in request.endpoint %}active{% endif %}">
+            <i class="fas fa-box bottom-nav-icon"></i>
+            <span>Hardcase</span>
+        </a>
+        <a href="{{ url_for('tour.list_tours') }}" class="bottom-nav-item {% if 'tour' in request.endpoint %}active{% endif %}">
+            <i class="fas fa-guitar bottom-nav-icon"></i>
+            <span>Tour</span>
+        </a>
+        {% if current_user.role == 'admin' %}
+        <a href="{{ url_for('company.settings') }}" class="bottom-nav-item {% if 'company' in request.endpoint %}active{% endif %}">
+            <i class="fas fa-cog bottom-nav-icon"></i>
+            <span>Config</span>
+        </a>
+        {% else %}
+        <a href="{{ url_for('auth.logout') }}" class="bottom-nav-item">
+            <i class="fas fa-sign-out-alt bottom-nav-icon"></i>
+            <span>Sair</span>
+        </a>
+        {% endif %}
+    </nav>
+
+    <!-- Floating Action Button (Scanner) -->
+    <a href="{{ url_for('equipment.scan') }}" class="fab" title="Scanner QR Code">
+        <i class="fas fa-qrcode fab-icon"></i>
+    </a>
+    {% endif %}
+
+    <!-- Flash Message Auto-Close Script -->
     <script>
         // Auto-fechar alertas após 5 segundos
         setTimeout(function() {
@@ -249,5 +82,7 @@
             });
         }, 5000);
     </script>
+
+    {% block extra_js %}{% endblock %}
 </body>
 </html>
