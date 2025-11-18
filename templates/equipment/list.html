@@ -2,7 +2,7 @@
 {% block title %}Equipamentos{% endblock %}
 {% block content %}
 
-<div style="max-width: 1400px; margin: 30px auto; padding: 0 20px;">
+<div class="container" style="max-width: 1400px; margin: 30px auto; padding: 0 20px;">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
         <h1>Equipamentos</h1>
         <a href="{{ url_for('equipment.new_equipment') }}" 
@@ -11,32 +11,32 @@
         </a>
     </div>
 
-<input type="text" id="searchBox" placeholder="🔍 Buscar código, nome, marca, modelo..." style="width: 100%; padding: 15px; border: 2px solid #007bff; border-radius: 8px; margin-bottom: 30px; font-size: 16px;">
+<input type="text" id="searchBox" class="search-box" placeholder="🔍 Buscar código, nome, marca, modelo..." style="width: 100%; padding: 15px; border: 2px solid #007bff; border-radius: 8px; margin-bottom: 30px; font-size: 16px;">
 
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 30px;">
-    <button onclick="filterCategory('')" class="cat-btn"
+<div class="category-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 30px;">
+    <button onclick="filterCategory('')" class="cat-btn category-btn"
             style="padding: 20px; background: #007bff; color: white; border: none; border-radius: 10px; cursor: pointer;">
-        <div style="font-size: 32px; margin-bottom: 10px;">🎵</div>
+        <div class="category-btn-icon" style="font-size: 32px; margin-bottom: 10px;">🎵</div>
         <div style="font-weight: bold;">Todos</div>
     </button>
-    <button onclick="filterCategory('Som')" class="cat-btn"
+    <button onclick="filterCategory('Som')" class="cat-btn category-btn"
             style="padding: 20px; background: #28a745; color: white; border: none; border-radius: 10px; cursor: pointer;">
-        <div style="font-size: 32px; margin-bottom: 10px;">🔊</div>
+        <div class="category-btn-icon" style="font-size: 32px; margin-bottom: 10px;">🔊</div>
         <div style="font-weight: bold;">Som</div>
     </button>
-    <button onclick="filterCategory('Luz')" class="cat-btn"
+    <button onclick="filterCategory('Luz')" class="cat-btn category-btn"
             style="padding: 20px; background: #ffc107; color: #000; border: none; border-radius: 10px; cursor: pointer;">
-        <div style="font-size: 32px; margin-bottom: 10px;">💡</div>
+        <div class="category-btn-icon" style="font-size: 32px; margin-bottom: 10px;">💡</div>
         <div style="font-weight: bold;">Luz</div>
     </button>
-    <button onclick="filterCategory('Materiais')" class="cat-btn"
+    <button onclick="filterCategory('Materiais')" class="cat-btn category-btn"
             style="padding: 20px; background: #17a2b8; color: white; border: none; border-radius: 10px; cursor: pointer;">
-        <div style="font-size: 32px; margin-bottom: 10px;">🔧</div>
+        <div class="category-btn-icon" style="font-size: 32px; margin-bottom: 10px;">🔧</div>
         <div style="font-weight: bold;">Materiais</div>
     </button>
-    <button onclick="filterCategory('Instrumentos')" class="cat-btn"
+    <button onclick="filterCategory('Instrumentos')" class="cat-btn category-btn"
             style="padding: 20px; background: #dc3545; color: white; border: none; border-radius: 10px; cursor: pointer;">
-        <div style="font-size: 32px; margin-bottom: 10px;">🎸</div>
+        <div class="category-btn-icon" style="font-size: 32px; margin-bottom: 10px;">🎸</div>
         <div style="font-weight: bold;">Instrumentos</div>
     </button>
 </div>
@@ -106,9 +106,9 @@
                             </h4>
 
                             <div id="content-modelo-{{ categoria }}-{{ tipo }}-{{ marca }}-{{ modelo }}" style="display: none; padding-left: 20px;">
-                                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; margin-top: 10px;">
+                                <div class="equipment-card-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; margin-top: 10px;">
                                     {% for eq in equipamentos %}
-                                    <a href="{{ url_for('equipment.detail_equipment', id=eq.id) }}"
+                                    <a href="{{ url_for('equipment.detail_equipment', id=eq.id) }}" class="equipment-card"
                                        style="background: white; border: 2px solid #dee2e6; border-radius: 8px; padding: 15px; text-decoration: none; color: inherit; display: block; transition: all 0.3s;">
 
                                         {% if eq.primary_photo_url %}
