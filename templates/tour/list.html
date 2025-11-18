@@ -1,50 +1,162 @@
 {% extends "base.html" %}
 
-{% block title %}Tours{% endblock %}
+{% block title %}Tours - TOUR{% endblock %}
+
+{% block extra_css %}
+<style>
+    .tour-container {
+        padding: var(--spacing-lg) var(--spacing-md);
+        max-width: 1200px;
+        margin: 0 auto;
+        padding-bottom: calc(var(--bottom-nav-height) + var(--spacing-lg));
+    }
+
+    .tour-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: var(--spacing-xl);
+        flex-wrap: wrap;
+        gap: var(--spacing-md);
+    }
+
+    .tour-title {
+        font-family: var(--font-display);
+        font-size: 2rem;
+        font-weight: var(--font-weight-semibold);
+        color: var(--text-primary);
+    }
+
+    .tour-grid {
+        display: grid;
+        gap: var(--spacing-md);
+    }
+
+    .tour-card {
+        background-color: var(--bg-secondary);
+        padding: var(--spacing-lg);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm);
+        text-decoration: none;
+        color: inherit;
+        display: block;
+        transition: all 0.3s ease;
+        border: 1px solid var(--border-subtle);
+    }
+
+    .tour-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-md);
+        border-color: var(--accent-gold);
+    }
+
+    .tour-card-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        gap: var(--spacing-lg);
+        flex-wrap: wrap;
+    }
+
+    .tour-info {
+        flex: 1;
+        min-width: 250px;
+    }
+
+    .tour-name {
+        font-family: var(--font-display);
+        font-size: 1.5rem;
+        font-weight: var(--font-weight-semibold);
+        color: var(--text-primary);
+        margin-bottom: var(--spacing-xs);
+    }
+
+    .tour-artist {
+        font-size: 1.1rem;
+        color: var(--accent-gold);
+        margin-bottom: var(--spacing-sm);
+    }
+
+    .tour-description {
+        font-size: 0.95rem;
+        color: var(--text-secondary);
+        margin-bottom: var(--spacing-sm);
+        line-height: 1.5;
+    }
+
+    .tour-dates {
+        font-size: 0.85rem;
+        color: var(--text-tertiary);
+    }
+
+    .empty-state {
+        background-color: var(--bg-secondary);
+        padding: var(--spacing-xl);
+        border-radius: var(--radius-lg);
+        text-align: center;
+    }
+
+    .empty-title {
+        color: var(--text-secondary);
+        margin-bottom: var(--spacing-sm);
+    }
+
+    .empty-description {
+        color: var(--text-tertiary);
+        margin-bottom: var(--spacing-lg);
+    }
+
+    @media (max-width: 768px) {
+        .tour-card-content {
+            flex-direction: column;
+        }
+
+        .tour-name {
+            font-size: 1.3rem;
+        }
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div style="max-width: 1200px; margin: 30px auto; padding: 0 20px;">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 15px;">
-        <h1>Tours</h1>
+<div class="tour-container">
+    <div class="tour-header">
+        <h1 class="tour-title">Tours</h1>
         {% if current_user.role == 'admin' %}
-        <a href="{{ url_for('tour.new_tour') }}" 
-           style="padding: 12px 24px; background: #ffc107; color: #000; text-decoration: none; border-radius: 5px; font-weight: bold;">
+        <a href="{{ url_for('tour.new_tour') }}" class="btn btn-primary">
             + Nova Tour
         </a>
         {% endif %}
     </div>
 
     {% if tours %}
-    <div style="display: grid; gap: 20px;">
+    <div class="tour-grid">
         {% for tour in tours %}
-        <a href="{{ url_for('tour.detail_tour', id=tour.id) }}" 
-           style="background: white; padding: 25px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); text-decoration: none; color: inherit; display: block; transition: transform 0.2s;"
-           onmouseover="this.style.transform='translateY(-3px)'" 
-           onmouseout="this.style.transform='translateY(0)'">
-            <div style="display: flex; justify-content: space-between; align-items: start; gap: 20px; flex-wrap: wrap;">
-                <div style="flex: 1;">
-                    <h2 style="margin-bottom: 10px;">🎸 {{ tour.name }}</h2>
+        <a href="{{ url_for('tour.detail_tour', id=tour.id) }}" class="tour-card">
+            <div class="tour-card-content">
+                <div class="tour-info">
+                    <h2 class="tour-name">🎸 {{ tour.name }}</h2>
                     {% if tour.artist %}
-                    <p style="color: #666; margin-bottom: 10px; font-size: 18px;">{{ tour.artist }}</p>
+                    <p class="tour-artist">{{ tour.artist }}</p>
                     {% endif %}
                     {% if tour.description %}
-                    <p style="color: #999; margin-bottom: 10px;">{{ tour.description }}</p>
+                    <p class="tour-description">{{ tour.description }}</p>
                     {% endif %}
-                    <div style="color: #999; font-size: 14px;">
-                        {% if tour.start_date %}
+                    {% if tour.start_date %}
+                    <div class="tour-dates">
                         {{ tour.start_date.strftime('%d/%m/%Y') }}
-                        {% if tour.end_date %} ate {{ tour.end_date.strftime('%d/%m/%Y') }}{% endif %}
-                        {% endif %}
+                        {% if tour.end_date %} até {{ tour.end_date.strftime('%d/%m/%Y') }}{% endif %}
                     </div>
+                    {% endif %}
                 </div>
 
-                <div style="text-align: right;">
+                <div>
                     {% if tour.status == 'planned' %}
-                    <span style="background: #ffc107; color: #000; padding: 8px 15px; border-radius: 5px; white-space: nowrap;">Planejada</span>
+                    <span class="badge badge-warning">Planejada</span>
                     {% elif tour.status == 'active' %}
-                    <span style="background: #28a745; color: white; padding: 8px 15px; border-radius: 5px; white-space: nowrap;">Ativa</span>
+                    <span class="badge badge-success">Ativa</span>
                     {% elif tour.status == 'completed' %}
-                    <span style="background: #6c757d; color: white; padding: 8px 15px; border-radius: 5px; white-space: nowrap;">Concluida</span>
+                    <span class="badge badge-secondary">Concluída</span>
                     {% endif %}
                 </div>
             </div>
@@ -52,12 +164,11 @@
         {% endfor %}
     </div>
     {% else %}
-    <div style="background: #f8f9fa; padding: 60px 20px; border-radius: 10px; text-align: center;">
-        <h3 style="color: #6c757d; margin-bottom: 10px;">Nenhuma tour cadastrada</h3>
-        <p style="color: #999; margin-bottom: 20px;">Crie sua primeira tour para comecar!</p>
+    <div class="empty-state">
+        <h3 class="empty-title">Nenhuma tour cadastrada</h3>
+        <p class="empty-description">Crie sua primeira tour para começar!</p>
         {% if current_user.role == 'admin' %}
-        <a href="{{ url_for('tour.new_tour') }}" 
-           style="display: inline-block; padding: 12px 24px; background: #ffc107; color: #000; text-decoration: none; border-radius: 5px; font-weight: bold;">
+        <a href="{{ url_for('tour.new_tour') }}" class="btn btn-primary">
             + Criar Primeira Tour
         </a>
         {% endif %}

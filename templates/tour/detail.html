@@ -1,195 +1,417 @@
 {% extends "base.html" %}
 
-{% block title %}{{ tour.name }} - Tour{% endblock %}
+{% block title %}{{ tour.name }} - TOUR{% endblock %}
+
+{% block extra_css %}
+<style>
+    .tour-detail-container {
+        padding: var(--spacing-lg) var(--spacing-md);
+        max-width: 1000px;
+        margin: 0 auto;
+        padding-bottom: calc(var(--bottom-nav-height) + var(--spacing-lg));
+    }
+
+    .back-link {
+        color: var(--text-secondary);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: var(--spacing-xs);
+        margin-bottom: var(--spacing-lg);
+        font-size: 0.9rem;
+        transition: color 0.3s ease;
+    }
+
+    .back-link:hover {
+        color: var(--accent-gold);
+    }
+
+    .tour-card {
+        background-color: var(--bg-secondary);
+        padding: var(--spacing-xl);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-md);
+    }
+
+    .tour-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: var(--spacing-lg);
+        flex-wrap: wrap;
+        gap: var(--spacing-md);
+    }
+
+    .tour-title {
+        font-family: var(--font-display);
+        font-size: 2rem;
+        font-weight: var(--font-weight-semibold);
+        color: var(--text-primary);
+        margin-bottom: var(--spacing-xs);
+    }
+
+    .tour-artist {
+        font-size: 1.2rem;
+        color: var(--accent-gold);
+    }
+
+    .tour-description {
+        color: var(--text-secondary);
+        margin-bottom: var(--spacing-lg);
+        line-height: 1.6;
+    }
+
+    .tour-period {
+        color: var(--text-tertiary);
+        margin-bottom: var(--spacing-xl);
+    }
+
+    .section {
+        margin-top: var(--spacing-xl);
+        padding-top: var(--spacing-xl);
+        border-top: 1px solid var(--border-subtle);
+    }
+
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: var(--spacing-md);
+        flex-wrap: wrap;
+        gap: var(--spacing-sm);
+    }
+
+    .section-title {
+        font-family: var(--font-display);
+        font-size: 1.5rem;
+        font-weight: var(--font-weight-semibold);
+        color: var(--text-primary);
+    }
+
+    .checkpoint-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: var(--spacing-sm);
+        background-color: var(--bg-tertiary);
+        padding: var(--spacing-lg);
+        border-radius: var(--radius-md);
+    }
+
+    .checkpoint-btn {
+        padding: var(--spacing-md);
+        border-radius: var(--radius-md);
+        text-decoration: none;
+        text-align: center;
+        font-weight: var(--font-weight-semibold);
+        transition: all 0.3s ease;
+        display: block;
+    }
+
+    .checkpoint-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .checkpoint-load {
+        background-color: #007bff;
+        color: white;
+    }
+
+    .checkpoint-unload {
+        background-color: #28a745;
+        color: white;
+    }
+
+    .checkpoint-load-return {
+        background-color: #ffc107;
+        color: var(--bg-primary);
+    }
+
+    .checkpoint-final {
+        background-color: #dc3545;
+        color: white;
+    }
+
+    .show-list,
+    .requirement-list,
+    .equipment-list {
+        display: grid;
+        gap: var(--spacing-sm);
+    }
+
+    .show-item,
+    .requirement-item,
+    .equipment-item {
+        background-color: var(--bg-tertiary);
+        padding: var(--spacing-md);
+        border-radius: var(--radius-md);
+        border-left: 4px solid var(--accent-gold);
+    }
+
+    .show-item {
+        border-left-color: #007bff;
+    }
+
+    .requirement-item {
+        border-left-color: #ffc107;
+    }
+
+    .equipment-item {
+        border-left-color: #28a745;
+    }
+
+    .item-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        flex-wrap: wrap;
+        gap: var(--spacing-xs);
+        margin-bottom: var(--spacing-xs);
+    }
+
+    .item-title {
+        font-size: 1rem;
+        font-weight: var(--font-weight-semibold);
+        color: var(--text-primary);
+    }
+
+    .item-info {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        margin-top: var(--spacing-xs);
+    }
+
+    .form-container {
+        display: none;
+        background-color: var(--bg-tertiary);
+        padding: var(--spacing-lg);
+        border-radius: var(--radius-md);
+        margin-bottom: var(--spacing-md);
+    }
+
+    .form-container.show {
+        display: block;
+    }
+
+    .form-title {
+        font-size: 1.2rem;
+        font-weight: var(--font-weight-semibold);
+        color: var(--text-primary);
+        margin-bottom: var(--spacing-md);
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--spacing-sm);
+    }
+
+    .complete-section {
+        margin-top: var(--spacing-xl);
+        padding-top: var(--spacing-xl);
+        border-top: 1px solid var(--border-subtle);
+    }
+
+    .empty-message {
+        text-align: center;
+        padding: var(--spacing-lg);
+        background-color: var(--bg-tertiary);
+        border-radius: var(--radius-md);
+        color: var(--text-tertiary);
+    }
+
+    @media (max-width: 768px) {
+        .checkpoint-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .tour-title {
+            font-size: 1.5rem;
+        }
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div style="max-width: 1000px; margin: 30px auto; padding: 0 20px;">
-    <div style="margin-bottom: 20px;">
-        <a href="{{ url_for('tour.list_tours') }}" style="color: #6c757d; text-decoration: none;">
-            ← Voltar para Tours
-        </a>
-    </div>
+<div class="tour-detail-container">
+    <a href="{{ url_for('tour.list_tours') }}" class="back-link">
+        ← Voltar para Tours
+    </a>
 
-    <div style="background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+    <div class="tour-card">
+        <div class="tour-header">
             <div>
-                <h1 style="margin: 0 0 10px 0;">{{ tour.name }}</h1>
+                <h1 class="tour-title">{{ tour.name }}</h1>
                 {% if tour.artist %}
-                <p style="color: #6c757d; margin: 0;">{{ tour.artist }}</p>
+                <p class="tour-artist">{{ tour.artist }}</p>
                 {% endif %}
             </div>
             {% if tour.status == 'planned' %}
-                <span style="background: #ffc107; color: #000; padding: 8px 15px; border-radius: 5px;">Planejada</span>
+            <span class="badge badge-warning">Planejada</span>
             {% elif tour.status == 'active' %}
-                <span style="background: #28a745; color: white; padding: 8px 15px; border-radius: 5px;">Ativa</span>
+            <span class="badge badge-success">Ativa</span>
             {% elif tour.status == 'completed' %}
-                <span style="background: #6c757d; color: white; padding: 8px 15px; border-radius: 5px;">Concluída</span>
+            <span class="badge badge-secondary">Concluída</span>
             {% endif %}
         </div>
 
         {% if tour.description %}
-        <p style="color: #333; margin-bottom: 20px;">{{ tour.description }}</p>
+        <p class="tour-description">{{ tour.description }}</p>
         {% endif %}
 
         {% if tour.start_date %}
-        <p style="color: #6c757d; margin-bottom: 30px;">
+        <p class="tour-period">
             <strong>Período:</strong> {{ tour.start_date.strftime('%d/%m/%Y') }}
             {% if tour.end_date %} até {{ tour.end_date.strftime('%d/%m/%Y') }}{% endif %}
         </p>
         {% endif %}
 
-        <!-- Checkpoints (4 Bipes) -->
         {% if tour.status != 'completed' %}
-        <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 30px;">
-            <h3 style="margin-bottom: 15px;">🎯 Checkpoints</h3>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
-                <a href="{{ url_for('tour.checkpoint_scanner', tour_id=tour.id, checkpoint_type='load_truck') }}"
-                   style="padding: 15px; background: #007bff; color: white; border-radius: 5px; text-decoration: none; text-align: center; font-weight: bold;">
+        <div class="section">
+            <h3 class="section-title">🎯 Checkpoints</h3>
+            <div class="checkpoint-grid">
+                <a href="{{ url_for('tour.checkpoint_scanner', tour_id=tour.id, checkpoint_type='load_truck') }}" class="checkpoint-btn checkpoint-load">
                     🚛 Carregar Caminhão
                 </a>
-                <a href="{{ url_for('tour.checkpoint_scanner', tour_id=tour.id, checkpoint_type='unload_show') }}"
-                   style="padding: 15px; background: #28a745; color: white; border-radius: 5px; text-decoration: none; text-align: center; font-weight: bold;">
+                <a href="{{ url_for('tour.checkpoint_scanner', tour_id=tour.id, checkpoint_type='unload_show') }}" class="checkpoint-btn checkpoint-unload">
                     📦 Descarregar Show
                 </a>
-                <a href="{{ url_for('tour.checkpoint_scanner', tour_id=tour.id, checkpoint_type='load_truck_return') }}"
-                   style="padding: 15px; background: #ffc107; color: #000; border-radius: 5px; text-decoration: none; text-align: center; font-weight: bold;">
+                <a href="{{ url_for('tour.checkpoint_scanner', tour_id=tour.id, checkpoint_type='load_truck_return') }}" class="checkpoint-btn checkpoint-load-return">
                     🚛 Carregar Retorno
                 </a>
-                <a href="{{ url_for('tour.checkpoint_scanner', tour_id=tour.id, checkpoint_type='unload_company') }}"
-                   style="padding: 15px; background: #dc3545; color: white; border-radius: 5px; text-decoration: none; text-align: center; font-weight: bold;">
+                <a href="{{ url_for('tour.checkpoint_scanner', tour_id=tour.id, checkpoint_type='unload_company') }}" class="checkpoint-btn checkpoint-final">
                     🏢 Descarregar Empresa
                 </a>
             </div>
         </div>
         {% endif %}
 
-        <!-- Shows -->
-        <div style="margin-bottom: 30px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <h3 style="margin: 0;">🎤 Shows ({{ shows|length }})</h3>
-                <button onclick="document.getElementById('show-form').style.display='block'" 
-                        style="padding: 8px 15px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">
+        <div class="section">
+            <div class="section-header">
+                <h3 class="section-title">🎤 Shows ({{ shows|length }})</h3>
+                {% if current_user.role == 'admin' %}
+                <button onclick="toggleForm('show-form')" class="btn btn-primary">
                     + Adicionar Show
                 </button>
+                {% endif %}
             </div>
 
-            <div id="show-form" style="display: none; background: #f8f9fa; padding: 20px; border-radius: 5px; margin-bottom: 15px;">
-                <h4>Adicionar Show</h4>
+            <div id="show-form" class="form-container">
+                <h4 class="form-title">Adicionar Show</h4>
                 <form method="POST" action="{{ url_for('tour.add_show', tour_id=tour.id) }}">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
-                        <input type="date" name="date" required style="padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
-                        <input type="time" name="time" style="padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <input type="date" name="date" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="time" name="time" class="form-control">
+                        </div>
                     </div>
-                    <input type="text" name="venue" required placeholder="Local" 
-                           style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 10px;">
-                    <input type="text" name="city" placeholder="Cidade" 
-                           style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 10px;">
-                    <div style="display: flex; gap: 10px;">
-                        <button type="submit" style="flex: 1; padding: 10px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer;">
-                            Adicionar
-                        </button>
-                        <button type="button" onclick="document.getElementById('show-form').style.display='none'" 
-                                style="flex: 1; padding: 10px; background: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer;">
-                            Cancelar
-                        </button>
+                    <div class="form-group">
+                        <input type="text" name="venue" placeholder="Local" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="text" name="city" placeholder="Cidade" class="form-control">
+                    </div>
+                    <div style="display: flex; gap: var(--spacing-sm);">
+                        <button type="submit" class="btn btn-success" style="flex: 1;">Adicionar</button>
+                        <button type="button" onclick="toggleForm('show-form')" class="btn btn-secondary" style="flex: 1;">Cancelar</button>
                     </div>
                 </form>
             </div>
 
             {% if shows %}
-            <div style="display: grid; gap: 10px;">
+            <div class="show-list">
                 {% for show in shows %}
-                <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; border-left: 4px solid #007bff;">
-                    <div style="display: flex; justify-content: space-between; align-items: start; flex-wrap: wrap; gap: 10px;">
-                        <div>
-                            <strong style="font-size: 16px;">{{ show.venue }}</strong>
-                            <p style="color: #6c757d; margin: 5px 0 0 0; font-size: 14px;">
-                                📅 {{ show.date.strftime('%d/%m/%Y') }}
-                                {% if show.time %} às {{ show.time.strftime('%H:%M') }}{% endif %}
-                                {% if show.city %}<br>📍 {{ show.city }}{% endif %}
-                            </p>
-                        </div>
-                        <span style="background: #cce5ff; color: #004085; padding: 5px 10px; border-radius: 5px; font-size: 12px;">
-                            {{ show.status }}
-                        </span>
+                <div class="show-item">
+                    <div class="item-header">
+                        <span class="item-title">{{ show.venue }}</span>
+                        <span class="badge badge-info" style="font-size: 0.75rem;">{{ show.status }}</span>
+                    </div>
+                    <div class="item-info">
+                        📅 {{ show.date.strftime('%d/%m/%Y') }}
+                        {% if show.time %} às {{ show.time.strftime('%H:%M') }}{% endif %}
+                        {% if show.city %}<br>📍 {{ show.city }}{% endif %}
                     </div>
                 </div>
                 {% endfor %}
             </div>
             {% else %}
-            <p style="color: #6c757d; text-align: center; padding: 20px; background: #f8f9fa; border-radius: 5px;">Nenhum show adicionado ainda</p>
+            <p class="empty-message">Nenhum show adicionado ainda</p>
             {% endif %}
         </div>
 
-        <!-- Requisição de Equipamentos -->
-        <div style="border-top: 2px solid #dee2e6; padding-top: 20px; margin-bottom: 30px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <h3 style="margin: 0;">📋 Requisição ({{ requirements|length }})</h3>
-                <a href="{{ url_for('tour.add_requirement', tour_id=tour.id) }}" 
-                   style="padding: 8px 15px; background: #17a2b8; color: white; border-radius: 5px; text-decoration: none;">
+        <div class="section">
+            <div class="section-header">
+                <h3 class="section-title">📋 Requisição ({{ requirements|length }})</h3>
+                {% if current_user.role == 'admin' %}
+                <a href="{{ url_for('tour.add_requirement', tour_id=tour.id) }}" class="btn btn-secondary">
                     + Adicionar
                 </a>
+                {% endif %}
             </div>
 
             {% if requirements %}
-            <div style="display: grid; gap: 10px;">
+            <div class="requirement-list">
                 {% for req in requirements %}
-                <div style="background: #fff3cd; padding: 15px; border-radius: 5px; border-left: 4px solid #ffc107;">
-                    <strong style="font-size: 15px;">{{ req.quantity }}x {{ req.equipment_name }}</strong>
+                <div class="requirement-item">
+                    <span class="item-title">{{ req.quantity }}x {{ req.equipment_name }}</span>
                     {% if req.brand or req.model %}
-                    <p style="color: #856404; margin: 5px 0 0 0; font-size: 14px;">
+                    <div class="item-info">
                         {{ req.brand }} {{ req.model }}
-                    </p>
+                    </div>
                     {% endif %}
                     {% if req.specifications %}
-                    <p style="color: #6c757d; margin: 5px 0 0 0; font-size: 13px;">
+                    <div class="item-info" style="font-size: 0.85rem;">
                         {{ req.specifications }}
-                    </p>
+                    </div>
                     {% endif %}
                 </div>
                 {% endfor %}
             </div>
             {% else %}
-            <p style="color: #6c757d; text-align: center; padding: 20px; background: #f8f9fa; border-radius: 5px;">Nenhum equipamento requisitado</p>
+            <p class="empty-message">Nenhum equipamento requisitado</p>
             {% endif %}
         </div>
 
-        <!-- Equipamentos Alocados -->
-        <div style="border-top: 2px solid #dee2e6; padding-top: 20px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <h3 style="margin: 0;">📦 Equipamentos Alocados ({{ allocated_equipment|length }})</h3>
-                <a href="{{ url_for('tour.scan_equipment', tour_id=tour.id) }}" 
-                   style="padding: 8px 15px; background: #28a745; color: white; border-radius: 5px; text-decoration: none;">
+        <div class="section">
+            <div class="section-header">
+                <h3 class="section-title">📦 Equipamentos Alocados ({{ allocated_equipment|length }})</h3>
+                {% if current_user.role == 'admin' %}
+                <a href="{{ url_for('tour.scan_equipment', tour_id=tour.id) }}" class="btn btn-success">
                     📷 Escanear
                 </a>
+                {% endif %}
             </div>
 
             {% if allocated_equipment %}
-            <div style="display: grid; gap: 10px;">
+            <div class="equipment-list">
                 {% for alloc in allocated_equipment %}
-                <div style="background: #d4edda; padding: 12px; border-radius: 5px; border-left: 4px solid #28a745;">
-                    <strong style="font-size: 15px;">{{ alloc.equipment.code }}</strong> - {{ alloc.equipment.name }}
+                <div class="equipment-item">
+                    <span class="item-title">{{ alloc.equipment.code }}</span> - {{ alloc.equipment.name }}
                     {% if alloc.equipment.brand %}
-                    <span style="color: #155724; font-size: 14px;"> | {{ alloc.equipment.brand }}</span>
+                    <span style="color: var(--text-secondary);"> | {{ alloc.equipment.brand }}</span>
                     {% endif %}
-                    <small style="color: #155724; display: block; margin-top: 5px;">
+                    <div class="item-info">
                         Status: {{ alloc.current_status }} | 📅 {{ alloc.allocated_at.strftime('%d/%m/%Y %H:%M') }}
-                    </small>
+                    </div>
                 </div>
                 {% endfor %}
             </div>
             {% else %}
-            <p style="color: #6c757d; text-align: center; padding: 20px; background: #f8f9fa; border-radius: 5px;">Nenhum equipamento alocado</p>
+            <p class="empty-message">Nenhum equipamento alocado</p>
             {% endif %}
         </div>
 
-        <!-- Concluir Tour -->
-        {% if tour.status != 'completed' %}
-        <div style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #dee2e6;">
+        {% if tour.status != 'completed' and current_user.role == 'admin' %}
+        <div class="complete-section">
             <form method="POST" action="{{ url_for('tour.complete_tour', tour_id=tour.id) }}" 
                   onsubmit="return confirm('⚠️ Concluir tour?\n\nTodos os equipamentos serão liberados e retornarão ao status disponível.')">
-                <button type="submit" 
-                        style="width: 100%; padding: 15px; background: #dc3545; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold;">
+                <button type="submit" class="btn btn-danger" style="width: 100%; font-size: 1rem;">
                     ✅ Concluir Tour e Liberar Todos os Equipamentos
                 </button>
             </form>
@@ -198,14 +420,15 @@
     </div>
 </div>
 
-<style>
-@media (max-width: 768px) {
-    div[style*="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr))"] {
-        grid-template-columns: 1fr !important;
-    }
-    div[style*="display: flex"] {
-        flex-direction: column !important;
+<script>
+function toggleForm(formId) {
+    const form = document.getElementById(formId);
+    if (form.classList.contains('show')) {
+        form.classList.remove('show');
+    } else {
+        document.querySelectorAll('.form-container').forEach(f => f.classList.remove('show'));
+        form.classList.add('show');
     }
 }
-</style>
+</script>
 {% endblock %}
