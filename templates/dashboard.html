@@ -1,208 +1,237 @@
 {% extends "base.html" %}
 
-{% block title %}Dashboard - TOUR{% endblock %}
+{% block title %}TOUR - Dashboard{% endblock %}
 
 {% block extra_css %}
 <style>
+    .dashboard-container {
+        padding: 0;
+        min-height: 100vh;
+        padding-bottom: calc(var(--bottom-nav-height) + var(--spacing-md));
+    }
+
     .dashboard-header {
-        padding: var(--spacing-xl) var(--spacing-md) var(--spacing-md);
+        background: linear-gradient(135deg, rgba(212, 165, 116, 0.3) 0%, rgba(212, 165, 116, 0.1) 100%);
+        padding: var(--spacing-xl) var(--spacing-lg);
         text-align: center;
+        border-bottom: 1px solid var(--border-subtle);
     }
 
     .dashboard-logo {
         font-family: var(--font-display);
-        font-size: 3rem;
-        font-weight: var(--font-weight-semibold);
+        font-size: 2.5rem;
+        font-weight: var(--font-weight-bold);
         color: var(--text-primary);
+        letter-spacing: 0.15em;
         margin-bottom: var(--spacing-xs);
-        letter-spacing: 0.1em;
     }
 
     .dashboard-subtitle {
-        font-family: var(--font-body);
-        font-size: 0.95rem;
-        font-weight: var(--font-weight-light);
+        font-size: 0.9rem;
         color: var(--text-secondary);
-        letter-spacing: 0.05em;
+        font-weight: var(--font-weight-light);
     }
 
-    .dashboard-user {
+    .user-section {
         display: flex;
         align-items: center;
-        gap: var(--spacing-sm);
-        padding: var(--spacing-md);
+        justify-content: space-between;
+        padding: var(--spacing-lg) var(--spacing-md);
         background-color: var(--bg-secondary);
-        margin: 0 var(--spacing-md) var(--spacing-md);
-        border-radius: var(--radius-md);
+        border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .user-info {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-md);
     }
 
     .user-avatar {
-        width: 48px;
-        height: 48px;
+        width: 50px;
+        height: 50px;
         border-radius: 50%;
-        background: linear-gradient(135deg, var(--accent-gold), var(--accent-gold-hover));
+        background: linear-gradient(135deg, var(--accent-gold) 0%, rgba(212, 165, 116, 0.6) 100%);
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 1.5rem;
+        font-weight: var(--font-weight-bold);
         color: var(--bg-primary);
-        font-weight: var(--font-weight-semibold);
     }
 
-    .user-info {
-        flex: 1;
-    }
-
-    .user-name {
-        font-weight: var(--font-weight-medium);
+    .user-details h3 {
         color: var(--text-primary);
+        font-size: 1.1rem;
+        font-weight: var(--font-weight-semibold);
         margin-bottom: 2px;
     }
 
-    .user-role {
-        font-size: 0.875rem;
+    .user-details p {
         color: var(--text-secondary);
-    }
-
-    .user-notification {
-        position: relative;
-        color: var(--text-secondary);
-        font-size: 1.5rem;
-        cursor: pointer;
+        font-size: 0.85rem;
     }
 
     .notification-badge {
+        position: relative;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+
+    .badge-count {
         position: absolute;
-        top: -6px;
-        right: -6px;
-        background-color: #e74c3c;
+        top: -4px;
+        right: -4px;
+        background-color: #dc3545;
         color: white;
-        font-size: 0.75rem;
-        font-weight: var(--font-weight-semibold);
-        padding: 2px 6px;
-        border-radius: 10px;
-        min-width: 18px;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.7rem;
+        font-weight: var(--font-weight-bold);
+    }
+
+    .main-cards {
+        padding: var(--spacing-lg) var(--spacing-md);
+        display: grid;
+        gap: var(--spacing-lg);
+    }
+
+    .main-card {
+        position: relative;
+        padding: var(--spacing-xl);
+        border-radius: var(--radius-xl);
+        text-decoration: none;
+        color: white;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 220px;
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        box-shadow: var(--shadow-lg);
+    }
+
+    .main-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+    }
+
+    .main-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-size: cover;
+        background-position: center;
+        opacity: 0.15;
+        z-index: 0;
+    }
+
+    .card-hardcase {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .card-hardcase::before {
+        background-image: url('/static/images/backgrounds/hardcase.jpg');
+    }
+
+    .card-tour {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+
+    .card-tour::before {
+        background-image: url('/static/images/backgrounds/stage-lights.jpg');
+    }
+
+    .card-content {
+        position: relative;
+        z-index: 1;
         text-align: center;
     }
 
-    .dashboard-cards {
-        display: flex;
-        flex-direction: column;
-        gap: var(--spacing-md);
-        padding: 0 var(--spacing-md) var(--spacing-xl);
-    }
-
-    .alert {
-        padding: var(--spacing-md);
-        border-radius: var(--radius-sm);
+    .card-icon {
+        font-size: 4rem;
         margin-bottom: var(--spacing-md);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
+        filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
     }
 
-    .alert-success {
-        background: rgba(46, 204, 113, 0.15);
-        color: var(--status-available);
-        border: 1px solid rgba(46, 204, 113, 0.3);
+    .card-title {
+        font-family: var(--font-display);
+        font-size: 2rem;
+        font-weight: var(--font-weight-bold);
+        margin-bottom: var(--spacing-xs);
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
     }
 
-    .alert-danger {
-        background: rgba(231, 76, 60, 0.15);
-        color: var(--status-repair);
-        border: 1px solid rgba(231, 76, 60, 0.3);
-    }
-
-    .alert-warning {
-        background: rgba(243, 156, 18, 0.15);
-        color: var(--status-maintenance);
-        border: 1px solid rgba(243, 156, 18, 0.3);
-    }
-
-    .alert-info {
-        background: rgba(52, 152, 219, 0.15);
-        color: var(--status-tour);
-        border: 1px solid rgba(52, 152, 219, 0.3);
-    }
-
-    .alert-close {
-        background: none;
-        border: none;
-        font-size: 1.25rem;
-        cursor: pointer;
-        color: inherit;
-        opacity: 0.7;
-        transition: opacity var(--transition-fast);
-    }
-
-    .alert-close:hover {
-        opacity: 1;
-    }
-
-    /* Responsive adjustments */
-    @media (max-width: 480px) {
-        .dashboard-logo {
-            font-size: 2.5rem;
-        }
-
-        .dashboard-header {
-            padding: var(--spacing-lg) var(--spacing-md) var(--spacing-sm);
-        }
+    .card-description {
+        font-size: 0.95rem;
+        opacity: 0.95;
+        font-weight: var(--font-weight-light);
     }
 
     @media (min-width: 768px) {
-        .dashboard-cards {
-            display: grid;
+        .main-cards {
             grid-template-columns: repeat(2, 1fr);
+            padding: var(--spacing-xl);
+        }
+
+        .main-card {
+            min-height: 280px;
         }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<!-- Dashboard Header -->
-<header class="dashboard-header">
-    <h1 class="dashboard-logo">TOUR</h1>
-    <p class="dashboard-subtitle">Gestão de Equipamentos e Logística</p>
-</header>
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <h1 class="dashboard-logo">🎸 TOUR</h1>
+        <p class="dashboard-subtitle">Bem-vindo ao sistema</p>
+    </div>
 
-<!-- User Profile Section -->
-<div class="dashboard-user">
-    <div class="user-avatar">
-        {{ current_user.name[0].upper() }}
-    </div>
-    <div class="user-info">
-        <div class="user-name">{{ current_user.name }}</div>
-        <div class="user-role">
-            {% if current_user.role == 'admin' %}Administrador{% else %}Usuário{% endif %}
-        </div>
-    </div>
-    <div class="user-notification">
-        <i class="fas fa-bell"></i>
-        <span class="notification-badge">3</span>
-    </div>
-</div>
-
-<!-- Main Dashboard Cards -->
-<div class="dashboard-cards">
-    <!-- HARDCASE Card -->
-    <a href="{{ url_for('equipment.list_equipment') }}" style="text-decoration: none;">
-        <div class="card card-cinematic" style="background-image: url('{{ url_for('static', filename='images/backgrounds/hardcase.jpg') }}');">
-            <div class="card-cinematic-content">
-                <h2 class="card-cinematic-title">HARDCASE</h2>
-                <p class="card-cinematic-subtitle">Gestão de Equipamentos</p>
+    <div class="user-section">
+        <div class="user-info">
+            <div class="user-avatar">
+                {{ current_user.name[0].upper() if current_user.name else 'A' }}
+            </div>
+            <div class="user-details">
+                <h3>{{ current_user.name or 'Admin User' }}</h3>
+                <p>{{ 'Administrador' if current_user.role == 'admin' else 'Usuário' }}</p>
             </div>
         </div>
-    </a>
-
-    <!-- TOUR Card -->
-    <a href="{{ url_for('tour.list_tours') }}" style="text-decoration: none;">
-        <div class="card card-cinematic" style="background-image: url('{{ url_for('static', filename='images/backgrounds/stage-lights.jpg') }}');">
-            <div class="card-cinematic-content">
-                <h2 class="card-cinematic-title">TOUR</h2>
-                <p class="card-cinematic-subtitle">Logística, Kits e Checkpoints</p>
-            </div>
+        <div class="notification-badge">
+            🔔
+            <span class="badge-count">3</span>
         </div>
-    </a>
+    </div>
+
+    <div class="main-cards">
+        <a href="{{ url_for('equipment.index') }}" class="main-card card-hardcase">
+            <div class="card-content">
+                <div class="card-icon">🎒</div>
+                <h2 class="card-title">HARDCASE</h2>
+                <p class="card-description">Gestão de patrimônio e equipamentos</p>
+            </div>
+        </a>
+
+        <a href="{{ url_for('tour.tour_menu') }}" class="main-card card-tour">
+            <div class="card-content">
+                <div class="card-icon">🎸</div>
+                <h2 class="card-title">TOUR</h2>
+                <p class="card-description">Logística, kits e checkpoints</p>
+            </div>
+        </a>
+    </div>
 </div>
 {% endblock %}
