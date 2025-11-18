@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+
+{% block title %}Scanner QR - TOUR{% endblock %}
+
+{% block extra_css %}
+<style>
+    .scanner-container {
+        padding: 0;
+        min-height: 100vh;
+        padding-bottom: calc(var(--bottom-nav-height) + var(--spacing-md));
+        background-color: var(--bg-primary);
+    }
+
+    .scanner-header {
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.3) 0%, rgba(118, 75, 162, 0.2) 100%);
+        padding: var(--spacing-lg) var(--spacing-md);
+        border-bottom: 1px solid var(--border-subtle);
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-md);
+    }
+
+    .back-button {
+        color: var(--text-primary);
+        font-size: 1.5rem;
+        text-decoration: none;
+        transition: transform 0.2s ease;
+    }
+
+    .back-button:hover {
+        transform: translateX(-4px);
+    }
+
+    .scanner-title {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+        font-size: 1.3rem;
+        font-weight: var(--font-weight-semibold);
+        color: var(--text-primary);
+    }
+
+    .scanner-subtitle {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        margin-top: 4px;
+    }
+
+    .scanner-card {
+        margin: var(--spacing-lg);
+        background-color: var(--bg-secondary);
+        border-radius: var(--radius-xl);
+        padding: var(--spacing-xl);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .camera-preview {
+        width: 100%;
+        aspect-ratio: 1;
+        background-color: var(--bg-primary);
+        border-radius: var(--radius-lg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+        margin-bottom: var(--spacing-lg);
+    }
+
+    .camera-frame {
+        width: 70%;
+        height: 70%;
+        border: 3px solid #2ecc71;
+        border-radius: var(--radius-md);
+        position: relative;
+    }
+
+    .camera-icon {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 4rem;
+        opacity: 0.3;
+        color: var(--text-secondary);
+    }
+
+    .status-text {
+        text-align: center;
+        font-size: 1rem;
+        color: var(--text-secondary);
+        margin-bottom: var(--spacing-lg);
+    }
+
+    .scanner-actions {
+        display: flex;
+        gap: var(--spacing-sm);
+    }
+
+    .btn-secondary {
+        flex: 1;
+        padding: var(--spacing-md);
+        background-color: transparent;
+        color: var(--text-secondary);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-md);
+        font-size: 1rem;
+        font-weight: var(--font-weight-medium);
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .btn-secondary:hover {
+        background-color: var(--bg-secondary);
+        border-color: var(--text-secondary);
+    }
+
+    .btn-primary-scan {
+        flex: 1;
+        padding: var(--spacing-md);
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: var(--radius-md);
+        font-size: 1rem;
+        font-weight: var(--font-weight-semibold);
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary-scan:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+    }
+
+    #video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: var(--radius-lg);
+    }
+
+    @media (min-width: 768px) {
+        .scanner-card {
+            max-width: 500px;
+            margin: var(--spacing-xl) auto;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="scanner-container">
+    <div class="scanner-header">
+        <a href="{{ url_for('equipment.index') }}" class="back-button">←</a>
+        <div>
+            <h1 class="scanner-title">📷 Scanner QR</h1>
+            <p class="scanner-subtitle">Posicione o QR Code dentro do quadro</p>
+        </div>
+    </div>
+
+    <div class="scanner-card">
+        <div class="camera-preview">
+            <video id="video" autoplay playsinline></video>
+            <canvas id="canvas" style="display: none;"></canvas>
+            <div class="camera-frame"></div>
+            <div class="camera-icon">📷</div>
+        </div>
+
+        <div class="status-text" id="status">Aguardando QR Code...</div>
+
+        <div class="scanner-actions">
+            <button class="btn-secondary" onclick="window.history.back()">Voltar</button>
+            <button class="btn-primary-scan" onclick="simulateScan()">Simular Scan</button>
+        </div>
+    </div>
+</div>
+
+<script>
+let videoStream = null;
+
+async function startCamera() {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+            video: { facingMode: 'environment' } 
+        });
+        const video = document.getElementById('video');
+        video.srcObject = stream;
+        videoStream = stream;
+        document.querySelector('.camera-icon').style.display = 'none';
+    } catch (error) {
+        console.error('Erro ao acessar câmera:', error);
+        document.getElementById('status').textContent = 'Erro ao acessar câmera. Use "Simular Scan".';
+    }
+}
+
+function stopCamera() {
+    if (videoStream) {
+        videoStream.getTracks().forEach(track => track.stop());
+    }
+}
+
+function simulateScan() {
+    // Simular leitura de QR code
+    const mockCode = 'EQP-' + Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+    document.getElementById('status').textContent = '✓ QR Code detectado: ' + mockCode;
+    
+    setTimeout(() => {
+        window.location.href = '{{ url_for("equipment.detail_equipment", id=1) }}';
+    }, 1000);
+}
+
+// Start camera on load
+window.addEventListener('load', startCamera);
+window.addEventListener('beforeunload', stopCamera);
+</script>
+{% endblock %}

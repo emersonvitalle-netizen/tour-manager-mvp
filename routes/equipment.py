@@ -19,6 +19,67 @@ def allowed_file(filename):
 
 @equipment_bp.route('/')
 @login_required
+def index():
+    categories = Category.query.filter_by(
+        company_id=current_user.company_id
+    ).all()
+    
+    category_counts = {}
+    for category in categories:
+        count = Equipment.query.filter_by(
+            company_id=current_user.company_id,
+            category_id=category.id,
+            is_active=True
+        ).count()
+        category_counts[category.id] = count
+    
+    return render_template('equipment/index.html', 
+                          categories=categories,
+                          category_counts=category_counts)
+
+@equipment_bp.route('/category/<int:category_id>')
+@login_required
+def list_by_category(category_id):
+    category = Category.query.filter_by(
+        id=category_id,
+        company_id=current_user.company_id
+    ).first_or_404()
+    
+    # Group by type
+    types = EquipmentType.query.filter_by(
+        category_id=category_id,
+        company_id=current_user.company_id
+    ).all()
+    
+    type_equipment = {}
+    total_count = 0
+    available_count = 0
+    
+    for eq_type in types:
+        items = Equipment.query.filter_by(
+            type_id=eq_type.id,
+            company_id=current_user.company_id,
+            is_active=True
+        ).order_by(Equipment.code).all()
+        
+        if items:
+            type_equipment[eq_type.id] = {
+                'type': eq_type,
+                'items': items,
+                'total': len(items),
+                'available': sum(1 for e in items if e.status == 'available')
+            }
+            total_count += len(items)
+            available_count += sum(1 for e in items if e.status == 'available')
+    
+    return render_template('equipment/category.html',
+                          category=category,
+                          type_equipment=type_equipment,
+                          total_count=total_count,
+                          available_count=available_count)
+
+@equipment_bp.route('/list')
+@login_required
 def list_equipment():
     equipments = Equipment.query.filter_by(
         company_id=current_user.company_id,

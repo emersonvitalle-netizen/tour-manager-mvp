@@ -10,6 +10,67 @@ tour_bp = Blueprint('tour', __name__, url_prefix='/tour')
 
 @tour_bp.route('/')
 @login_required
+def tour_menu():
+    # Stats
+    active_tours = Tour.query.filter_by(
+        company_id=current_user.company_id,
+        is_active=True,
+        status='active'
+    ).count()
+    
+    kits_count = Kit.query.filter_by(
+        company_id=current_user.company_id
+    ).count()
+    
+    allocated_equipment = TourEquipment.query.join(Tour).filter(
+        Tour.company_id == current_user.company_id,
+        TourEquipment.returned_at == None
+    ).count()
+    
+    return render_template('tour/menu.html',
+                          active_tours=active_tours,
+                          kits_count=kits_count,
+                          allocated_equipment=allocated_equipment)
+
+@tour_bp.route('/<int:tour_id>/checklist')
+@login_required
+def checklist(tour_id):
+    from models.category import Category
+    
+    tour = Tour.query.filter_by(
+        id=tour_id,
+        company_id=current_user.company_id
+    ).first_or_404()
+    
+    # Get allocated equipment grouped by category
+    allocated = TourEquipment.query.filter_by(
+        tour_id=tour_id,
+        returned_at=None
+    ).all()
+    
+    equipment_by_category = {}
+    total_count = len(allocated)
+    checked_count = sum(1 for e in allocated if e.current_status == 'checked')
+    
+    for te in allocated:
+        if te.equipment and te.equipment.category:
+            cat_name = te.equipment.category.name
+            if cat_name not in equipment_by_category:
+                equipment_by_category[cat_name] = {
+                    'icon': '🎤' if cat_name == 'Som' else '💡' if cat_name == 'Luz' else '🔧' if cat_name == 'Materiais' else '🎸',
+                    'items': []
+                }
+            equipment_by_category[cat_name]['items'].append(te)
+    
+    return render_template('tour/checklist.html',
+                          tour=tour,
+                          equipment_by_category=equipment_by_category,
+                          total_count=total_count,
+                          checked_count=checked_count,
+                          pending_count=total_count - checked_count)
+
+@tour_bp.route('/list')
+@login_required
 def list_tours():
     tours = Tour.query.filter_by(
         company_id=current_user.company_id,

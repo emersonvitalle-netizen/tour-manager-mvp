@@ -1,0 +1,306 @@
+{% extends "base.html" %}
+
+{% block title %}TOUR - Menu{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-container {
+        padding: 0;
+        min-height: 100vh;
+        padding-bottom: calc(var(--bottom-nav-height) + var(--spacing-md));
+    }
+
+    .page-header {
+        background: linear-gradient(135deg, rgba(240, 147, 251, 0.3) 0%, rgba(245, 87, 108, 0.2) 100%);
+        padding: var(--spacing-lg) var(--spacing-md);
+        border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .header-content {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-md);
+    }
+
+    .back-button {
+        color: var(--text-primary);
+        font-size: 1.5rem;
+        text-decoration: none;
+        transition: transform 0.2s ease;
+    }
+
+    .back-button:hover {
+        transform: translateX(-4px);
+    }
+
+    .header-title {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+        font-size: 1.5rem;
+        font-weight: var(--font-weight-bold);
+        color: var(--text-primary);
+    }
+
+    .new-tour-button {
+        margin: var(--spacing-md);
+        padding: var(--spacing-md);
+        background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+        color: white;
+        border: none;
+        border-radius: var(--radius-md);
+        font-size: 1rem;
+        font-weight: var(--font-weight-semibold);
+        text-decoration: none;
+        text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--spacing-xs);
+        box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
+        transition: all 0.3s ease;
+    }
+
+    .new-tour-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(46, 204, 113, 0.4);
+    }
+
+    .stats-grid {
+        padding: var(--spacing-md);
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: var(--spacing-sm);
+        margin-bottom: var(--spacing-md);
+    }
+
+    @media (max-width: 480px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .stat-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            text-align: left;
+        }
+        
+        .stat-number {
+            font-size: 1.5rem;
+        }
+    }
+
+    @media (min-width: 481px) and (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (min-width: 1024px) {
+        .stats-grid {
+            grid-template-columns: repeat(4, 1fr);
+        }
+    }
+
+    .stat-card {
+        background-color: var(--bg-secondary);
+        padding: var(--spacing-md);
+        border-radius: var(--radius-md);
+        text-align: center;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .stat-number {
+        font-size: 2rem;
+        font-weight: var(--font-weight-bold);
+        color: var(--accent-gold);
+        margin-bottom: 4px;
+    }
+
+    .stat-label {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        font-weight: var(--font-weight-light);
+    }
+
+    .menu-list {
+        padding: var(--spacing-md);
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-md);
+    }
+
+    .menu-item {
+        background-color: var(--bg-secondary);
+        border-radius: var(--radius-lg);
+        padding: var(--spacing-md);
+        text-decoration: none;
+        color: inherit;
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-md);
+        box-shadow: var(--shadow-sm);
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .menu-item:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+    }
+
+    .menu-icon {
+        width: 70px;
+        height: 70px;
+        border-radius: var(--radius-md);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        flex-shrink: 0;
+    }
+
+    .icon-purple {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .icon-pink {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+
+    .icon-blue {
+        background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    }
+
+    .icon-green {
+        background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+    }
+
+    .icon-orange {
+        background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+    }
+
+    .menu-content {
+        flex: 1;
+    }
+
+    .menu-title {
+        font-size: 1.2rem;
+        font-weight: var(--font-weight-semibold);
+        color: var(--text-primary);
+        margin-bottom: 4px;
+    }
+
+    .menu-description {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        font-weight: var(--font-weight-light);
+    }
+
+    .menu-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background-color: #e74c3c;
+        color: white;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+        font-weight: var(--font-weight-bold);
+    }
+
+    @media (min-width: 768px) {
+        .menu-list {
+            padding: var(--spacing-xl);
+        }
+
+        .stats-grid {
+            padding: var(--spacing-xl) var(--spacing-xl) var(--spacing-md);
+        }
+
+        .new-tour-button {
+            margin: var(--spacing-md) var(--spacing-xl);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <div class="header-content">
+            <a href="{{ url_for('dashboard') }}" class="back-button">←</a>
+            <h1 class="header-title">🎸 TOUR</h1>
+        </div>
+    </div>
+
+    <a href="{{ url_for('tour.new_tour') }}" class="new-tour-button">
+        + Nova Tour
+    </a>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-number">{{ active_tours }}</div>
+            <div class="stat-label">Tours Ativas</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ kits_count }}</div>
+            <div class="stat-label">Kits</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ allocated_equipment }}</div>
+            <div class="stat-label">Itens Alocados</div>
+        </div>
+    </div>
+
+    <div class="menu-list">
+        <a href="{{ url_for('kit.list_kits') }}" class="menu-item">
+            <div class="menu-icon icon-purple">🎒</div>
+            <div class="menu-content">
+                <div class="menu-title">Kits</div>
+                <div class="menu-description">Conjuntos pré-definidos de equipamentos</div>
+            </div>
+        </a>
+
+        <a href="{{ url_for('tour.list_tours') }}" class="menu-item">
+            <div class="menu-icon icon-pink">🎤</div>
+            <div class="menu-content">
+                <div class="menu-title">Tours Ativas</div>
+                <div class="menu-description">Gerenciar tours e shows</div>
+            </div>
+            {% if active_tours > 0 %}
+            <div class="menu-badge">{{ active_tours }}</div>
+            {% endif %}
+        </a>
+
+        <a href="#" class="menu-item">
+            <div class="menu-icon icon-blue">📅</div>
+            <div class="menu-content">
+                <div class="menu-title">Agenda</div>
+                <div class="menu-description">Calendário de shows e eventos</div>
+            </div>
+        </a>
+
+        <a href="#" class="menu-item">
+            <div class="menu-icon icon-green">✓</div>
+            <div class="menu-content">
+                <div class="menu-title">Checkpoints</div>
+                <div class="menu-description">Rastreamento de equipamentos</div>
+            </div>
+        </a>
+
+        <a href="#" class="menu-item">
+            <div class="menu-icon icon-orange">🚚</div>
+            <div class="menu-content">
+                <div class="menu-title">Logística</div>
+                <div class="menu-description">Transporte e alocação</div>
+            </div>
+        </a>
+    </div>
+</div>
+{% endblock %}

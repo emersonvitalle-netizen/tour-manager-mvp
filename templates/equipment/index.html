@@ -1,114 +1,239 @@
 {% extends "base.html" %}
 
+{% block title %}HARDCASE - Categorias{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-container {
+        padding: 0;
+        min-height: 100vh;
+        padding-bottom: calc(var(--bottom-nav-height) + 80px);
+    }
+
+    .page-header {
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.3) 0%, rgba(118, 75, 162, 0.2) 100%);
+        padding: var(--spacing-lg) var(--spacing-md);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .header-left {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-md);
+    }
+
+    .back-button {
+        color: var(--text-primary);
+        font-size: 1.5rem;
+        text-decoration: none;
+        transition: transform 0.2s ease;
+    }
+
+    .back-button:hover {
+        transform: translateX(-4px);
+    }
+
+    .header-title {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+        font-size: 1.5rem;
+        font-weight: var(--font-weight-bold);
+        color: var(--text-primary);
+    }
+
+    .scan-button {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-xs);
+        padding: var(--spacing-sm) var(--spacing-md);
+        background-color: rgba(102, 126, 234, 0.2);
+        color: var(--text-primary);
+        border: 1px solid rgba(102, 126, 234, 0.3);
+        border-radius: var(--radius-md);
+        text-decoration: none;
+        font-size: 0.9rem;
+        font-weight: var(--font-weight-medium);
+        transition: all 0.3s ease;
+    }
+
+    .scan-button:hover {
+        background-color: rgba(102, 126, 234, 0.3);
+        transform: translateY(-2px);
+    }
+
+    .categories-grid {
+        padding: var(--spacing-lg) var(--spacing-md);
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--spacing-md);
+    }
+
+    @media (min-width: 480px) {
+        .categories-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    .category-card {
+        position: relative;
+        padding: var(--spacing-xl);
+        border-radius: var(--radius-lg);
+        text-decoration: none;
+        color: white;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 160px;
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        box-shadow: var(--shadow-md);
+    }
+
+    .category-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+    }
+
+    .category-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.1) 100%);
+        z-index: 0;
+    }
+
+    .category-som {
+        background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+    }
+
+    .category-luz {
+        background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+    }
+
+    .category-materiais {
+        background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    }
+
+    .category-instrumentos {
+        background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    }
+
+    .category-content {
+        position: relative;
+        z-index: 1;
+        text-align: center;
+    }
+
+    .category-icon {
+        font-size: 3.5rem;
+        margin-bottom: var(--spacing-md);
+        filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3));
+    }
+
+    .category-name {
+        font-size: 1.4rem;
+        font-weight: var(--font-weight-bold);
+        margin-bottom: var(--spacing-xs);
+        text-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    }
+
+    .category-count {
+        font-size: 0.9rem;
+        opacity: 0.9;
+        font-weight: var(--font-weight-light);
+    }
+
+    .fab {
+        position: fixed;
+        bottom: calc(var(--bottom-nav-height) + var(--spacing-lg));
+        right: var(--spacing-lg);
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        text-decoration: none;
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        z-index: 100;
+    }
+
+    .fab:hover {
+        transform: scale(1.1);
+        box-shadow: 0 8px 28px rgba(102, 126, 234, 0.6);
+    }
+
+    @media (min-width: 768px) {
+        .categories-grid {
+            grid-template-columns: repeat(4, 1fr);
+            padding: var(--spacing-xl);
+        }
+
+        .category-card {
+            min-height: 200px;
+        }
+
+        .fab {
+            bottom: var(--spacing-xl);
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div style="padding: 20px;">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-        <h1>Equipamentos</h1>
-        <a href="{{ url_for('equipment.new') }}" style="background: #007bff; color: white; padding: 12px 24px; border-radius: 5px; text-decoration: none; font-weight: bold;">
-            + Novo Equipamento
+<div class="page-container">
+    <div class="page-header">
+        <div class="header-left">
+            <a href="{{ url_for('dashboard') }}" class="back-button">←</a>
+            <h1 class="header-title">🎒 HARDCASE</h1>
+        </div>
+        <a href="{{ url_for('equipment.scan') }}" class="scan-button">
+            📷 Scan
         </a>
     </div>
 
-    {% for category, types in organized_equipment.items() %}
-    <div style="background: white; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; overflow: hidden;">
-        <div onclick="toggleCategory('{{ category }}')" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
-            <h2 style="color: white; margin: 0; text-transform: uppercase;">{{ category }}</h2>
-            <span id="icon-{{ category }}" style="color: white; font-size: 24px;">▼</span>
-        </div>
+    <div class="categories-grid">
+        {% for category in categories %}
+            {% set cat_name = category.name.lower() %}
+            {% set cat_class = 'category-' + cat_name %}
+            
+            {% if cat_name == 'som' %}
+                {% set icon = '🎤' %}
+            {% elif cat_name == 'luz' %}
+                {% set icon = '💡' %}
+            {% elif cat_name == 'materiais' %}
+                {% set icon = '🔧' %}
+            {% elif cat_name == 'instrumentos' %}
+                {% set icon = '🎸' %}
+            {% else %}
+                {% set icon = '📦' %}
+            {% endif %}
 
-        <div id="content-{{ category }}" style="display: block;">
-            {% for eq_type, equipment_list in types.items() %}
-            <div style="border-bottom: 1px solid #eee;">
-                <div onclick="toggleType('{{ category }}-{{ eq_type }}')" style="padding: 15px 20px; background: #f8f9fa; cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
-                    <h3 style="margin: 0; color: #333; font-size: 18px;">{{ eq_type }} ({{ equipment_list|length }})</h3>
-                    <span id="icon-{{ category }}-{{ eq_type }}" style="color: #666; font-size: 20px;">▼</span>
+            <a href="{{ url_for('equipment.list_by_category', category_id=category.id) }}" 
+               class="category-card {{ cat_class }}">
+                <div class="category-content">
+                    <div class="category-icon">{{ icon }}</div>
+                    <div class="category-name">{{ category.name }}</div>
+                    <div class="category-count">{{ category_counts.get(category.id, 0) }} equipamentos</div>
                 </div>
-
-                <div id="content-{{ category }}-{{ eq_type }}" style="display: block; padding: 10px 20px;">
-                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; padding: 10px 0;">
-                        {% for equipment in equipment_list %}
-                        <a href="{{ url_for('equipment.detail', id=equipment.id) }}" style="text-decoration: none; color: inherit;">
-                            <div style="border: 1px solid #ddd; border-radius: 8px; padding: 15px; transition: all 0.3s; background: white;">
-                                {% if equipment.photo_path %}
-                                <img src="{{ url_for('static', filename=equipment.photo_path.replace('static/', '')) }}" style="width: 100%; height: 150px; object-fit: cover; border-radius: 5px; margin-bottom: 10px;">
-                                {% else %}
-                                <div style="width: 100%; height: 150px; background: #f0f0f0; border-radius: 5px; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; color: #999;">
-                                    Sem foto
-                                </div>
-                                {% endif %}
-
-                                <h4 style="margin: 0 0 5px 0; color: #333;">{{ equipment.name }}</h4>
-                                <p style="margin: 0 0 5px 0; color: #666; font-size: 14px;">Código: {{ equipment.code }}</p>
-
-                                {% if equipment.status == 'available' %}
-                                <span style="background: #28a745; color: white; padding: 4px 8px; border-radius: 3px; font-size: 12px;">Disponível</span>
-                                {% elif equipment.status == 'in_use' %}
-                                <span style="background: #ffc107; color: #000; padding: 4px 8px; border-radius: 3px; font-size: 12px;">Em Uso</span>
-                                {% elif equipment.status == 'maintenance' %}
-                                <span style="background: #dc3545; color: white; padding: 4px 8px; border-radius: 3px; font-size: 12px;">Manutenção</span>
-                                {% endif %}
-                            </div>
-                        </a>
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
+            </a>
+        {% endfor %}
     </div>
-    {% endfor %}
+
+    <a href="{{ url_for('equipment.scan') }}" class="fab">
+        📷
+    </a>
 </div>
-
-<script>
-function toggleCategory(category) {
-    const content = document.getElementById('content-' + category);
-    const icon = document.getElementById('icon-' + category);
-
-    if (content.style.display === 'none') {
-        content.style.display = 'block';
-        icon.textContent = '▼';
-    } else {
-        content.style.display = 'none';
-        icon.textContent = '▶';
-    }
-}
-
-function toggleType(type) {
-    const content = document.getElementById('content-' + type);
-    const icon = document.getElementById('icon-' + type);
-
-    if (content.style.display === 'none') {
-        content.style.display = 'block';
-        icon.textContent = '▼';
-    } else {
-        content.style.display = 'none';
-        icon.textContent = '▶';
-    }
-}
-</script>
-
-<style>
-div[onclick] {
-    transition: background 0.3s;
-}
-
-div[onclick]:hover {
-    opacity: 0.9;
-}
-
-a[href*="equipment.detail"] div {
-    transition: transform 0.2s, box-shadow 0.2s;
-}
-
-a[href*="equipment.detail"] div:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 5px 20px rgba(0,0,0,0.15);
-}
-
-@media (max-width: 768px) {
-    div[style*="grid-template-columns"] {
-        grid-template-columns: 1fr !important;
-    }
-}
-</style>
 {% endblock %}

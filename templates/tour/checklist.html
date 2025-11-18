@@ -1,0 +1,460 @@
+{% extends "base.html" %}
+
+{% block title %}Checklist de Separação - {{ tour.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-container {
+        padding: 0;
+        min-height: 100vh;
+        padding-bottom: calc(var(--bottom-nav-height) + var(--spacing-md));
+    }
+
+    .page-header {
+        background: linear-gradient(135deg, rgba(46, 204, 113, 0.3) 0%, rgba(39, 174, 96, 0.2) 100%);
+        padding: var(--spacing-lg) var(--spacing-md);
+        border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .header-content {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-md);
+        margin-bottom: var(--spacing-sm);
+    }
+
+    .back-button {
+        color: var(--text-primary);
+        font-size: 1.5rem;
+        text-decoration: none;
+        transition: transform 0.2s ease;
+    }
+
+    .back-button:hover {
+        transform: translateX(-4px);
+    }
+
+    .header-title {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+        font-size: 1.3rem;
+        font-weight: var(--font-weight-bold);
+        color: var(--text-primary);
+    }
+
+    .tour-info {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        padding-left: calc(1.5rem + var(--spacing-md));
+    }
+
+    .stats-section {
+        padding: var(--spacing-md);
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: var(--spacing-sm);
+    }
+
+    @media (max-width: 480px) {
+        .stats-section {
+            grid-template-columns: 1fr;
+        }
+        
+        .stat-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            text-align: left;
+        }
+        
+        .stat-number {
+            font-size: 1.5rem;
+        }
+    }
+
+    @media (min-width: 481px) and (max-width: 768px) {
+        .stats-section {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (min-width: 1024px) {
+        .stats-section {
+            grid-template-columns: repeat(4, 1fr);
+        }
+    }
+
+    .stat-card {
+        background-color: var(--bg-secondary);
+        padding: var(--spacing-md);
+        border-radius: var(--radius-md);
+        text-align: center;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .stat-number {
+        font-size: 2rem;
+        font-weight: var(--font-weight-bold);
+        margin-bottom: 4px;
+    }
+
+    .stat-number.total {
+        color: #667eea;
+    }
+
+    .stat-number.checked {
+        color: #2ecc71;
+    }
+
+    .stat-number.pending {
+        color: #f39c12;
+    }
+
+    .stat-label {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+    }
+
+    .scan-buttons {
+        padding: var(--spacing-md);
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--spacing-sm);
+    }
+
+    @media (max-width: 480px) {
+        .scan-buttons {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .scan-btn {
+        padding: var(--spacing-md);
+        border-radius: var(--radius-md);
+        color: white;
+        text-decoration: none;
+        text-align: center;
+        font-weight: var(--font-weight-semibold);
+        font-size: 0.9rem;
+        box-shadow: var(--shadow-sm);
+        transition: all 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: var(--spacing-xs);
+    }
+
+    .scan-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+    }
+
+    .scan-btn-qr {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .scan-btn-rfid {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+
+    .scan-icon {
+        font-size: 1.8rem;
+    }
+
+    .categories-list {
+        padding: var(--spacing-md);
+    }
+
+    .category-section {
+        background-color: var(--bg-secondary);
+        border-radius: var(--radius-lg);
+        margin-bottom: var(--spacing-md);
+        overflow: hidden;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .category-header {
+        padding: var(--spacing-md);
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.1) 100%);
+        border-bottom: 1px solid var(--border-subtle);
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+        cursor: pointer;
+        transition: background 0.2s ease;
+    }
+
+    .category-header:hover {
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.25) 0%, rgba(118, 75, 162, 0.15) 100%);
+    }
+
+    .category-name {
+        font-size: 1.1rem;
+        font-weight: var(--font-weight-semibold);
+        color: var(--text-primary);
+    }
+
+    .category-count {
+        margin-left: auto;
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+    }
+
+    .equipment-list {
+        padding: var(--spacing-sm) 0;
+        max-height: 1000px;
+        overflow: hidden;
+        transition: max-height 0.3s ease;
+    }
+
+    .equipment-list.collapsed {
+        max-height: 0;
+    }
+
+    .equipment-item {
+        padding: var(--spacing-md);
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-md);
+        border-bottom: 1px solid var(--border-subtle);
+        transition: background 0.2s ease;
+    }
+
+    .equipment-item:last-child {
+        border-bottom: none;
+    }
+
+    .equipment-item:hover {
+        background-color: rgba(255, 255, 255, 0.02);
+    }
+
+    .equipment-item.checked {
+        background-color: rgba(46, 204, 113, 0.05);
+    }
+
+    .checkbox {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        border: 2px solid var(--border-subtle);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .checkbox.checked {
+        background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+        border-color: #2ecc71;
+        color: white;
+        font-size: 1.2rem;
+    }
+
+    .equipment-info {
+        flex: 1;
+    }
+
+    .equipment-code {
+        font-weight: var(--font-weight-semibold);
+        color: var(--text-primary);
+        margin-bottom: 2px;
+    }
+
+    .equipment-name {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+    }
+
+    .status-badge {
+        padding: 4px 10px;
+        border-radius: var(--radius-sm);
+        font-size: 0.75rem;
+        font-weight: var(--font-weight-semibold);
+    }
+
+    .status-checked {
+        background-color: rgba(46, 204, 113, 0.2);
+        color: var(--status-available);
+    }
+
+    .status-pending {
+        background-color: rgba(243, 156, 18, 0.2);
+        color: var(--status-maintenance);
+    }
+
+    .footer-actions {
+        position: fixed;
+        bottom: var(--bottom-nav-height);
+        left: 0;
+        right: 0;
+        padding: var(--spacing-sm) var(--spacing-md);
+        background-color: var(--bg-secondary);
+        border-top: 1px solid var(--border-subtle);
+        display: flex;
+        gap: var(--spacing-sm);
+        z-index: 100;
+    }
+
+    .btn-action {
+        flex: 1;
+        padding: var(--spacing-sm);
+        border-radius: var(--radius-md);
+        border: 1px solid var(--border-subtle);
+        background-color: transparent;
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+        font-weight: var(--font-weight-medium);
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .btn-action:hover {
+        background-color: var(--bg-primary);
+    }
+
+    .btn-action.primary {
+        background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+        color: white;
+        border: none;
+    }
+
+    @media (min-width: 768px) {
+        .categories-list {
+            padding: var(--spacing-xl);
+        }
+
+        .footer-actions {
+            bottom: 0;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <div class="header-content">
+            <a href="{{ url_for('tour.detail_tour', id=tour.id) }}" class="back-button">←</a>
+            <h1 class="header-title">📋 Checklist de Separação</h1>
+        </div>
+        <div class="tour-info">
+            <strong>{{ tour.name }}</strong>
+            {% if tour.artist %} - {{ tour.artist }}{% endif %}
+        </div>
+    </div>
+
+    <div class="stats-section">
+        <div class="stat-card">
+            <div class="stat-number total">{{ total_count }}</div>
+            <div class="stat-label">Total</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number checked">{{ checked_count }}</div>
+            <div class="stat-label">Conferidos</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number pending">{{ pending_count }}</div>
+            <div class="stat-label">Pendentes</div>
+        </div>
+    </div>
+
+    <div class="scan-buttons">
+        <a href="{{ url_for('equipment.scan') }}" class="scan-btn scan-btn-qr">
+            <span class="scan-icon">📷</span>
+            <span>Scan QR Individual</span>
+        </a>
+        <a href="#" class="scan-btn scan-btn-rfid">
+            <span class="scan-icon">📡</span>
+            <span>Leitura RFID Lote</span>
+        </a>
+    </div>
+
+    <div class="categories-list">
+        {% for category_name, data in equipment_by_category.items() %}
+        <div class="category-section">
+            <div class="category-header" onclick="toggleCategory('{{ category_name }}')">
+                <span>{{ data.icon }}</span>
+                <span class="category-name">{{ category_name }}</span>
+                <span class="category-count">({{ data.items|length }} itens)</span>
+                <span style="margin-left: auto;" id="icon-{{ category_name }}">▼</span>
+            </div>
+            <div class="equipment-list" id="list-{{ category_name }}">
+                {% for item in data.items %}
+                <div class="equipment-item {% if item.current_status == 'checked' %}checked{% endif %}">
+                    <div class="checkbox {% if item.current_status == 'checked' %}checked{% endif %}"
+                         onclick="toggleCheck({{ item.id }})">
+                        {% if item.current_status == 'checked' %}✓{% endif %}
+                    </div>
+                    <div class="equipment-info">
+                        <div class="equipment-code">{{ item.equipment.code }}</div>
+                        <div class="equipment-name">{{ item.equipment.name }}</div>
+                    </div>
+                    <span class="status-badge {% if item.current_status == 'checked' %}status-checked{% else %}status-pending{% endif %}">
+                        {% if item.current_status == 'checked' %}Conferido{% else %}Pendente{% endif %}
+                    </span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="footer-actions">
+        <button class="btn-action">📄 Imprimir</button>
+        <button class="btn-action primary">✓ Finalizar Separação</button>
+    </div>
+</div>
+
+<script>
+function toggleCategory(categoryName) {
+    const list = document.getElementById('list-' + categoryName);
+    const icon = document.getElementById('icon-' + categoryName);
+    
+    if (list.classList.contains('collapsed')) {
+        list.classList.remove('collapsed');
+        icon.textContent = '▼';
+    } else {
+        list.classList.add('collapsed');
+        icon.textContent = '▶';
+    }
+}
+
+function toggleCheck(itemId) {
+    // TODO: Make AJAX call to toggle status
+    const item = document.querySelector(`.equipment-item:has(.checkbox[onclick*="${itemId}"])`);
+    const checkbox = item.querySelector('.checkbox');
+    const badge = item.querySelector('.status-badge');
+    
+    if (checkbox.classList.contains('checked')) {
+        checkbox.classList.remove('checked');
+        checkbox.textContent = '';
+        item.classList.remove('checked');
+        badge.classList.remove('status-checked');
+        badge.classList.add('status-pending');
+        badge.textContent = 'Pendente';
+    } else {
+        checkbox.classList.add('checked');
+        checkbox.textContent = '✓';
+        item.classList.add('checked');
+        badge.classList.remove('status-pending');
+        badge.classList.add('status-checked');
+        badge.textContent = 'Conferido';
+    }
+    
+    // Update stats
+    updateStats();
+}
+
+function updateStats() {
+    const checked = document.querySelectorAll('.checkbox.checked').length;
+    const total = document.querySelectorAll('.checkbox').length;
+    const pending = total - checked;
+    
+    document.querySelector('.stat-number.checked').textContent = checked;
+    document.querySelector('.stat-number.pending').textContent = pending;
+}
+</script>
+{% endblock %}
