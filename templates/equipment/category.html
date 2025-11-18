@@ -273,7 +273,7 @@
                 </div>
                 <div class="type-content" id="content-{{ type_id }}">
                     <div class="equipment-grid">
-                        {% for equipment in data.items %}
+                        {% for equipment in data['items'] %}
                         <a href="{{ url_for('equipment.detail_equipment', id=equipment.id) }}" class="equipment-card">
                             {% if equipment.primary_photo_url %}
                             <img src="{{ equipment.primary_photo_url }}" alt="{{ equipment.name }}" class="equipment-photo">
