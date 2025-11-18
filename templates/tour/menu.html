@@ -8,6 +8,7 @@
         padding: 0;
         min-height: 100vh;
         padding-bottom: calc(var(--bottom-nav-height) + var(--spacing-md));
+        overflow-y: auto;
     }
 
     .page-header {
@@ -231,7 +232,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="page-container">
+<div class="page-container" id="tourPage">
     <div class="page-header">
         <div class="header-content">
             <a href="{{ url_for('dashboard') }}" class="back-button">←</a>
@@ -303,4 +304,12 @@
         </a>
     </div>
 </div>
+
+<script>
+// Garantir que a página inicie no topo
+window.addEventListener('load', function() {
+    document.getElementById('tourPage').scrollTop = 0;
+    window.scrollTo(0, 0);
+});
+</script>
 {% endblock %}
