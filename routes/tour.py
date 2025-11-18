@@ -32,6 +32,18 @@ def tour_menu():
                           kits_count=kits_count,
                           allocated_equipment=allocated_equipment)
 
+@tour_bp.route('/checklist-selection')
+@login_required
+def checklist_selection():
+    # Lista tours ativas para escolher qual checklist abrir
+    tours = Tour.query.filter_by(
+        company_id=current_user.company_id,
+        is_active=True,
+        status='active'
+    ).order_by(Tour.created_at.desc()).all()
+    
+    return render_template('tour/checklist_selection.html', tours=tours)
+
 @tour_bp.route('/<int:tour_id>/checklist')
 @login_required
 def checklist(tour_id):

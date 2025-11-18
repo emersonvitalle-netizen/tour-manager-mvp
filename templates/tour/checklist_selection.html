@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+
+{% block title %}Separação - Selecionar Tour{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-container {
+        padding: 0;
+        min-height: 100vh;
+        padding-bottom: calc(var(--bottom-nav-height) + var(--spacing-md));
+    }
+
+    .page-header {
+        background: linear-gradient(135deg, rgba(243, 156, 18, 0.3) 0%, rgba(230, 126, 34, 0.2) 100%);
+        padding: var(--spacing-lg) var(--spacing-md);
+        border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .header-content {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-md);
+    }
+
+    .back-button {
+        color: var(--text-primary);
+        font-size: 1.5rem;
+        text-decoration: none;
+        transition: transform 0.2s ease;
+    }
+
+    .back-button:hover {
+        transform: translateX(-4px);
+    }
+
+    .header-title {
+        font-size: 1.5rem;
+        font-weight: var(--font-weight-bold);
+        color: var(--text-primary);
+    }
+
+    .tours-list {
+        padding: var(--spacing-md);
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-md);
+    }
+
+    .tour-card {
+        background-color: var(--bg-secondary);
+        border-radius: var(--radius-lg);
+        padding: var(--spacing-lg);
+        text-decoration: none;
+        color: inherit;
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-sm);
+        box-shadow: var(--shadow-sm);
+        transition: all 0.3s ease;
+        border-left: 4px solid #f39c12;
+    }
+
+    .tour-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+    }
+
+    .tour-name {
+        font-size: 1.3rem;
+        font-weight: var(--font-weight-semibold);
+        color: var(--text-primary);
+    }
+
+    .tour-artist {
+        font-size: 1rem;
+        color: var(--accent-gold);
+        font-weight: var(--font-weight-medium);
+    }
+
+    .tour-dates {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-xs);
+    }
+
+    .tour-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--spacing-xs);
+        padding: 4px 12px;
+        border-radius: var(--radius-sm);
+        font-size: 0.75rem;
+        font-weight: var(--font-weight-semibold);
+        background-color: rgba(46, 204, 113, 0.2);
+        color: #2ecc71;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: var(--spacing-xl);
+        color: var(--text-secondary);
+    }
+
+    .empty-icon {
+        font-size: 3rem;
+        margin-bottom: var(--spacing-md);
+        opacity: 0.5;
+    }
+
+    .empty-text {
+        font-size: 1rem;
+        margin-bottom: var(--spacing-sm);
+    }
+
+    .empty-hint {
+        font-size: 0.85rem;
+        opacity: 0.7;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <div class="header-content">
+            <a href="{{ url_for('tour.tour_menu') }}" class="back-button">←</a>
+            <h1 class="header-title">📋 Separação</h1>
+        </div>
+    </div>
+
+    <div class="tours-list">
+        {% if tours %}
+            {% for tour in tours %}
+            <a href="{{ url_for('tour.checklist', tour_id=tour.id) }}" class="tour-card">
+                <div class="tour-name">{{ tour.name }}</div>
+                {% if tour.artist %}
+                <div class="tour-artist">🎤 {{ tour.artist }}</div>
+                {% endif %}
+                <div class="tour-dates">
+                    📅 {{ tour.start_date.strftime('%d/%m/%Y') }}
+                    {% if tour.end_date %}
+                        - {{ tour.end_date.strftime('%d/%m/%Y') }}
+                    {% endif %}
+                </div>
+                <div>
+                    <span class="tour-badge">✓ Tour Ativa</span>
+                </div>
+            </a>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">📋</div>
+                <div class="empty-text">Nenhuma tour ativa</div>
+                <div class="empty-hint">Crie uma tour para acessar o checklist de separação</div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
