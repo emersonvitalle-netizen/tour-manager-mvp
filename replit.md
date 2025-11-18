@@ -351,20 +351,21 @@ Desktop: min-width: 1024px
 - [x] QR Code geração e scanner
 - [x] Sistema de Tours e Checkpoints
 - [x] Upload de fotos
-
-### Em Desenvolvimento 🚧
-- [ ] **Redesign Dark Cinematográfico** (EM ANDAMENTO)
-  - [ ] CSS dark theme
-  - [ ] Dashboard com cards fotográficos
-  - [ ] Bottom navigation
-  - [ ] Templates mobile-first
+- [x] **Redesign Dark Cinematográfico** ✨
+  - [x] CSS dark theme completo
+  - [x] Dashboard com cards fotográficos
+  - [x] Bottom navigation mobile
+  - [x] Templates mobile-first
+  - [x] Login redesenhado
+  - [x] Paleta de cores dark premium
+  - [x] Tipografia elegante (Playfair Display + Inter)
 
 ### Próximas Etapas 📋
-1. Implementar design dark cinematográfico
+1. Redesenhar templates secundários (equipment, tours, kits)
 2. Adicionar campos NFC/RFID ao banco
 3. Criar API endpoints RFID/NFC
 4. Implementar scanners NFC/RFID
-5. Testes de responsividade
+5. Melhorar estados focus/hover para acessibilidade
 6. Documentação de API
 
 ---
