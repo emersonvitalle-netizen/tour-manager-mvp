@@ -1,0 +1,319 @@
+# SISTEMA DE IDENTIFICAÇÃO MÚLTIPLA - TOUR MANAGER
+
+## TECNOLOGIAS IMPLEMENTADAS
+
+### 1. QR CODE
+
+- **Uso:** Visual, impressão, verificação manual
+- **Alcance:** Requer câmera (0-2m)
+- **Velocidade:** 1 item por vez
+- **Custo:** R$ 0,05 por etiqueta impressa
+- **Vantagem:** Universal, funciona sem tecnologia
+
+### 2. NFC (Near Field Communication)
+
+- **Uso:** Leitura por smartphone (Android/iOS)
+- **Alcance:** 4-10cm
+- **Velocidade:** 1 item por vez
+- **Custo:** R$ 1-3 por tag adesiva
+- **Padrão:** ISO 14443A / ISO 15693
+- **Vantagem:** Qualquer celular moderno lê
+
+### 3. RFID UHF (Ultra High Frequency)
+
+- **Uso:** Leitura em massa, portais, pistolas
+- **Alcance:** 1-10 metros
+- **Velocidade:** 100+ itens por segundo
+- **Custo:** R$ 2-5 por tag + leitor R$ 1.500-15.000
+- **Padrão:** EPC Gen 2 (ISO 18000-6C)
+- **Vantagem:** Operação industrial em larga escala
+
+-----
+
+## ESTRUTURA DE DADOS
+
+### Equipment Model
+
+```python
+qr_code_url      # String: URL da imagem QR Code
+nfc_tag_id       # String: UID único da tag NFC (14 chars hex)
+rfid_uhf_tag     # String: EPC da tag RFID UHF (formato GS1)
+```
+
+### Formato EPC (RFID UHF)
+
+```
+E2 + [Company:6] + [Item:8] + [Serial:6]
+Exemplo: E20000010000000100AF32
+
+E2         = Header EPC Gen 2
+000001     = Company ID (1 em hex)
+00000001   = Equipment ID (1 em hex)
+00AF32     = Serial único
+```
+
+-----
+
+## FLUXOS DE USO
+
+### CELULAR (NFC ou QR)
+
+```
+Usuário abre app
+  ↓
+Aproxima celular da tag NFC OU escaneia QR
+  ↓
+Sistema identifica equipamento
+  ↓
+Opções:
+  - ✓ Conferir item
+  - 🔧 Marcar manutenção
+  - 📋 Ver detalhes
+  - 📊 Ver histórico
+```
+
+### LEITOR RFID INDUSTRIAL
+
+```
+Portal instalado na saída
+  ↓
+Equipamentos passam pelo portal
+  ↓
+Leitor capta 50 tags simultaneamente
+  ↓
+Envia via API: POST /api/rfid/scan
+  ↓
+Sistema registra checkpoint automático
+```
+
+-----
+
+## DISPOSITIVOS COMPATÍVEIS
+
+### CELULARES (NFC)
+
+- ✅ Android 4.4+ com NFC
+- ✅ iPhone 7+ (iOS 13+)
+- Web NFC API (Chrome Android)
+- App nativo (iOS/Android)
+
+### LEITORES RFID RECOMENDADOS
+
+**Portais Fixos:**
+
+- Zebra FX9600 (R$ 8.000-12.000)
+- Impinj Speedway R420 (R$ 10.000-15.000)
+- Alcance: 8-10 metros
+
+**Pistolas Portáteis:**
+
+- Zebra MC3300R (R$ 4.000-6.000)
+- Chainway C66 (R$ 2.500-4.000)
+- Alcance: 3-5 metros
+
+**Leitores USB Desktop:**
+
+- Sunlux XC-1302 (R$ 800-1.200)
+- ACR122U NFC (R$ 150-300) - apenas NFC
+
+-----
+
+## API ENDPOINTS
+
+### Leitura NFC (Celular)
+
+```http
+POST /api/rfid/nfc-scan
+Content-Type: application/json
+
+{
+  "nfc_uid": "A1B2C3D4E5F6G7",
+  "action": "check"
+}
+
+Response:
+{
+  "success": true,
+  "equipment": {
+    "code": "CAI-001",
+    "name": "Caixa Ativa",
+    "status": "available"
+  }
+}
+```
+
+### Leitura RFID UHF (Leitor Industrial)
+
+```http
+POST /api/rfid/scan
+Content-Type: application/json
+
+{
+  "reader_id": "PORTAL-001",
+  "reader_type": "portal",
+  "location": "empresa",
+  "checkpoint_type": "saida_empresa",
+  "tour_id": 1,
+  "tags": [
+    {
+      "epc": "E20000010000000100AF32",
+      "rssi": -45,
+      "timestamp": "2025-01-15T10:30:00Z"
+    }
+  ]
+}
+
+Response:
+{
+  "success": true,
+  "total_scanned": 1,
+  "total_found": 1,
+  "results": [...]
+}
+```
+
+### Status dos Leitores
+
+```http
+GET /api/rfid/reader-status
+
+Response:
+{
+  "readers": [
+    {
+      "id": "PORTAL-001",
+      "type": "portal",
+      "location": "Saída da Empresa",
+      "status": "online",
+      "total_reads_today": 145
+    }
+  ]
+}
+```
+
+-----
+
+## INTEGRAÇÃO COM HARDWARE
+
+### Portal RFID (Exemplo: Zebra FX9600)
+
+**Configuração:**
+
+1. Conectar leitor à rede (Ethernet/WiFi)
+1. Configurar IP estático
+1. Definir região (Brasil: 902-907.5 MHz)
+1. Configurar potência de leitura (20-30 dBm)
+1. Ativar modo “Tag Report” via HTTP
+
+**Webhook Configuration:**
+
+```
+URL: https://seuapp.com/api/rfid/scan
+Method: POST
+Auth: Bearer TOKEN
+```
+
+### Pistola RFID (Exemplo: Zebra MC3300R)
+
+**App Android:**
+
+- SDK: Zebra RFID SDK 3
+- API: RFIDReader.Events.readEvent
+- Modo: Trigger scan
+- Buffer: 100 tags
+- Auto-submit via HTTP
+
+-----
+
+## CHECKLIST DE IMPLANTAÇÃO
+
+### Fase 1: Preparação
+
+- [ ] Comprar tags NFC (quantidade)
+- [ ] Comprar tags RFID UHF (quantidade)
+- [ ] Colar tags nos equipamentos
+- [ ] Registrar IDs no banco de dados
+- [ ] Imprimir QR Codes de backup
+
+### Fase 2: Infraestrutura
+
+- [ ] Instalar portais RFID (locais)
+- [ ] Configurar rede e energia
+- [ ] Instalar software de integração
+- [ ] Testar conectividade
+- [ ] Configurar webhooks
+
+### Fase 3: Treinamento
+
+- [ ] Treinar equipe no uso do celular (NFC)
+- [ ] Treinar operadores de pistola RFID
+- [ ] Criar manual de procedimentos
+- [ ] Definir responsáveis
+
+### Fase 4: Operação
+
+- [ ] Teste piloto (1 tour)
+- [ ] Ajustes e correções
+- [ ] Rollout completo
+- [ ] Monitoramento contínuo
+
+-----
+
+## CUSTOS ESTIMADOS
+
+### Cenário: 500 Equipamentos
+
+**Tags:**
+
+- 500 Tags NFC: R$ 1.000 (R$ 2 cada)
+- 500 Tags RFID UHF: R$ 2.000 (R$ 4 cada)
+- Impressão QR Codes: R$ 50
+
+**Hardware:**
+
+- 2 Portais RFID: R$ 20.000
+- 2 Pistolas RFID: R$ 8.000
+- 1 Leitor NFC Desktop: R$ 300
+
+**Total:** R$ 31.350
+
+**Manutenção Anual:**
+
+- Reposição tags danificadas: R$ 500/ano
+- Suporte técnico leitores: R$ 2.000/ano
+
+-----
+
+## TROUBLESHOOTING
+
+### NFC não funciona no celular
+
+- Verificar se NFC está ativado (Configurações)
+- Aproximar parte traseira do celular da tag
+- Tag pode estar danificada (testar outra)
+- Navegador não suporta (usar Chrome Android)
+
+### RFID não lê equipamento
+
+- Verificar se tag está na orientação correta
+- Aumentar potência do leitor
+- Verificar interferências metálicas
+- Tag pode estar danificada (RSSI muito baixo)
+
+### Portal não envia dados
+
+- Verificar conexão de rede
+- Testar endpoint manualmente (Postman)
+- Verificar token de autenticação
+- Checar logs do leitor
+
+-----
+
+## PRÓXIMOS PASSOS
+
+1. Migration do banco de dados (adicionar campos NFC e RFID)
+1. Implementar rotas API (/api/rfid/*)
+1. Testar com leitor RFID real
+1. Criar app mobile nativo (iOS/Android)
+1. Dashboard de monitoramento de leitores
+1. Relatórios de eficiência de leitura
