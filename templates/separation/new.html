@@ -1,0 +1,332 @@
+{% extends "base.html" %}
+
+{% block title %}Nova Lista de Separação{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-container {
+        padding: 0;
+        min-height: 100vh;
+        padding-bottom: calc(var(--bottom-nav-height) + 80px);
+    }
+
+    .page-header {
+        background: linear-gradient(135deg, rgba(243, 156, 18, 0.3) 0%, rgba(230, 126, 34, 0.2) 100%);
+        padding: var(--spacing-lg) var(--spacing-md);
+        border-bottom: 1px solid var(--border-subtle);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    .header-content {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-md);
+    }
+
+    .back-button {
+        color: var(--text-primary);
+        font-size: 1.5rem;
+        text-decoration: none;
+    }
+
+    .header-title {
+        font-size: 1.3rem;
+        font-weight: var(--font-weight-bold);
+        color: var(--text-primary);
+    }
+
+    .form-section {
+        padding: var(--spacing-md);
+        background-color: var(--bg-secondary);
+        border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .form-group {
+        margin-bottom: var(--spacing-md);
+    }
+
+    .form-label {
+        display: block;
+        font-size: 0.9rem;
+        color: var(--text-primary);
+        font-weight: var(--font-weight-semibold);
+        margin-bottom: var(--spacing-xs);
+    }
+
+    .form-input, .form-select {
+        width: 100%;
+        padding: var(--spacing-sm);
+        background-color: var(--bg-primary);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-sm);
+        color: var(--text-primary);
+        font-size: 1rem;
+    }
+
+    .categories-list {
+        padding: var(--spacing-sm) 0;
+    }
+
+    .category-section {
+        background-color: var(--bg-secondary);
+        margin-bottom: var(--spacing-md);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .category-header {
+        padding: var(--spacing-md);
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.1) 100%);
+        border-bottom: 1px solid var(--border-subtle);
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+        cursor: pointer;
+        transition: background 0.2s ease;
+    }
+
+    .category-header:hover {
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.25) 0%, rgba(118, 75, 162, 0.15) 100%);
+    }
+
+    .category-name {
+        font-size: 1.1rem;
+        font-weight: var(--font-weight-semibold);
+        color: var(--text-primary);
+        flex: 1;
+    }
+
+    .category-count {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+    }
+
+    .equipment-list {
+        padding: var(--spacing-sm) 0;
+        max-height: 1000px;
+        overflow: hidden;
+        transition: max-height 0.3s ease;
+    }
+
+    .equipment-list.collapsed {
+        max-height: 0;
+    }
+
+    .equipment-item {
+        padding: var(--spacing-md);
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-md);
+        border-bottom: 1px solid var(--border-subtle);
+        cursor: pointer;
+        transition: background 0.2s ease;
+    }
+
+    .equipment-item:hover {
+        background-color: rgba(243, 156, 18, 0.05);
+    }
+
+    .equipment-item:last-child {
+        border-bottom: none;
+    }
+
+    .checkbox {
+        width: 24px;
+        height: 24px;
+        border: 2px solid var(--border-subtle);
+        border-radius: var(--radius-sm);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        transition: all 0.2s ease;
+        background-color: var(--bg-primary);
+    }
+
+    .checkbox.checked {
+        background-color: #2ecc71;
+        border-color: #2ecc71;
+    }
+
+    .checkbox.checked::after {
+        content: '✓';
+        color: white;
+        font-size: 1rem;
+        font-weight: bold;
+    }
+
+    .equipment-info {
+        flex: 1;
+    }
+
+    .equipment-code {
+        font-size: 0.95rem;
+        font-weight: var(--font-weight-semibold);
+        color: var(--text-primary);
+    }
+
+    .equipment-name {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+    }
+
+    .selected-count {
+        position: fixed;
+        bottom: calc(var(--bottom-nav-height) + var(--spacing-sm));
+        left: var(--spacing-md);
+        right: var(--spacing-md);
+        background-color: #f39c12;
+        color: white;
+        padding: var(--spacing-sm);
+        border-radius: var(--radius-md);
+        text-align: center;
+        font-weight: var(--font-weight-semibold);
+        box-shadow: 0 4px 12px rgba(243, 156, 18, 0.4);
+        z-index: 100;
+    }
+
+    .submit-button {
+        position: fixed;
+        bottom: calc(var(--bottom-nav-height) + 60px);
+        left: var(--spacing-md);
+        right: var(--spacing-md);
+        padding: var(--spacing-md);
+        background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+        color: white;
+        border: none;
+        border-radius: var(--radius-md);
+        font-size: 1rem;
+        font-weight: var(--font-weight-bold);
+        box-shadow: 0 4px 12px rgba(46, 204, 113, 0.4);
+        cursor: pointer;
+        z-index: 100;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<form method="POST" id="separationForm">
+    <div class="page-container">
+        <div class="page-header">
+            <div class="header-content">
+                <a href="{{ url_for('separation.index') }}" class="back-button">←</a>
+                <h1 class="header-title">Nova Lista de Separação</h1>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <div class="form-group">
+                <label class="form-label">Tour *</label>
+                <select name="tour_id" class="form-select" required>
+                    <option value="">Selecione a tour</option>
+                    {% for tour in tours %}
+                    <option value="{{ tour.id }}">{{ tour.name }} - {{ tour.artist }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Nome da Lista *</label>
+                <input type="text" name="name" class="form-input" 
+                       placeholder="Ex: Lista Show ABC - Dia 1" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Observações</label>
+                <input type="text" name="description" class="form-input" 
+                       placeholder="Observações opcionais">
+            </div>
+        </div>
+
+        <div class="categories-list">
+            {% for category_name, data in equipment_by_category.items() %}
+            <div class="category-section">
+                <div class="category-header" onclick="toggleCategory('{{ category_name }}')">
+                    <span>{{ data.icon }}</span>
+                    <span class="category-name">{{ category_name }}</span>
+                    <span class="category-count">({{ data.count }} disponíveis)</span>
+                    <span id="icon-{{ category_name }}">▼</span>
+                </div>
+                <div class="equipment-list" id="list-{{ category_name }}">
+                    {% for eq in data.items %}
+                    <div class="equipment-item" onclick="toggleEquipment({{ eq.id }}, this)">
+                        <div class="checkbox" id="check-{{ eq.id }}"></div>
+                        <div class="equipment-info">
+                            <div class="equipment-code">{{ eq.code }}</div>
+                            <div class="equipment-name">{{ eq.name }}{% if eq.brand %} - {{ eq.brand }}{% endif %}</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <button type="submit" class="submit-button" id="submitBtn" disabled>
+            ✓ Criar Lista
+        </button>
+
+        <div class="selected-count" id="selectedCount">
+            0 equipamentos selecionados
+        </div>
+    </div>
+</form>
+
+<script>
+let selectedEquipment = new Set();
+
+function toggleCategory(categoryName) {
+    const list = document.getElementById('list-' + categoryName);
+    const icon = document.getElementById('icon-' + categoryName);
+    
+    if (list.classList.contains('collapsed')) {
+        list.classList.remove('collapsed');
+        icon.textContent = '▼';
+    } else {
+        list.classList.add('collapsed');
+        icon.textContent = '▶';
+    }
+}
+
+function toggleEquipment(equipmentId, element) {
+    const checkbox = document.getElementById('check-' + equipmentId);
+    
+    if (selectedEquipment.has(equipmentId)) {
+        selectedEquipment.delete(equipmentId);
+        checkbox.classList.remove('checked');
+    } else {
+        selectedEquipment.add(equipmentId);
+        checkbox.classList.add('checked');
+    }
+    
+    updateSelectedCount();
+}
+
+function updateSelectedCount() {
+    const count = selectedEquipment.size;
+    const countDisplay = document.getElementById('selectedCount');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    countDisplay.textContent = count + ' equipamento' + (count !== 1 ? 's' : '') + ' selecionado' + (count !== 1 ? 's' : '');
+    submitBtn.disabled = count === 0;
+}
+
+document.getElementById('separationForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // Adicionar equipamentos selecionados ao form
+    selectedEquipment.forEach(id => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'equipment_ids';
+        input.value = id;
+        this.appendChild(input);
+    });
+    
+    this.submit();
+});
+</script>
+{% endblock %}

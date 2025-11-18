@@ -11,6 +11,8 @@ tour_bp = Blueprint('tour', __name__, url_prefix='/tour')
 @tour_bp.route('/')
 @login_required
 def tour_menu():
+    from models.separation_list import SeparationList
+    
     # Stats
     active_tours = Tour.query.filter_by(
         company_id=current_user.company_id,
@@ -27,10 +29,18 @@ def tour_menu():
         TourEquipment.returned_at == None
     ).count()
     
+    # Separações pendentes (para badge)
+    pending_separations = SeparationList.query.filter_by(
+        company_id=current_user.company_id,
+        is_active=True,
+        status='pending'
+    ).count()
+    
     return render_template('tour/menu.html',
                           active_tours=active_tours,
                           kits_count=kits_count,
-                          allocated_equipment=allocated_equipment)
+                          allocated_equipment=allocated_equipment,
+                          pending_separations=pending_separations)
 
 @tour_bp.route('/checklist-selection')
 @login_required

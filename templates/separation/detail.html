@@ -1,0 +1,428 @@
+{% extends "base.html" %}
+
+{% block title %}{{ sep_list.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-container {
+        padding: 0;
+        min-height: 100vh;
+        padding-bottom: calc(var(--bottom-nav-height) + var(--spacing-md));
+    }
+
+    .page-header {
+        background: linear-gradient(135deg, rgba(243, 156, 18, 0.3) 0%, rgba(230, 126, 34, 0.2) 100%);
+        padding: var(--spacing-lg) var(--spacing-md);
+        border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .header-content {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-md);
+        margin-bottom: var(--spacing-sm);
+    }
+
+    .back-button {
+        color: var(--text-primary);
+        font-size: 1.5rem;
+        text-decoration: none;
+    }
+
+    .header-title {
+        font-size: 1.3rem;
+        font-weight: var(--font-weight-bold);
+        color: var(--text-primary);
+        flex: 1;
+    }
+
+    .info-section {
+        padding: var(--spacing-md);
+        background-color: var(--bg-secondary);
+        border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: var(--spacing-xs) 0;
+        font-size: 0.9rem;
+    }
+
+    .info-label {
+        color: var(--text-secondary);
+    }
+
+    .info-value {
+        color: var(--text-primary);
+        font-weight: var(--font-weight-medium);
+    }
+
+    .stats-section {
+        padding: var(--spacing-md);
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--spacing-sm);
+    }
+
+    .stat-card {
+        background-color: var(--bg-secondary);
+        padding: var(--spacing-md);
+        border-radius: var(--radius-md);
+        text-align: center;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .stat-number {
+        font-size: 1.8rem;
+        font-weight: var(--font-weight-bold);
+        color: #f39c12;
+        margin-bottom: 4px;
+    }
+
+    .stat-label {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+    }
+
+    .categories-list {
+        padding: var(--spacing-sm) 0;
+    }
+
+    .category-section {
+        background-color: var(--bg-secondary);
+        margin-bottom: var(--spacing-md);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .category-header {
+        padding: var(--spacing-md);
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.1) 100%);
+        border-bottom: 1px solid var(--border-subtle);
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+        cursor: pointer;
+    }
+
+    .category-header:hover {
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.25) 0%, rgba(118, 75, 162, 0.15) 100%);
+    }
+
+    .category-name {
+        font-size: 1.1rem;
+        font-weight: var(--font-weight-semibold);
+        flex: 1;
+    }
+
+    .category-count {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+    }
+
+    .equipment-list {
+        padding: var(--spacing-sm) 0;
+    }
+
+    .equipment-item {
+        padding: var(--spacing-md);
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-md);
+        border-bottom: 1px solid var(--border-subtle);
+        background-color: white;
+        transition: background 0.2s ease;
+    }
+
+    .equipment-item:hover {
+        background-color: rgba(243, 156, 18, 0.05);
+    }
+
+    .equipment-item:last-child {
+        border-bottom: none;
+    }
+
+    .equipment-info {
+        flex: 1;
+    }
+
+    .equipment-code {
+        font-size: 0.95rem;
+        font-weight: var(--font-weight-semibold);
+        color: #0a0a0a;
+    }
+
+    .equipment-name {
+        font-size: 0.8rem;
+        color: #666;
+    }
+
+    .status-badge {
+        padding: 4px 12px;
+        border-radius: var(--radius-sm);
+        font-size: 0.75rem;
+        font-weight: var(--font-weight-semibold);
+    }
+
+    .approval-section {
+        padding: var(--spacing-md);
+        background-color: var(--bg-secondary);
+        border-top: 1px solid var(--border-subtle);
+    }
+
+    .approval-buttons {
+        display: flex;
+        gap: var(--spacing-sm);
+    }
+
+    .btn-approve, .btn-reject {
+        flex: 1;
+        padding: var(--spacing-md);
+        border: none;
+        border-radius: var(--radius-md);
+        font-size: 1rem;
+        font-weight: var(--font-weight-semibold);
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .btn-approve {
+        background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+        color: white;
+        box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
+    }
+
+    .btn-approve:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(46, 204, 113, 0.4);
+    }
+
+    .btn-reject {
+        background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        color: white;
+        box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+    }
+
+    .btn-reject:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(231, 76, 60, 0.4);
+    }
+
+    .approval-notes {
+        background-color: rgba(46, 204, 113, 0.1);
+        padding: var(--spacing-md);
+        border-radius: var(--radius-md);
+        margin-top: var(--spacing-md);
+        border-left: 4px solid #2ecc71;
+    }
+
+    .rejection-reason {
+        background-color: rgba(231, 76, 60, 0.1);
+        padding: var(--spacing-md);
+        border-radius: var(--radius-md);
+        margin-top: var(--spacing-md);
+        border-left: 4px solid #e74c3c;
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.8);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modal-content {
+        background-color: var(--bg-secondary);
+        padding: var(--spacing-xl);
+        border-radius: var(--radius-lg);
+        width: 90%;
+        max-width: 400px;
+    }
+
+    .modal-title {
+        font-size: 1.2rem;
+        font-weight: var(--font-weight-bold);
+        margin-bottom: var(--spacing-md);
+    }
+
+    .modal-input {
+        width: 100%;
+        padding: var(--spacing-sm);
+        background-color: var(--bg-primary);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-sm);
+        color: var(--text-primary);
+        margin-bottom: var(--spacing-md);
+    }
+
+    .modal-buttons {
+        display: flex;
+        gap: var(--spacing-sm);
+    }
+
+    .modal-buttons button {
+        flex: 1;
+        padding: var(--spacing-sm);
+        border: none;
+        border-radius: var(--radius-sm);
+        font-weight: var(--font-weight-semibold);
+        cursor: pointer;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <div class="header-content">
+            <a href="{{ url_for('separation.index') }}" class="back-button">←</a>
+            <h1 class="header-title">{{ sep_list.name }}</h1>
+            <span class="badge {{ sep_list.status_badge_class }}">{{ sep_list.status_label }}</span>
+        </div>
+    </div>
+
+    <div class="info-section">
+        <div class="info-row">
+            <span class="info-label">Tour:</span>
+            <span class="info-value">{{ sep_list.tour.name }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Criado por:</span>
+            <span class="info-value">{{ sep_list.creator.name }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Data:</span>
+            <span class="info-value">{{ sep_list.created_at.strftime('%d/%m/%Y %H:%M') }}</span>
+        </div>
+        {% if sep_list.description %}
+        <div class="info-row">
+            <span class="info-label">Observações:</span>
+            <span class="info-value">{{ sep_list.description }}</span>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="stats-section">
+        <div class="stat-card">
+            <div class="stat-number">{{ sep_list.total_items }}</div>
+            <div class="stat-label">Total de Itens</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ equipment_by_category|length }}</div>
+            <div class="stat-label">Categorias</div>
+        </div>
+    </div>
+
+    <div class="categories-list">
+        {% for category_name, data in equipment_by_category.items() %}
+        <div class="category-section">
+            <div class="category-header" onclick="toggleCategory('{{ category_name }}')">
+                <span>{{ data.icon }}</span>
+                <span class="category-name">{{ category_name }}</span>
+                <span class="category-count">({{ data.items|length }} itens)</span>
+                <span id="icon-{{ category_name }}">▼</span>
+            </div>
+            <div class="equipment-list" id="list-{{ category_name }}">
+                {% for item in data.items %}
+                <div class="equipment-item">
+                    <div class="equipment-info">
+                        <div class="equipment-code">{{ item.equipment.code }}</div>
+                        <div class="equipment-name">{{ item.equipment.name }}{% if item.equipment.brand %} - {{ item.equipment.brand }}{% endif %}</div>
+                    </div>
+                    <span class="badge badge-{{ item.equipment.status == 'available' and 'success' or 'warning' }}">
+                        {{ item.equipment.status == 'available' and 'Disponível' or 'Indisponível' }}
+                    </span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if sep_list.status == 'pending' and current_user.role == 'admin' %}
+    <div class="approval-section">
+        <div class="approval-buttons">
+            <button class="btn-approve" onclick="approveList()">✓ Aprovar</button>
+            <button class="btn-reject" onclick="showRejectModal()">✗ Rejeitar</button>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if sep_list.status == 'approved' and sep_list.approval_notes %}
+    <div class="approval-section">
+        <div class="approval-notes">
+            <strong>Aprovado por {{ sep_list.approver.name }}</strong><br>
+            {{ sep_list.approval_notes }}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if sep_list.status == 'rejected' %}
+    <div class="approval-section">
+        <div class="rejection-reason">
+            <strong>Rejeitado por {{ sep_list.approver.name }}</strong><br>
+            {{ sep_list.rejection_reason }}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Modal de Rejeição -->
+<div class="modal" id="rejectModal">
+    <div class="modal-content">
+        <div class="modal-title">Motivo da Rejeição</div>
+        <form method="POST" action="{{ url_for('separation.reject', id=sep_list.id) }}">
+            <textarea name="reason" class="modal-input" rows="4" placeholder="Informe o motivo..." required></textarea>
+            <div class="modal-buttons">
+                <button type="button" onclick="closeRejectModal()" style="background-color: var(--bg-primary); color: var(--text-primary);">
+                    Cancelar
+                </button>
+                <button type="submit" style="background-color: #e74c3c; color: white;">
+                    Rejeitar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function toggleCategory(categoryName) {
+    const list = document.getElementById('list-' + categoryName);
+    const icon = document.getElementById('icon-' + categoryName);
+    
+    if (list.style.display === 'none') {
+        list.style.display = 'block';
+        icon.textContent = '▼';
+    } else {
+        list.style.display = 'none';
+        icon.textContent = '▶';
+    }
+}
+
+function approveList() {
+    if (confirm('Confirma a aprovação desta lista? Os equipamentos serão alocados automaticamente.')) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '{{ url_for("separation.approve", id=sep_list.id) }}';
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+function showRejectModal() {
+    document.getElementById('rejectModal').style.display = 'flex';
+}
+
+function closeRejectModal() {
+    document.getElementById('rejectModal').style.display = 'none';
+}
+</script>
+{% endblock %}

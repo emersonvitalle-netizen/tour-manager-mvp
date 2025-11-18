@@ -268,12 +268,15 @@
             </div>
         </a>
 
-        <a href="{{ url_for('tour.checklist_selection') }}" class="menu-item">
+        <a href="{{ url_for('separation.index') }}" class="menu-item">
             <div class="menu-icon icon-orange">📋</div>
             <div class="menu-content">
                 <div class="menu-title">Separação</div>
-                <div class="menu-description">Checklist de equipamentos por tour</div>
+                <div class="menu-description">Criar e aprovar listas de separação</div>
             </div>
+            {% if pending_separations > 0 %}
+            <div class="menu-badge">{{ pending_separations }}</div>
+            {% endif %}
         </a>
 
         <a href="{{ url_for('tour.list_tours') }}" class="menu-item">

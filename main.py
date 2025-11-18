@@ -14,6 +14,7 @@ def create_models():
     from models.maintenance import Maintenance
     from models.kit import Kit, KitRequirement
     from models.tour import Tour, Show, TourRequirement, TourEquipment, EquipmentCheckpoint, EquipmentTransfer, EquipmentReplacement
+    from models.separation_list import SeparationList, SeparationListItem
 
 def migrate_database():
     """Adiciona colunas que podem estar faltando sem quebrar"""
@@ -86,12 +87,14 @@ from routes.equipment import equipment_bp
 from routes.kit import kit_bp
 from routes.company import company_bp
 from routes.tour import tour_bp
+from routes.separation import separation_bp
 
 app.register_blueprint(auth_bp)
 app.register_blueprint(equipment_bp)
 app.register_blueprint(kit_bp)
 app.register_blueprint(company_bp)
 app.register_blueprint(tour_bp)
+app.register_blueprint(separation_bp)
 
 @app.route('/')
 def index():
