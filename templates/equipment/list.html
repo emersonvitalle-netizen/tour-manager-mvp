@@ -98,19 +98,10 @@
 
                     <div id="content-marca-{{ categoria }}-{{ tipo }}-{{ marca }}" style="display: none;">
                         {% for modelo, equipamentos in modelos.items() %}
-                        
-                        {% set total_modelo = equipamentos|length %}
-                        {% set disponiveis_modelo = 0 %}
-                        {% for eq in equipamentos %}
-                            {% if eq.status == 'available' %}
-                                {% set disponiveis_modelo = disponiveis_modelo + 1 %}
-                            {% endif %}
-                        {% endfor %}
-                        
                         <div style="margin-bottom: 20px; padding-left: 20px;">
                             <h4 onclick="toggleModelo('{{ categoria }}-{{ tipo }}-{{ marca }}-{{ modelo }}')"
                                 style="color: #555; margin-bottom: 10px; font-size: 16px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-left: 3px solid #007bff; padding-left: 10px;">
-                                <span>{{ modelo }} ({{ total_modelo }}/{{ disponiveis_modelo }})</span>
+                                <span>{{ modelo }} ({{ equipamentos|length }}/{{ equipamentos|selectattr("status", "equalto", "available")|list|length }})</span>
                                 <span id="icon-modelo-{{ categoria }}-{{ tipo }}-{{ marca }}-{{ modelo }}" style="font-size: 18px;">▼</span>
                             </h4>
 
