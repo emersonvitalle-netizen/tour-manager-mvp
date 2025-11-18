@@ -1,0 +1,341 @@
+{% extends "base.html" %}
+
+{% block title %}{{ category.name }} - HARDCASE{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-container {
+        padding: 0;
+        min-height: 100vh;
+        padding-bottom: calc(var(--bottom-nav-height) + var(--spacing-md));
+    }
+
+    .page-header {
+        {% if category.name.lower() == 'som' %}
+            background: linear-gradient(135deg, rgba(46, 204, 113, 0.3) 0%, rgba(39, 174, 96, 0.2) 100%);
+        {% elif category.name.lower() == 'luz' %}
+            background: linear-gradient(135deg, rgba(243, 156, 18, 0.3) 0%, rgba(230, 126, 34, 0.2) 100%);
+        {% elif category.name.lower() == 'materiais' %}
+            background: linear-gradient(135deg, rgba(52, 152, 219, 0.3) 0%, rgba(41, 128, 185, 0.2) 100%);
+        {% elif category.name.lower() == 'instrumentos' %}
+            background: linear-gradient(135deg, rgba(231, 76, 60, 0.3) 0%, rgba(192, 57, 43, 0.2) 100%);
+        {% else %}
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.3) 0%, rgba(118, 75, 162, 0.2) 100%);
+        {% endif %}
+        padding: var(--spacing-lg) var(--spacing-md);
+        border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .header-content {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .header-left {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-md);
+    }
+
+    .back-button {
+        color: var(--text-primary);
+        font-size: 1.5rem;
+        text-decoration: none;
+        transition: transform 0.2s ease;
+    }
+
+    .back-button:hover {
+        transform: translateX(-4px);
+    }
+
+    .header-title {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+        font-size: 1.5rem;
+        font-weight: var(--font-weight-bold);
+        color: var(--text-primary);
+    }
+
+    .action-section {
+        padding: var(--spacing-md);
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-sm);
+    }
+
+    .new-button {
+        width: 100%;
+        padding: var(--spacing-md);
+        background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+        color: white;
+        border: none;
+        border-radius: var(--radius-md);
+        font-size: 1rem;
+        font-weight: var(--font-weight-semibold);
+        text-decoration: none;
+        text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--spacing-xs);
+        box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
+        transition: all 0.3s ease;
+    }
+
+    .new-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(46, 204, 113, 0.4);
+    }
+
+    .search-box {
+        width: 100%;
+        padding: var(--spacing-sm) var(--spacing-md);
+        background-color: var(--bg-secondary);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-md);
+        color: var(--text-primary);
+        font-size: 0.95rem;
+    }
+
+    .search-box::placeholder {
+        color: var(--text-secondary);
+    }
+
+    .types-list {
+        padding: var(--spacing-md);
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-sm);
+    }
+
+    .type-card {
+        background-color: var(--bg-secondary);
+        border-radius: var(--radius-md);
+        overflow: hidden;
+        box-shadow: var(--shadow-sm);
+        transition: all 0.3s ease;
+    }
+
+    .type-header {
+        padding: var(--spacing-md);
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.1) 100%);
+        border-bottom: 1px solid var(--border-subtle);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        transition: background 0.2s ease;
+    }
+
+    .type-header:hover {
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.3) 0%, rgba(118, 75, 162, 0.2) 100%);
+    }
+
+    .type-info {
+        flex: 1;
+    }
+
+    .type-name {
+        font-size: 1.1rem;
+        font-weight: var(--font-weight-semibold);
+        color: var(--text-primary);
+        margin-bottom: 4px;
+    }
+
+    .type-count {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+    }
+
+    .collapse-icon {
+        font-size: 1.2rem;
+        color: var(--text-secondary);
+        transition: transform 0.3s ease;
+    }
+
+    .collapse-icon.expanded {
+        transform: rotate(180deg);
+    }
+
+    .type-content {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease;
+    }
+
+    .type-content.expanded {
+        max-height: 2000px;
+    }
+
+    .equipment-grid {
+        padding: var(--spacing-md);
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: var(--spacing-md);
+    }
+
+    .equipment-card {
+        background-color: var(--bg-primary);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-md);
+        padding: var(--spacing-md);
+        text-decoration: none;
+        color: inherit;
+        transition: all 0.3s ease;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .equipment-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-lg);
+        border-color: var(--accent-gold);
+    }
+
+    .equipment-photo {
+        width: 100%;
+        height: 150px;
+        object-fit: cover;
+        border-radius: var(--radius-sm);
+        margin-bottom: var(--spacing-sm);
+        background-color: var(--bg-secondary);
+    }
+
+    .equipment-name {
+        font-size: 1rem;
+        font-weight: var(--font-weight-semibold);
+        color: var(--text-primary);
+        margin-bottom: var(--spacing-xs);
+    }
+
+    .equipment-code {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        margin-bottom: var(--spacing-sm);
+    }
+
+    @media (min-width: 768px) {
+        .action-section {
+            flex-direction: row;
+        }
+
+        .new-button {
+            width: auto;
+            min-width: 200px;
+        }
+
+        .search-box {
+            flex: 1;
+        }
+
+        .equipment-grid {
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <div class="header-content">
+            <div class="header-left">
+                <a href="{{ url_for('equipment.index') }}" class="back-button">←</a>
+                <h1 class="header-title">
+                    {% if category.name.lower() == 'som' %}🎤{% elif category.name.lower() == 'luz' %}💡{% elif category.name.lower() == 'materiais' %}🔧{% elif category.name.lower() == 'instrumentos' %}🎸{% else %}📦{% endif %}
+                    {{ category.name }}
+                </h1>
+            </div>
+        </div>
+    </div>
+
+    <div class="action-section">
+        {% if current_user.role == 'admin' %}
+        <a href="{{ url_for('equipment.new_equipment') }}" class="new-button">
+            + Novo Equipamento
+        </a>
+        {% endif %}
+        <input type="text" class="search-box" placeholder="Buscar código, marca, modelo..." id="searchInput">
+    </div>
+
+    <div class="types-list">
+        {% if type_equipment %}
+            {% for type_id, data in type_equipment.items() %}
+            <div class="type-card">
+                <div class="type-header" onclick="toggleType({{ type_id }})">
+                    <div class="type-info">
+                        <div class="type-name">{{ data.type.name }}</div>
+                        <div class="type-count">{{ data.total }} total / {{ data.available }} disponíveis</div>
+                    </div>
+                    <div class="collapse-icon" id="icon-{{ type_id }}">▼</div>
+                </div>
+                <div class="type-content" id="content-{{ type_id }}">
+                    <div class="equipment-grid">
+                        {% for equipment in data.items %}
+                        <a href="{{ url_for('equipment.detail_equipment', id=equipment.id) }}" class="equipment-card">
+                            {% if equipment.primary_photo_url %}
+                            <img src="{{ equipment.primary_photo_url }}" alt="{{ equipment.name }}" class="equipment-photo">
+                            {% else %}
+                            <div class="equipment-photo" style="display: flex; align-items: center; justify-content: center; color: var(--text-secondary);">
+                                Sem foto
+                            </div>
+                            {% endif %}
+                            
+                            <div class="equipment-name">{{ equipment.name }}</div>
+                            <div class="equipment-code">{{ equipment.code }}</div>
+                            
+                            {% if equipment.status == 'available' %}
+                                <span class="badge badge-success">Disponível</span>
+                            {% elif equipment.status == 'maintenance' %}
+                                <span class="badge badge-warning">Manutenção</span>
+                            {% elif equipment.status == 'in_repair' %}
+                                <span class="badge badge-danger">Conserto</span>
+                            {% elif equipment.status == 'in_tour' %}
+                                <span class="badge badge-info">Em Tour</span>
+                            {% endif %}
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div style="text-align: center; padding: var(--spacing-xl); color: var(--text-secondary);">
+                Nenhum equipamento cadastrado nesta categoria.
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function toggleType(typeId) {
+    const content = document.getElementById('content-' + typeId);
+    const icon = document.getElementById('icon-' + typeId);
+    
+    if (content.classList.contains('expanded')) {
+        content.classList.remove('expanded');
+        icon.classList.remove('expanded');
+    } else {
+        content.classList.add('expanded');
+        icon.classList.add('expanded');
+    }
+}
+
+// Search functionality
+document.getElementById('searchInput').addEventListener('input', function(e) {
+    const searchTerm = e.target.value.toLowerCase();
+    const cards = document.querySelectorAll('.equipment-card');
+    
+    cards.forEach(card => {
+        const text = card.textContent.toLowerCase();
+        if (text.includes(searchTerm)) {
+            card.style.display = 'flex';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+});
+</script>
+{% endblock %}
