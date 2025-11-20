@@ -188,22 +188,22 @@ def new_simple():
 def detail(id):
     """Visualizar detalhes da lista de separação
     
-    Proteção de preços feita no template (defense in depth):
-    - Template só renderiza preços SE (admin OU lista completa aprovada)
-    - Server-side: técnicos nem devem acessar listas simples não aprovadas
+    SEGURANÇA: Técnicos em listas simples recebem dict sem preços.
     """
-    sep_list = SeparationList.query.filter_by(
+    sep_list_orm = SeparationList.query.filter_by(
         id=id,
         company_id=current_user.company_id
     ).first_or_404()
     
-    # Validação de acesso: técnicos não podem ver listas simples pendentes/rejeitadas
+    # Validação: técnicos não acessam listas simples não aprovadas
     if current_user.role != 'admin':
-        if sep_list.list_type == 'simple' and sep_list.status != 'approved':
+        if sep_list_orm.list_type == 'simple' and sep_list_orm.status != 'approved':
             flash('Você não tem permissão para visualizar esta lista.', 'danger')
             return redirect(url_for('separation.index'))
     
-    return render_template('separation/detail.html', sep_list=sep_list)
+    # MÁXIMA SIMPLICIDADE: Template já controla visibilidade
+    # Defense in depth: técnicos não deveriam nem ver listas simples
+    return render_template('separation/detail.html', sep_list=sep_list_orm)
 
 @separation_bp.route('/<int:id>/approve', methods=['POST'])
 @login_required
