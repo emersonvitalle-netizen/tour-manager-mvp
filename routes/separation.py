@@ -192,29 +192,12 @@ def detail(id):
         company_id=current_user.company_id
     ).first_or_404()
     
-    # Agrupar itens por categoria
-    items = sep_list.items.all()
-    equipment_by_category = {}
-    
-    for item in items:
-        eq = item.equipment
-        if eq and eq.category:
-            cat_name = eq.category.name
-            if cat_name not in equipment_by_category:
-                equipment_by_category[cat_name] = {
-                    'icon': get_category_icon(cat_name),
-                    'items': []
-                }
-            equipment_by_category[cat_name]['items'].append(item)
-    
-    return render_template('separation/detail.html',
-                          sep_list=sep_list,
-                          equipment_by_category=equipment_by_category)
+    return render_template('separation/detail.html', sep_list=sep_list)
 
 @separation_bp.route('/<int:id>/approve', methods=['POST'])
 @login_required
 def approve(id):
-    """Aprovar lista de separação e alocar equipamentos automaticamente"""
+    """Aprovar lista de separação (sem alocar equipamentos)"""
     # Validar permissão de admin
     if current_user.role != 'admin':
         flash('Apenas administradores podem aprovar listas.', 'danger')
@@ -230,61 +213,14 @@ def approve(id):
         return redirect(url_for('separation.detail', id=id))
     
     try:
-        # Aprovar lista
+        # Apenas aprovar (não aloca equipamentos automaticamente)
         sep_list.status = 'approved'
         sep_list.approved_by = current_user.id
         sep_list.approved_at = datetime.utcnow()
         sep_list.approval_notes = request.form.get('notes', '')
         
-        # Alocar equipamentos automaticamente
-        items = sep_list.items.all()
-        allocated_count = 0
-        unavailable_items = []
-        
-        for item in items:
-            eq = item.equipment
-            if not eq:
-                continue
-            
-            # Verificar se já está alocado em QUALQUER tour
-            existing = TourEquipment.query.filter_by(
-                equipment_id=eq.id,
-                returned_at=None
-            ).first()
-            
-            if existing:
-                unavailable_items.append(f"{eq.code} (já em tour)")
-                continue
-            
-            # Verificar se está disponível
-            if eq.status != 'available':
-                unavailable_items.append(f"{eq.code} ({eq.status})")
-                continue
-            
-            # Criar TourEquipment (ALOCAÇÃO)
-            tour_eq = TourEquipment(
-                tour_id=sep_list.tour_id,
-                equipment_id=eq.id,
-                allocated_at=datetime.utcnow(),
-                allocated_by=current_user.id,
-                current_status='in_company'
-            )
-            db.session.add(tour_eq)
-            
-            # Atualizar status do equipamento
-            eq.status = 'in_tour'
-            allocated_count += 1
-        
-        # Commit transacional
         db.session.commit()
-        
-        # Mensagens
-        if allocated_count > 0:
-            flash(f'Lista aprovada! {allocated_count} equipamentos alocados automaticamente.', 'success')
-        
-        if unavailable_items:
-            flash(f'Atenção: {len(unavailable_items)} itens não puderam ser alocados: {", ".join(unavailable_items[:3])}', 'warning')
-        
+        flash(f'Lista aprovada! Aguardando separação física dos equipamentos.', 'success')
         return redirect(url_for('separation.detail', id=id))
         
     except Exception as e:

@@ -58,112 +58,83 @@
         font-weight: var(--font-weight-medium);
     }
 
-    .stats-section {
-        padding: var(--spacing-md);
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: var(--spacing-sm);
-    }
-
-    .stat-card {
-        background-color: var(--bg-secondary);
-        padding: var(--spacing-md);
-        border-radius: var(--radius-md);
-        text-align: center;
-        box-shadow: var(--shadow-sm);
-    }
-
-    .stat-number {
-        font-size: 1.8rem;
-        font-weight: var(--font-weight-bold);
-        color: #f39c12;
-        margin-bottom: 4px;
-    }
-
-    .stat-label {
+    .list-type-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: var(--radius-sm);
         font-size: 0.75rem;
-        color: var(--text-secondary);
+        font-weight: var(--font-weight-bold);
+        margin-bottom: var(--spacing-sm);
     }
 
-    .categories-list {
-        padding: var(--spacing-sm) 0;
+    .badge-complete {
+        background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+        color: white;
     }
 
-    .category-section {
-        background-color: var(--bg-secondary);
-        margin-bottom: var(--spacing-md);
-        border-radius: var(--radius-lg);
-        overflow: hidden;
-        box-shadow: var(--shadow-sm);
+    .badge-simple {
+        background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+        color: white;
     }
 
-    .category-header {
+    .items-list {
         padding: var(--spacing-md);
-        background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.1) 100%);
-        border-bottom: 1px solid var(--border-subtle);
-        display: flex;
-        align-items: center;
+    }
+
+    .item-row {
+        padding: var(--spacing-md);
+        background-color: var(--bg-secondary);
+        border-radius: var(--radius-md);
+        margin-bottom: var(--spacing-sm);
+        display: grid;
+        grid-template-columns: 3fr 80px {% if sep_list.list_type == 'complete' %}100px 100px{% endif %};
         gap: var(--spacing-sm);
-        cursor: pointer;
+        align-items: center;
     }
 
-    .category-header:hover {
-        background: linear-gradient(135deg, rgba(102, 126, 234, 0.25) 0%, rgba(118, 75, 162, 0.15) 100%);
+    .item-name {
+        font-size: 0.95rem;
+        font-weight: var(--font-weight-medium);
     }
 
-    .category-name {
-        font-size: 1.1rem;
-        font-weight: var(--font-weight-semibold);
-        flex: 1;
+    .item-quantity {
+        text-align: center;
+        font-size: 0.95rem;
+        font-weight: var(--font-weight-bold);
+        color: #3498db;
     }
 
-    .category-count {
+    .item-price {
+        text-align: right;
         font-size: 0.85rem;
         color: var(--text-secondary);
     }
 
-    .equipment-list {
-        padding: var(--spacing-sm) 0;
-    }
-
-    .equipment-item {
-        padding: var(--spacing-md);
-        display: flex;
-        align-items: center;
-        gap: var(--spacing-md);
-        border-bottom: 1px solid var(--border-subtle);
-        background-color: white;
-        transition: background 0.2s ease;
-    }
-
-    .equipment-item:hover {
-        background-color: rgba(243, 156, 18, 0.05);
-    }
-
-    .equipment-item:last-child {
-        border-bottom: none;
-    }
-
-    .equipment-info {
-        flex: 1;
-    }
-
-    .equipment-code {
+    .item-total {
+        text-align: right;
         font-size: 0.95rem;
-        font-weight: var(--font-weight-semibold);
-        color: #0a0a0a;
+        font-weight: var(--font-weight-bold);
+        color: #f39c12;
     }
 
-    .equipment-name {
-        font-size: 0.8rem;
-        color: #666;
+    .total-section {
+        padding: var(--spacing-lg) var(--spacing-md);
+        background: linear-gradient(135deg, rgba(243, 156, 18, 0.2) 0%, rgba(230, 126, 34, 0.15) 100%);
+        border-top: 2px solid var(--border-subtle);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
     }
 
-    .status-badge {
-        padding: 4px 12px;
-        border-radius: var(--radius-sm);
-        font-size: 0.75rem;
-        font-weight: var(--font-weight-semibold);
+    .total-label {
+        font-size: 1.2rem;
+        font-weight: var(--font-weight-bold);
+    }
+
+    .total-value {
+        font-size: 1.5rem;
+        font-weight: var(--font-weight-bold);
+        color: #f39c12;
     }
 
     .approval-section {
@@ -185,45 +156,26 @@
         font-size: 1rem;
         font-weight: var(--font-weight-semibold);
         cursor: pointer;
-        transition: all 0.3s ease;
     }
 
     .btn-approve {
         background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
         color: white;
-        box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
-    }
-
-    .btn-approve:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 16px rgba(46, 204, 113, 0.4);
     }
 
     .btn-reject {
         background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
         color: white;
-        box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
     }
 
-    .btn-reject:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 16px rgba(231, 76, 60, 0.4);
-    }
-
-    .approval-notes {
-        background-color: rgba(46, 204, 113, 0.1);
-        padding: var(--spacing-md);
-        border-radius: var(--radius-md);
-        margin-top: var(--spacing-md);
-        border-left: 4px solid #2ecc71;
-    }
-
-    .rejection-reason {
-        background-color: rgba(231, 76, 60, 0.1);
-        padding: var(--spacing-md);
-        border-radius: var(--radius-md);
-        margin-top: var(--spacing-md);
-        border-left: 4px solid #e74c3c;
+    .admin-only-notice {
+        background: rgba(231, 76, 60, 0.1);
+        padding: var(--spacing-sm);
+        border-radius: var(--radius-sm);
+        font-size: 0.8rem;
+        color: #e74c3c;
+        margin-top: var(--spacing-sm);
+        text-align: center;
     }
 
     .modal {
@@ -287,6 +239,11 @@
             <h1 class="header-title">{{ sep_list.name }}</h1>
             <span class="badge {{ sep_list.status_badge_class }}">{{ sep_list.status_label }}</span>
         </div>
+        {% if sep_list.list_type == 'complete' %}
+        <span class="list-type-badge badge-complete">💰 COMPLETA</span>
+        {% else %}
+        <span class="list-type-badge badge-simple">📋 SIMPLES</span>
+        {% endif %}
     </div>
 
     <div class="info-section">
@@ -310,42 +267,35 @@
         {% endif %}
     </div>
 
-    <div class="stats-section">
-        <div class="stat-card">
-            <div class="stat-number">{{ sep_list.total_items }}</div>
-            <div class="stat-label">Total de Itens</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-number">{{ equipment_by_category|length }}</div>
-            <div class="stat-label">Categorias</div>
-        </div>
-    </div>
-
-    <div class="categories-list">
-        {% for category_name, data in equipment_by_category.items() %}
-        <div class="category-section">
-            <div class="category-header" onclick="toggleCategory('{{ category_name }}')">
-                <span>{{ data.icon }}</span>
-                <span class="category-name">{{ category_name }}</span>
-                <span class="category-count">({{ data['items']|length }} itens)</span>
-                <span id="icon-{{ category_name }}">▼</span>
-            </div>
-            <div class="equipment-list" id="list-{{ category_name }}">
-                {% for item in data['items'] %}
-                <div class="equipment-item">
-                    <div class="equipment-info">
-                        <div class="equipment-code">{{ item.equipment.code }}</div>
-                        <div class="equipment-name">{{ item.equipment.name }}{% if item.equipment.brand %} - {{ item.equipment.brand }}{% endif %}</div>
-                    </div>
-                    <span class="badge badge-{{ item.equipment.status == 'available' and 'success' or 'warning' }}">
-                        {{ item.equipment.status == 'available' and 'Disponível' or 'Indisponível' }}
-                    </span>
-                </div>
-                {% endfor %}
-            </div>
+    <div class="items-list">
+        <h3 style="font-size: 1rem; margin-bottom: var(--spacing-md); color: var(--text-secondary);">Itens ({{ sep_list.total_items }})</h3>
+        
+        {% for item in sep_list.items %}
+        <div class="item-row">
+            <div class="item-name">{{ item.item_name }}</div>
+            <div class="item-quantity">{{ item.quantity }}x</div>
+            {% if sep_list.list_type == 'complete' and (current_user.role == 'admin' or sep_list.status == 'approved') %}
+            <div class="item-price">R$ {{ "%.2f"|format(item.unit_price or 0)|replace('.', ',') }}</div>
+            <div class="item-total">R$ {{ "%.2f"|format(item.total_price or 0)|replace('.', ',') }}</div>
+            {% endif %}
         </div>
         {% endfor %}
     </div>
+
+    {% if sep_list.list_type == 'complete' and (current_user.role == 'admin' or sep_list.status == 'approved') %}
+    <div class="total-section">
+        <span class="total-label">TOTAL</span>
+        <span class="total-value">R$ {{ "%.2f"|format(sep_list.calculated_total)|replace('.', ',') }}</span>
+    </div>
+    {% elif sep_list.list_type == 'simple' and current_user.role == 'admin' %}
+    <div class="total-section">
+        <span class="total-label">VALOR TOTAL</span>
+        <span class="total-value">R$ {{ "%.2f"|format(sep_list.total_value or 0)|replace('.', ',') }}</span>
+    </div>
+    <div class="admin-only-notice">
+        ⚠️ Valor total visível apenas para administradores
+    </div>
+    {% endif %}
 
     {% if sep_list.status == 'pending' and current_user.role == 'admin' %}
     <div class="approval-section">
@@ -358,7 +308,7 @@
 
     {% if sep_list.status == 'approved' and sep_list.approval_notes %}
     <div class="approval-section">
-        <div class="approval-notes">
+        <div style="background-color: rgba(46, 204, 113, 0.1); padding: var(--spacing-md); border-radius: var(--radius-md); border-left: 4px solid #2ecc71;">
             <strong>Aprovado por {{ sep_list.approver.name }}</strong><br>
             {{ sep_list.approval_notes }}
         </div>
@@ -367,7 +317,7 @@
 
     {% if sep_list.status == 'rejected' %}
     <div class="approval-section">
-        <div class="rejection-reason">
+        <div style="background-color: rgba(231, 76, 60, 0.1); padding: var(--spacing-md); border-radius: var(--radius-md); border-left: 4px solid #e74c3c;">
             <strong>Rejeitado por {{ sep_list.approver.name }}</strong><br>
             {{ sep_list.rejection_reason }}
         </div>
@@ -394,21 +344,8 @@
 </div>
 
 <script>
-function toggleCategory(categoryName) {
-    const list = document.getElementById('list-' + categoryName);
-    const icon = document.getElementById('icon-' + categoryName);
-    
-    if (list.style.display === 'none') {
-        list.style.display = 'block';
-        icon.textContent = '▼';
-    } else {
-        list.style.display = 'none';
-        icon.textContent = '▶';
-    }
-}
-
 function approveList() {
-    if (confirm('Confirma a aprovação desta lista? Os equipamentos serão alocados automaticamente.')) {
+    if (confirm('Confirma a aprovação desta lista?')) {
         const form = document.createElement('form');
         form.method = 'POST';
         form.action = '{{ url_for("separation.approve", id=sep_list.id) }}';
