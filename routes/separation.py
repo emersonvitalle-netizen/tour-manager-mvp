@@ -9,6 +9,84 @@ from datetime import datetime
 
 separation_bp = Blueprint('separation', __name__, url_prefix='/separation')
 
+def create_safe_separation_view(sep_list, redact_prices=False):
+    """Cria visão segura da lista de separação (dict puro, sem SQLAlchemy)
+    
+    Retorna SimpleNamespace contendo apenas dados primitivos.
+    Previne vazamento via ORM instrumentation ou session state.
+    
+    Args:
+        sep_list: Objeto SeparationList do SQLAlchemy
+        redact_prices: Se True, mascara todos valores monetários
+        
+    Returns:
+        SimpleNamespace com campos seguros (sem referências ORM)
+    """
+    from types import SimpleNamespace
+    
+    # Extrair relationships antes de descartar ORM
+    tour_name = sep_list.tour.name if sep_list.tour else None
+    creator_name = sep_list.creator.name if sep_list.creator else None
+    approver_name = sep_list.approver.name if sep_list.approver else None
+    
+    # Criar itens como dicts puros (zero referências SQLAlchemy)
+    items_data = []
+    for item in sep_list.items:
+        item_dict = {
+            'id': item.id,
+            'item_name': str(item.item_name),  # Force primitive string
+            'quantity': int(item.quantity),     # Force primitive int
+            'unit_price': None if redact_prices else (float(item.unit_price) if item.unit_price else None),
+            'total_price': None if redact_prices else (float(item.total_price) if item.total_price else None)
+        }
+        items_data.append(SimpleNamespace(**item_dict))
+    
+    # Campos monetários mascarados se necessário
+    total_value = None if redact_prices else (float(sep_list.total_value) if sep_list.total_value else None)
+    calculated_total = None if redact_prices else (float(sep_list.calculated_total) if sep_list.calculated_total else None)
+    
+    # Criar estrutura completamente desconectada do ORM
+    safe_view = SimpleNamespace(
+        # IDs e metadados (primitivos)
+        id=int(sep_list.id),
+        name=str(sep_list.name),
+        description=str(sep_list.description) if sep_list.description else None,
+        list_type=str(sep_list.list_type),
+        status=str(sep_list.status),
+        tour_id=int(sep_list.tour_id),
+        company_id=int(sep_list.company_id),
+        created_by=int(sep_list.created_by),
+        created_at=sep_list.created_at,
+        approved_by=int(sep_list.approved_by) if sep_list.approved_by else None,
+        approved_at=sep_list.approved_at,
+        approval_notes=str(sep_list.approval_notes) if sep_list.approval_notes else None,
+        rejection_reason=str(sep_list.rejection_reason) if sep_list.rejection_reason else None,
+        
+        # Relationships (apenas nomes, não objetos ORM)
+        tour_name=tour_name,
+        creator_name=creator_name,
+        approver_name=approver_name,
+        
+        # Campos monetários (mascarados ou reais)
+        total_value=total_value,
+        calculated_total=calculated_total,
+        
+        # Itens (lista de SimpleNamespace, zero SQL Alchemy)
+        items=items_data,
+        
+        # Properties calculadas
+        total_items=len(items_data),
+        status_label=str(sep_list.status_label),
+        status_badge_class=str(sep_list.status_badge_class),
+        
+        # Relationships completos (para acesso no template - mas não usados)
+        tour=SimpleNamespace(name=tour_name) if tour_name else None,
+        creator=SimpleNamespace(name=creator_name) if creator_name else None,
+        approver=SimpleNamespace(name=approver_name) if approver_name else None
+    )
+    
+    return safe_view
+
 @separation_bp.route('/')
 @login_required
 def index():
@@ -186,11 +264,27 @@ def new_simple():
 @separation_bp.route('/<int:id>')
 @login_required
 def detail(id):
-    """Visualizar detalhes da lista de separação"""
-    sep_list = SeparationList.query.filter_by(
+    """Visualizar detalhes da lista de separação
+    
+    Regras de visibilidade de preços:
+    - Admin: vê tudo sempre (completa e simples)
+    - Técnico em lista simples: NÃO vê valores (proteção de margem)
+    - Técnico em lista completa aprovada: vê preços (orçamento cliente)
+    
+    Usa visualização segura (SimpleNamespace puro) para prevenir:
+    - Corrupção de dados no banco
+    - Vazamento via ORM instrumentation (_sa_instance_state)
+    - Vazamento via session history
+    - Race conditions com outras rotas
+    """
+    sep_list_orm = SeparationList.query.filter_by(
         id=id,
         company_id=current_user.company_id
     ).first_or_404()
+    
+    # Criar visão segura com mascaramento se necessário
+    should_redact = (current_user.role != 'admin' and sep_list_orm.list_type == 'simple')
+    sep_list = create_safe_separation_view(sep_list_orm, redact_prices=should_redact)
     
     return render_template('separation/detail.html', sep_list=sep_list)
 

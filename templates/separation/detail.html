@@ -282,19 +282,26 @@
         {% endfor %}
     </div>
 
-    {% if sep_list.list_type == 'complete' and (current_user.role == 'admin' or sep_list.status == 'approved') %}
-    <div class="total-section">
-        <span class="total-label">TOTAL</span>
-        <span class="total-value">R$ {{ "%.2f"|format(sep_list.calculated_total)|replace('.', ',') }}</span>
-    </div>
-    {% elif sep_list.list_type == 'simple' and current_user.role == 'admin' %}
-    <div class="total-section">
-        <span class="total-label">VALOR TOTAL</span>
-        <span class="total-value">R$ {{ "%.2f"|format(sep_list.total_value or 0)|replace('.', ',') }}</span>
-    </div>
-    <div class="admin-only-notice">
-        ⚠️ Valor total visível apenas para administradores
-    </div>
+    {% if current_user.role == 'admin' %}
+        {% if sep_list.list_type == 'complete' %}
+        <div class="total-section">
+            <span class="total-label">TOTAL</span>
+            <span class="total-value">R$ {{ "%.2f"|format(sep_list.calculated_total)|replace('.', ',') }}</span>
+        </div>
+        {% elif sep_list.list_type == 'simple' %}
+        <div class="total-section">
+            <span class="total-label">VALOR TOTAL</span>
+            <span class="total-value">R$ {{ "%.2f"|format(sep_list.total_value or 0)|replace('.', ',') }}</span>
+        </div>
+        <div class="admin-only-notice">
+            ⚠️ Valor total visível apenas para administradores
+        </div>
+        {% endif %}
+    {% elif sep_list.list_type == 'complete' and sep_list.status == 'approved' %}
+        <div class="total-section">
+            <span class="total-label">TOTAL</span>
+            <span class="total-value">R$ {{ "%.2f"|format(sep_list.calculated_total)|replace('.', ',') }}</span>
+        </div>
     {% endif %}
 
     {% if sep_list.status == 'pending' and current_user.role == 'admin' %}
