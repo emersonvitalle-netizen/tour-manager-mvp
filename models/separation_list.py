@@ -10,7 +10,13 @@ class SeparationList(db.Model):
     name = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text)
     
-    # Status: pending, approved, rejected
+    # Tipo de lista: 'complete' (com preços detalhados) ou 'simple' (só valor total)
+    list_type = db.Column(db.String(20), default='complete', nullable=False)
+    
+    # Valor total (usado em lista 'simple')
+    total_value = db.Column(db.Numeric(10, 2))
+    
+    # Status: pending, approved, rejected, in_separation
     status = db.Column(db.String(20), default='pending', nullable=False)
     
     # Usuários
@@ -59,9 +65,22 @@ class SeparationList(db.Model):
         status_labels = {
             'pending': 'Pendente',
             'approved': 'Aprovada',
-            'rejected': 'Rejeitada'
+            'rejected': 'Rejeitada',
+            'in_separation': 'Em Separação'
         }
         return status_labels.get(self.status, self.status)
+    
+    @property
+    def calculated_total(self):
+        """Calcula total da lista (para listas 'complete')"""
+        if self.list_type == 'simple':
+            return self.total_value or 0
+        
+        total = 0
+        for item in self.items:
+            if item.total_price:
+                total += float(item.total_price)
+        return total
 
 
 class SeparationListItem(db.Model):
@@ -70,10 +89,19 @@ class SeparationListItem(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     separation_list_id = db.Column(db.Integer, db.ForeignKey('separation_list.id'), nullable=False)
-    equipment_id = db.Column(db.Integer, db.ForeignKey('equipment.id'), nullable=False)
+    
+    # Tipo de equipamento (não equipamento específico)
+    equipment_type_id = db.Column(db.Integer, db.ForeignKey('equipment_type.id'))
+    item_name = db.Column(db.String(200), nullable=False)  # Nome do item
+    
+    # Quantidade
+    quantity = db.Column(db.Integer, default=1, nullable=False)
+    
+    # Preços (opcional - apenas para listas 'complete')
+    unit_price = db.Column(db.Numeric(10, 2))  # Preço unitário
+    total_price = db.Column(db.Numeric(10, 2))  # Preço total (quantidade * unitário)
     
     # Campos opcionais
-    quantity = db.Column(db.Integer, default=1)
     notes = db.Column(db.Text)
     
     # Status de conferência (para checklist visual)
@@ -83,7 +111,7 @@ class SeparationListItem(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Relationships
-    equipment = db.relationship('Equipment', backref='separation_list_items')
+    equipment_type = db.relationship('EquipmentType', backref='separation_list_items')
     
     def __repr__(self):
-        return f'<SeparationListItem {self.equipment_id}>'
+        return f'<SeparationListItem {self.item_name} x{self.quantity}>'
