@@ -46,6 +46,11 @@ class WorkList(db.Model):
         return int((self.separated_items / self.total_items) * 100)
     
     @property
+    def progress(self):
+        """Alias para progress_percentage (usado nos templates)"""
+        return self.progress_percentage
+    
+    @property
     def status_label(self):
         """Label traduzida do status"""
         labels = {
@@ -56,8 +61,8 @@ class WorkList(db.Model):
         return labels.get(self.status, self.status)
     
     @property
-    def status_badge_class(self):
-        """Classe CSS do badge de status"""
+    def status_badge(self):
+        """Classe CSS do badge de status (usado nos templates)"""
         classes = {
             'pending': 'badge-warning',
             'in_progress': 'badge-info',

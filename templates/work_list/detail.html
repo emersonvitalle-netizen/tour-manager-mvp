@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% block title %}{{ work_list.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <a href="{{ url_for('work_list.list_work_lists') }}" class="btn btn-outline-secondary btn-sm mb-2">
+                <i class="bi bi-arrow-left"></i> Voltar
+            </a>
+            <h2 class="text-white mb-0">{{ work_list.name }}</h2>
+            <span class="badge {{ work_list.status_badge }} mt-2">{{ work_list.status_label }}</span>
+        </div>
+
+        {% if work_list.status != 'completed' and work_list.progress == 100 %}
+        <form method="POST" action="{{ url_for('work_list.complete', id=work_list.id) }}" 
+              onsubmit="return confirm('Finalizar esta lista de trabalho?')">
+            <button type="submit" class="btn btn-success">
+                <i class="bi bi-check-circle"></i> Finalizar Lista
+            </button>
+        </form>
+        {% endif %}
+    </div>
+
+    {% if work_list.description %}
+    <div class="alert alert-dark border-secondary mb-4">
+        <i class="bi bi-info-circle"></i> {{ work_list.description }}
+    </div>
+    {% endif %}
+
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-dark border-secondary">
+                <div class="card-body text-center">
+                    <h5 class="text-muted mb-2">Total de Itens</h5>
+                    <h2 class="text-white">{{ work_list.total_items }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-dark border-success">
+                <div class="card-body text-center">
+                    <h5 class="text-muted mb-2">Separados</h5>
+                    <h2 class="text-success">{{ work_list.separated_items }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-dark border-warning">
+                <div class="card-body text-center">
+                    <h5 class="text-muted mb-2">Pendentes</h5>
+                    <h2 class="text-warning">{{ work_list.total_items - work_list.separated_items }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-dark border-info">
+                <div class="card-body text-center">
+                    <h5 class="text-muted mb-2">Progresso</h5>
+                    <h2 class="text-info">{{ work_list.progress }}%</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card bg-dark border-secondary">
+        <div class="card-header bg-transparent border-secondary">
+            <h5 class="text-white mb-0">
+                <i class="bi bi-list-check"></i> Itens da Lista
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-dark table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th style="width: 5%"></th>
+                            <th>Item</th>
+                            <th style="width: 15%" class="text-center">Quantidade</th>
+                            <th style="width: 20%" class="text-center">Status</th>
+                            <th style="width: 15%" class="text-center">Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in work_list.items %}
+                        <tr class="{% if item.separated %}table-success{% endif %}">
+                            <td class="text-center">
+                                {% if item.separated %}
+                                <i class="bi bi-check-circle-fill text-success"></i>
+                                {% else %}
+                                <i class="bi bi-circle text-secondary"></i>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="{% if item.separated %}text-decoration-line-through text-muted{% else %}text-white{% endif %}">
+                                    {{ item.item_name }}
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-secondary">{{ item.quantity }}x</span>
+                            </td>
+                            <td class="text-center">
+                                {% if item.separated %}
+                                <span class="badge bg-success">
+                                    <i class="bi bi-check-circle"></i> Separado
+                                </span>
+                                {% else %}
+                                <span class="badge bg-warning text-dark">
+                                    <i class="bi bi-clock"></i> Pendente
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if work_list.status != 'completed' %}
+                                <form method="POST" action="{{ url_for('work_list.mark_separated', id=work_list.id, item_id=item.id) }}" style="display: inline;">
+                                    {% if item.separated %}
+                                    <button type="submit" class="btn btn-sm btn-outline-warning" title="Desmarcar">
+                                        <i class="bi bi-x-circle"></i>
+                                    </button>
+                                    {% else %}
+                                    <button type="submit" class="btn btn-sm btn-outline-success" title="Marcar como separado">
+                                        <i class="bi bi-check-circle"></i>
+                                    </button>
+                                    {% endif %}
+                                </form>
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4 text-muted">
+        <small>
+            <i class="bi bi-calendar"></i> Criada em: {{ work_list.created_at.strftime('%d/%m/%Y às %H:%M') }}
+            {% if work_list.completed_at %}
+            <br>
+            <i class="bi bi-check-circle"></i> Finalizada em: {{ work_list.completed_at.strftime('%d/%m/%Y às %H:%M') }}
+            {% endif %}
+        </small>
+    </div>
+</div>
+{% endblock %}
