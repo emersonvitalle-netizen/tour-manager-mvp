@@ -89,6 +89,7 @@ from routes.kit import kit_bp
 from routes.company import company_bp
 from routes.tour import tour_bp
 from routes.separation import separation_bp
+from routes.work_list import work_list_bp
 
 app.register_blueprint(auth_bp)
 app.register_blueprint(equipment_bp)
@@ -96,6 +97,7 @@ app.register_blueprint(kit_bp)
 app.register_blueprint(company_bp)
 app.register_blueprint(tour_bp)
 app.register_blueprint(separation_bp)
+app.register_blueprint(work_list_bp)
 
 @app.route('/')
 def index():

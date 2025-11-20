@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}Listas de Trabalho{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-white mb-0">
+            <i class="bi bi-clipboard-check"></i> Listas de Trabalho
+        </h2>
+    </div>
+
+    {% if work_lists %}
+        <div class="row g-3">
+            {% for wl in work_lists %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card bg-dark border-secondary h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <h5 class="card-title text-white mb-0">{{ wl.name }}</h5>
+                            <span class="badge {{ wl.status_badge }}">
+                                {{ wl.status_label }}
+                            </span>
+                        </div>
+
+                        {% if wl.description %}
+                        <p class="card-text text-muted small">{{ wl.description }}</p>
+                        {% endif %}
+
+                        <div class="row text-center mt-3 mb-3">
+                            <div class="col-6">
+                                <div class="border-end border-secondary">
+                                    <h4 class="text-white mb-0">{{ wl.separated_items }}/{{ wl.total_items }}</h4>
+                                    <small class="text-muted">Separados</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <h4 class="text-white mb-0">{{ wl.progress }}%</h4>
+                                <small class="text-muted">Progresso</small>
+                            </div>
+                        </div>
+
+                        <div class="progress mb-3" style="height: 6px;">
+                            <div class="progress-bar bg-success" role="progressbar" 
+                                 style="width: {{ wl.progress }}%" 
+                                 aria-valuenow="{{ wl.progress }}" 
+                                 aria-valuemin="0" 
+                                 aria-valuemax="100"></div>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center text-muted small">
+                            <span>
+                                <i class="bi bi-calendar3"></i>
+                                {{ wl.created_at.strftime('%d/%m/%Y %H:%M') }}
+                            </span>
+                        </div>
+
+                        <a href="{{ url_for('work_list.detail', id=wl.id) }}" 
+                           class="btn btn-outline-light btn-sm w-100 mt-3">
+                            <i class="bi bi-eye"></i> Ver Detalhes
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-dark border-secondary text-center py-5">
+            <i class="bi bi-clipboard-x" style="font-size: 3rem; color: #666;"></i>
+            <h4 class="text-white mt-3">Nenhuma Lista de Trabalho</h4>
+            <p class="text-muted">As listas aparecem aqui quando um administrador aprova uma Lista de Separação.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
