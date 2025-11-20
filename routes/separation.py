@@ -13,7 +13,15 @@ separation_bp = Blueprint('separation', __name__, url_prefix='/separation')
 @separation_bp.route('/')
 @login_required
 def index():
-    """Lista todas as listas de separação (tabs: pendentes, aprovadas, rejeitadas)"""
+    """Lista todas as listas de separação (tabs: pendentes, aprovadas, rejeitadas)
+    
+    SEGURANÇA: Apenas admins podem acessar listas de separação.
+    """
+    # Bloqueio para técnicos
+    if current_user.role != 'admin':
+        flash('Acesso negado. Use a lista de trabalho.', 'danger')
+        return redirect(url_for('work_list.list_work_lists'))
+    
     status_filter = request.args.get('status', 'pending')
     
     lists = SeparationList.query.filter_by(
@@ -51,7 +59,14 @@ def index():
 @separation_bp.route('/new')
 @login_required
 def new():
-    """Escolher tipo de lista a criar"""
+    """Escolher tipo de lista a criar
+    
+    SEGURANÇA: Apenas admins podem criar listas de separação.
+    """
+    if current_user.role != 'admin':
+        flash('Apenas administradores podem criar listas de separação.', 'danger')
+        return redirect(url_for('work_list.list_work_lists'))
+    
     tours = Tour.query.filter_by(
         company_id=current_user.company_id,
         is_active=True,
@@ -63,7 +78,14 @@ def new():
 @separation_bp.route('/new/complete', methods=['GET', 'POST'])
 @login_required
 def new_complete():
-    """Criar lista COMPLETA (com preços detalhados)"""
+    """Criar lista COMPLETA (com preços detalhados)
+    
+    SEGURANÇA: Apenas admins.
+    """
+    if current_user.role != 'admin':
+        flash('Acesso negado.', 'danger')
+        return redirect(url_for('work_list.list_work_lists'))
+    
     if request.method == 'POST':
         return create_list_complete()
     
@@ -125,7 +147,14 @@ def new_complete():
 @separation_bp.route('/new/simple', methods=['GET', 'POST'])
 @login_required
 def new_simple():
-    """Criar lista SIMPLES (só valor total)"""
+    """Criar lista SIMPLES (só valor total)
+    
+    SEGURANÇA: Apenas admins.
+    """
+    if current_user.role != 'admin':
+        flash('Acesso negado.', 'danger')
+        return redirect(url_for('work_list.list_work_lists'))
+    
     if request.method == 'POST':
         return create_list_simple()
     
@@ -189,21 +218,19 @@ def new_simple():
 def detail(id):
     """Visualizar detalhes da lista de separação
     
-    SEGURANÇA: Técnicos em listas simples recebem dict sem preços.
+    SEGURANÇA CRÍTICA: Apenas admins podem acessar SeparationList.
+    Técnicos usam WorkList (sem preços) em /work-list/
     """
+    # BLOQUEIO TOTAL: Apenas admins acessam listas de separação
+    if current_user.role != 'admin':
+        flash('Acesso negado. Use a lista de trabalho para separar equipamentos.', 'danger')
+        return redirect(url_for('work_list.list_work_lists'))
+    
     sep_list_orm = SeparationList.query.filter_by(
         id=id,
         company_id=current_user.company_id
     ).first_or_404()
     
-    # Validação: técnicos não acessam listas simples não aprovadas
-    if current_user.role != 'admin':
-        if sep_list_orm.list_type == 'simple' and sep_list_orm.status != 'approved':
-            flash('Você não tem permissão para visualizar esta lista.', 'danger')
-            return redirect(url_for('separation.index'))
-    
-    # MÁXIMA SIMPLICIDADE: Template já controla visibilidade
-    # Defense in depth: técnicos não deveriam nem ver listas simples
     return render_template('separation/detail.html', sep_list=sep_list_orm)
 
 @separation_bp.route('/<int:id>/approve', methods=['POST'])
