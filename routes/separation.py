@@ -332,7 +332,20 @@ def reject(id):
 @separation_bp.route('/<int:id>/toggle-item/<int:item_id>', methods=['POST'])
 @login_required
 def toggle_item(id, item_id):
-    """Toggle checkbox de item (para conferência visual)"""
+    """Toggle checkbox de item (para conferência visual)
+    
+    SEGURANÇA: Apenas admins podem modificar SeparationList.
+    """
+    # Bloqueio crítico: apenas admins
+    if current_user.role != 'admin':
+        return jsonify({'success': False, 'error': 'Acesso negado'}), 403
+    
+    # Verificar company_id
+    sep_list = SeparationList.query.filter_by(
+        id=id,
+        company_id=current_user.company_id
+    ).first_or_404()
+    
     item = SeparationListItem.query.filter_by(
         id=item_id,
         separation_list_id=id
