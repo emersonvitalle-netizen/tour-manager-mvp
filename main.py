@@ -15,6 +15,7 @@ def create_models():
     from models.kit import Kit, KitRequirement
     from models.tour import Tour, Show, TourRequirement, TourEquipment, EquipmentCheckpoint, EquipmentTransfer, EquipmentReplacement
     from models.separation_list import SeparationList, SeparationListItem
+    from models.work_list import WorkList, WorkListItem
 
 def migrate_database():
     """Adiciona colunas que podem estar faltando sem quebrar"""
