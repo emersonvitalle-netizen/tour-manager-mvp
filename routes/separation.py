@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, redirect, url_for, request, flash,
 from flask_login import login_required, current_user
 from extensions import db
 from models.separation_list import SeparationList, SeparationListItem
+from models.work_list import WorkList, WorkListItem
 from models.tour import Tour, TourEquipment
 from models.equipment import Equipment
 from models.category import Category
@@ -208,7 +209,7 @@ def detail(id):
 @separation_bp.route('/<int:id>/approve', methods=['POST'])
 @login_required
 def approve(id):
-    """Aprovar lista de separação (sem alocar equipamentos)"""
+    """Aprovar lista e criar WorkList para técnicos"""
     # Validar permissão de admin
     if current_user.role != 'admin':
         flash('Apenas administradores podem aprovar listas.', 'danger')
@@ -224,14 +225,38 @@ def approve(id):
         return redirect(url_for('separation.detail', id=id))
     
     try:
-        # Apenas aprovar (não aloca equipamentos automaticamente)
+        # 1. Aprovar SeparationList
         sep_list.status = 'approved'
         sep_list.approved_by = current_user.id
         sep_list.approved_at = datetime.utcnow()
         sep_list.approval_notes = request.form.get('notes', '')
         
+        # 2. Criar WorkList (SEM preços) para técnicos
+        work_list = WorkList(
+            separation_list_id=sep_list.id,
+            tour_id=sep_list.tour_id,
+            name=f"{sep_list.name} - Lista de Trabalho",
+            description=sep_list.description,
+            status='pending',
+            company_id=current_user.company_id,
+            created_by=current_user.id,
+            created_at=datetime.utcnow()
+        )
+        db.session.add(work_list)
+        db.session.flush()  # Gerar ID
+        
+        # 3. Copiar itens (SEM preços)
+        for item in sep_list.items:
+            work_item = WorkListItem(
+                work_list_id=work_list.id,
+                item_name=item.item_name,
+                quantity=item.quantity,
+                separated=False
+            )
+            db.session.add(work_item)
+        
         db.session.commit()
-        flash(f'Lista aprovada! Aguardando separação física dos equipamentos.', 'success')
+        flash(f'Lista aprovada! Lista de trabalho #{work_list.id} criada para técnicos.', 'success')
         return redirect(url_for('separation.detail', id=id))
         
     except Exception as e:
