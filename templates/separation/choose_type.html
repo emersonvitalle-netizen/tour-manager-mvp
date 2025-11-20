@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% block title %}Nova Lista de Separação{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-container {
+        padding: var(--spacing-lg);
+        min-height: 100vh;
+        padding-bottom: calc(var(--bottom-nav-height) + var(--spacing-md));
+    }
+
+    .page-header {
+        text-align: center;
+        margin-bottom: var(--spacing-xl);
+    }
+
+    .page-title {
+        font-size: 1.8rem;
+        font-weight: var(--font-weight-bold);
+        margin-bottom: var(--spacing-sm);
+    }
+
+    .page-subtitle {
+        font-size: 0.95rem;
+        color: var(--text-secondary);
+    }
+
+    .type-options {
+        display: grid;
+        gap: var(--spacing-lg);
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .type-card {
+        background: linear-gradient(135deg, var(--bg-secondary) 0%, #1f1f1f 100%);
+        border-radius: var(--radius-lg);
+        padding: var(--spacing-xl);
+        text-decoration: none;
+        color: var(--text-primary);
+        transition: all 0.3s ease;
+        box-shadow: var(--shadow-md);
+        border: 2px solid transparent;
+    }
+
+    .type-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px rgba(212, 165, 116, 0.2);
+        border-color: rgba(212, 165, 116, 0.3);
+    }
+
+    .type-icon {
+        font-size: 3rem;
+        margin-bottom: var(--spacing-md);
+        text-align: center;
+    }
+
+    .type-name {
+        font-size: 1.3rem;
+        font-weight: var(--font-weight-bold);
+        margin-bottom: var(--spacing-sm);
+        text-align: center;
+    }
+
+    .type-description {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        line-height: 1.6;
+        margin-bottom: var(--spacing-md);
+        text-align: center;
+    }
+
+    .type-features {
+        list-style: none;
+        padding: 0;
+        margin: var(--spacing-md) 0;
+    }
+
+    .type-features li {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        padding: var(--spacing-xs) 0;
+        padding-left: var(--spacing-md);
+        position: relative;
+    }
+
+    .type-features li::before {
+        content: "✓";
+        position: absolute;
+        left: 0;
+        color: #2ecc71;
+        font-weight: var(--font-weight-bold);
+    }
+
+    .recommended-badge {
+        display: inline-block;
+        background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+        color: white;
+        padding: 4px 12px;
+        border-radius: var(--radius-sm);
+        font-size: 0.75rem;
+        font-weight: var(--font-weight-bold);
+        margin-bottom: var(--spacing-sm);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <h1 class="page-title">Nova Lista de Separação</h1>
+        <p class="page-subtitle">Escolha o tipo de lista que deseja criar</p>
+    </div>
+
+    <div class="type-options">
+        <a href="{{ url_for('separation.new_complete') }}" class="type-card">
+            <div class="type-icon">💰</div>
+            <div style="text-align: center;">
+                <span class="recommended-badge">RECOMENDADO</span>
+            </div>
+            <div class="type-name">Lista Completa</div>
+            <div class="type-description">
+                Para orçamentos detalhados que serão enviados ao cliente
+            </div>
+            <ul class="type-features">
+                <li>Preço unitário por item</li>
+                <li>Cálculo automático de totais</li>
+                <li>Visualização completa de valores</li>
+                <li>Ideal para aprovação comercial</li>
+            </ul>
+        </a>
+
+        <a href="{{ url_for('separation.new_simple') }}" class="type-card">
+            <div class="type-icon">📋</div>
+            <div class="type-name">Lista Simples</div>
+            <div class="type-description">
+                Para listas internas sem detalhamento de preços
+            </div>
+            <ul class="type-features">
+                <li>Apenas nome e quantidade</li>
+                <li>Valor total único</li>
+                <li>Técnicos não veem margem</li>
+                <li>Ideal para controle interno</li>
+            </ul>
+        </a>
+    </div>
+</div>
+{% endblock %}
