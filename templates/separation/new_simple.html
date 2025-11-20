@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+
+{% block title %}Nova Lista Simples{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-container {
+        padding: var(--spacing-md);
+        min-height: 100vh;
+        padding-bottom: calc(var(--bottom-nav-height) + 80px);
+    }
+
+    .page-header {
+        background: linear-gradient(135deg, rgba(52, 152, 219, 0.3) 0%, rgba(41, 128, 185, 0.2) 100%);
+        padding: var(--spacing-lg) var(--spacing-md);
+        border-radius: var(--radius-lg);
+        margin-bottom: var(--spacing-lg);
+    }
+
+    .header-title {
+        font-size: 1.5rem;
+        font-weight: var(--font-weight-bold);
+        margin-bottom: var(--spacing-xs);
+    }
+
+    .header-subtitle {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+    }
+
+    .form-section {
+        background-color: var(--bg-secondary);
+        padding: var(--spacing-md);
+        border-radius: var(--radius-md);
+        margin-bottom: var(--spacing-md);
+    }
+
+    .form-group {
+        margin-bottom: var(--spacing-md);
+    }
+
+    .form-label {
+        display: block;
+        font-size: 0.9rem;
+        font-weight: var(--font-weight-semibold);
+        margin-bottom: var(--spacing-xs);
+    }
+
+    .form-input, .form-select {
+        width: 100%;
+        padding: var(--spacing-sm);
+        background-color: var(--bg-primary);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-sm);
+        color: var(--text-primary);
+        font-size: 0.95rem;
+    }
+
+    .category-section {
+        background-color: var(--bg-secondary);
+        margin-bottom: var(--spacing-md);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+    }
+
+    .category-header {
+        padding: var(--spacing-md);
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.1) 100%);
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+        cursor: pointer;
+    }
+
+    .category-name {
+        font-size: 1.1rem;
+        font-weight: var(--font-weight-semibold);
+        flex: 1;
+    }
+
+    .category-list {
+        padding: var(--spacing-sm) 0;
+    }
+
+    .item-row {
+        padding: var(--spacing-md);
+        border-bottom: 1px solid var(--border-subtle);
+        display: grid;
+        grid-template-columns: 1fr 100px;
+        gap: var(--spacing-md);
+        align-items: center;
+    }
+
+    .item-row:last-child {
+        border-bottom: none;
+    }
+
+    .item-name {
+        font-size: 0.95rem;
+        font-weight: var(--font-weight-medium);
+    }
+
+    .item-availability {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+    }
+
+    .item-input {
+        padding: var(--spacing-xs) var(--spacing-sm);
+        background-color: var(--bg-primary);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-sm);
+        color: var(--text-primary);
+        text-align: right;
+        font-size: 0.9rem;
+    }
+
+    .submit-button {
+        position: fixed;
+        bottom: calc(var(--bottom-nav-height) + var(--spacing-md));
+        left: var(--spacing-md);
+        right: var(--spacing-md);
+        padding: var(--spacing-md);
+        background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+        color: white;
+        border: none;
+        border-radius: var(--radius-md);
+        font-size: 1rem;
+        font-weight: var(--font-weight-bold);
+        box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
+        cursor: pointer;
+    }
+
+    .admin-only-section {
+        background: linear-gradient(135deg, rgba(231, 76, 60, 0.1) 0%, rgba(192, 57, 43, 0.05) 100%);
+        padding: var(--spacing-md);
+        border-radius: var(--radius-md);
+        border-left: 4px solid #e74c3c;
+        margin-bottom: var(--spacing-md);
+    }
+
+    .admin-badge {
+        display: inline-block;
+        background: #e74c3c;
+        color: white;
+        padding: 4px 12px;
+        border-radius: var(--radius-sm);
+        font-size: 0.75rem;
+        font-weight: var(--font-weight-bold);
+        margin-bottom: var(--spacing-sm);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <h1 class="header-title">📋 Lista Simples</h1>
+        <p class="header-subtitle">Para listas internas sem detalhamento de preços</p>
+    </div>
+
+    <form method="POST" action="{{ url_for('separation.new_simple') }}" id="listForm">
+        <div class="form-section">
+            <div class="form-group">
+                <label class="form-label">Tour *</label>
+                <select name="tour_id" class="form-select" required>
+                    <option value="">Selecione uma tour...</option>
+                    {% for tour in tours %}
+                    <option value="{{ tour.id }}">{{ tour.name }} - {{ tour.artist }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Nome da Lista *</label>
+                <input type="text" name="name" class="form-input" 
+                       placeholder="Ex: Lista Show ABC - Dia 1" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Observações</label>
+                <input type="text" name="description" class="form-input" 
+                       placeholder="Observações opcionais">
+            </div>
+        </div>
+
+        <div class="admin-only-section">
+            <span class="admin-badge">APENAS ADMIN</span>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label">Valor Total do Serviço *</label>
+                <input type="number" name="total_value" class="form-input" 
+                       placeholder="R$ 0,00" min="0" step="0.01" required>
+                <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: var(--spacing-xs);">
+                    ⚠️ Este valor não será visível para técnicos
+                </p>
+            </div>
+        </div>
+
+        <h3 style="font-size: 1.1rem; margin: var(--spacing-lg) 0 var(--spacing-md) 0;">Equipamentos</h3>
+
+        {% for category_name, data in types_by_category.items() %}
+        <div class="category-section">
+            <div class="category-header">
+                <span>{{ data.icon }}</span>
+                <span class="category-name">{{ category_name }}</span>
+            </div>
+            <div class="category-list">
+                {% for type in data.types %}
+                <div class="item-row">
+                    <div>
+                        <div class="item-name">{{ type.name }}</div>
+                        <div class="item-availability">{{ type.available }}/{{ type.total }} disponíveis</div>
+                    </div>
+                    <input type="number" name="quantity-{{ type.id }}" class="item-input" 
+                           placeholder="Qtd" min="0" max="{{ type.available }}">
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+
+        <div style="height: 80px;"></div>
+
+        <button type="submit" class="submit-button">✓ Criar Lista Simples</button>
+    </form>
+</div>
+{% endblock %}

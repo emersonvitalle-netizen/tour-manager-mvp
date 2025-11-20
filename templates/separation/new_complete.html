@@ -1,0 +1,266 @@
+{% extends "base.html" %}
+
+{% block title %}Nova Lista Completa{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-container {
+        padding: var(--spacing-md);
+        min-height: 100vh;
+        padding-bottom: calc(var(--bottom-nav-height) + 80px);
+    }
+
+    .page-header {
+        background: linear-gradient(135deg, rgba(243, 156, 18, 0.3) 0%, rgba(230, 126, 34, 0.2) 100%);
+        padding: var(--spacing-lg) var(--spacing-md);
+        border-radius: var(--radius-lg);
+        margin-bottom: var(--spacing-lg);
+    }
+
+    .header-title {
+        font-size: 1.5rem;
+        font-weight: var(--font-weight-bold);
+        margin-bottom: var(--spacing-xs);
+    }
+
+    .header-subtitle {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+    }
+
+    .form-section {
+        background-color: var(--bg-secondary);
+        padding: var(--spacing-md);
+        border-radius: var(--radius-md);
+        margin-bottom: var(--spacing-md);
+    }
+
+    .form-group {
+        margin-bottom: var(--spacing-md);
+    }
+
+    .form-label {
+        display: block;
+        font-size: 0.9rem;
+        font-weight: var(--font-weight-semibold);
+        margin-bottom: var(--spacing-xs);
+    }
+
+    .form-input, .form-select {
+        width: 100%;
+        padding: var(--spacing-sm);
+        background-color: var(--bg-primary);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-sm);
+        color: var(--text-primary);
+        font-size: 0.95rem;
+    }
+
+    .category-section {
+        background-color: var(--bg-secondary);
+        margin-bottom: var(--spacing-md);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+    }
+
+    .category-header {
+        padding: var(--spacing-md);
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.1) 100%);
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+        cursor: pointer;
+    }
+
+    .category-name {
+        font-size: 1.1rem;
+        font-weight: var(--font-weight-semibold);
+        flex: 1;
+    }
+
+    .category-list {
+        padding: var(--spacing-sm) 0;
+    }
+
+    .item-row {
+        padding: var(--spacing-md);
+        border-bottom: 1px solid var(--border-subtle);
+        display: grid;
+        grid-template-columns: 2fr 100px 120px 120px;
+        gap: var(--spacing-sm);
+        align-items: center;
+    }
+
+    .item-row:last-child {
+        border-bottom: none;
+    }
+
+    .item-name {
+        font-size: 0.95rem;
+        font-weight: var(--font-weight-medium);
+    }
+
+    .item-availability {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+    }
+
+    .item-input {
+        padding: var(--spacing-xs) var(--spacing-sm);
+        background-color: var(--bg-primary);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-sm);
+        color: var(--text-primary);
+        text-align: right;
+        font-size: 0.9rem;
+    }
+
+    .item-total {
+        font-size: 0.95rem;
+        font-weight: var(--font-weight-bold);
+        color: #f39c12;
+        text-align: right;
+    }
+
+    .submit-button {
+        position: fixed;
+        bottom: calc(var(--bottom-nav-height) + var(--spacing-md));
+        left: var(--spacing-md);
+        right: var(--spacing-md);
+        padding: var(--spacing-md);
+        background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+        color: white;
+        border: none;
+        border-radius: var(--radius-md);
+        font-size: 1rem;
+        font-weight: var(--font-weight-bold);
+        box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
+        cursor: pointer;
+    }
+
+    .total-summary {
+        position: fixed;
+        bottom: calc(var(--bottom-nav-height) + 70px);
+        left: var(--spacing-md);
+        right: var(--spacing-md);
+        padding: var(--spacing-md);
+        background: linear-gradient(135deg, rgba(243, 156, 18, 0.2) 0%, rgba(230, 126, 34, 0.15) 100%);
+        border-radius: var(--radius-md);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        backdrop-filter: blur(10px);
+    }
+
+    .total-label {
+        font-size: 1rem;
+        font-weight: var(--font-weight-semibold);
+    }
+
+    .total-value {
+        font-size: 1.3rem;
+        font-weight: var(--font-weight-bold);
+        color: #f39c12;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <h1 class="header-title">💰 Lista Completa (com Preços)</h1>
+        <p class="header-subtitle">Para orçamentos detalhados que serão enviados ao cliente</p>
+    </div>
+
+    <form method="POST" action="{{ url_for('separation.new_complete') }}" id="listForm">
+        <div class="form-section">
+            <div class="form-group">
+                <label class="form-label">Tour *</label>
+                <select name="tour_id" class="form-select" required>
+                    <option value="">Selecione uma tour...</option>
+                    {% for tour in tours %}
+                    <option value="{{ tour.id }}">{{ tour.name }} - {{ tour.artist }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Nome da Lista *</label>
+                <input type="text" name="name" class="form-input" 
+                       placeholder="Ex: Orçamento Show ABC - Dia 1" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Observações</label>
+                <input type="text" name="description" class="form-input" 
+                       placeholder="Observações opcionais">
+            </div>
+        </div>
+
+        <h3 style="font-size: 1.1rem; margin: var(--spacing-lg) 0 var(--spacing-md) 0;">Equipamentos</h3>
+
+        {% for category_name, data in types_by_category.items() %}
+        <div class="category-section">
+            <div class="category-header">
+                <span>{{ data.icon }}</span>
+                <span class="category-name">{{ category_name }}</span>
+            </div>
+            <div class="category-list">
+                {% for type in data.types %}
+                <div class="item-row">
+                    <div>
+                        <div class="item-name">{{ type.name }}</div>
+                        <div class="item-availability">{{ type.available }}/{{ type.total }} disponíveis</div>
+                    </div>
+                    <input type="number" name="quantity-{{ type.id }}" class="item-input" 
+                           placeholder="Qtd" min="0" max="{{ type.available }}" 
+                           data-type-id="{{ type.id }}" oninput="calculateTotal({{ type.id }})">
+                    <input type="number" name="unit_price-{{ type.id }}" class="item-input" 
+                           placeholder="R$ Unit" min="0" step="0.01"
+                           data-type-id="{{ type.id }}" oninput="calculateTotal({{ type.id }})">
+                    <div class="item-total" id="total-{{ type.id }}">R$ 0,00</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+
+        <div style="height: 150px;"></div>
+
+        <div class="total-summary">
+            <span class="total-label">TOTAL GERAL</span>
+            <span class="total-value" id="grandTotal">R$ 0,00</span>
+        </div>
+
+        <button type="submit" class="submit-button">✓ Criar Lista Completa</button>
+    </form>
+</div>
+
+<script>
+function calculateTotal(typeId) {
+    const qtyInput = document.querySelector(`input[name="quantity-${typeId}"]`);
+    const priceInput = document.querySelector(`input[name="unit_price-${typeId}"]`);
+    const totalDiv = document.getElementById(`total-${typeId}`);
+    
+    const qty = parseFloat(qtyInput.value) || 0;
+    const price = parseFloat(priceInput.value) || 0;
+    const total = qty * price;
+    
+    totalDiv.textContent = `R$ ${total.toFixed(2).replace('.', ',')}`;
+    
+    updateGrandTotal();
+}
+
+function updateGrandTotal() {
+    let grandTotal = 0;
+    document.querySelectorAll('.item-input[name^="quantity-"]').forEach(input => {
+        const typeId = input.dataset.typeId;
+        const qty = parseFloat(input.value) || 0;
+        const price = parseFloat(document.querySelector(`input[name="unit_price-${typeId}"]`).value) || 0;
+        grandTotal += qty * price;
+    });
+    
+    document.getElementById('grandTotal').textContent = `R$ ${grandTotal.toFixed(2).replace('.', ',')}`;
+}
+</script>
+{% endblock %}
