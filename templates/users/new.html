@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Novo Usuário{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 600px;">
+    <h2 class="text-white mb-4">
+        <i class="bi bi-person-plus"></i> Novo Usuário
+    </h2>
+
+    <div class="card bg-dark border-secondary">
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('users.new') }}">
+                <div class="mb-3">
+                    <label class="form-label text-white">Nome *</label>
+                    <input type="text" name="name" class="form-control bg-dark text-white border-secondary" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label text-white">Email *</label>
+                    <input type="email" name="email" class="form-control bg-dark text-white border-secondary" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label text-white">Telefone</label>
+                    <input type="tel" name="phone" class="form-control bg-dark text-white border-secondary">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label text-white">Senha *</label>
+                    <input type="password" name="password" class="form-control bg-dark text-white border-secondary" required minlength="6">
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label text-white">Tipo de Usuário *</label>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="role" value="admin" id="role_admin">
+                                <label class="form-check-label text-white" for="role_admin">
+                                    <span class="badge badge-danger">Administrador</span>
+                                    <br><small class="text-muted">Acesso total + financeiro</small>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="role" value="tech_responsible" id="role_tech" checked>
+                                <label class="form-check-label text-white" for="role_tech">
+                                    <span class="badge badge-primary">Técnico Responsável</span>
+                                    <br><small class="text-muted">Separação + manutenção</small>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="role" value="tech_tour" id="role_tour">
+                                <label class="form-check-label text-white" for="role_tour">
+                                    <span class="badge badge-warning text-dark">Técnico Tour</span>
+                                    <br><small class="text-muted">Acesso temporário</small>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-check-circle"></i> Criar Usuário
+                    </button>
+                    <a href="{{ url_for('users.index') }}" class="btn btn-outline-secondary">Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
