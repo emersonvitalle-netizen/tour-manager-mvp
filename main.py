@@ -66,6 +66,8 @@ def migrate_database():
         'ALTER TABLE equipment ADD COLUMN rfid_uhf_tag VARCHAR(128)',
         'ALTER TABLE equipment ADD COLUMN tag_associated_at DATETIME',
         'ALTER TABLE equipment ADD COLUMN tag_associated_by INTEGER',
+        # Company - API Key
+        'ALTER TABLE company ADD COLUMN api_key VARCHAR(64)',
     ]
 
     for migration in migrations:
@@ -131,6 +133,7 @@ from routes.users import users_bp
 from routes.financial import financial_bp
 from routes.orcamento import orcamento_bp
 from routes.scanner import scanner_bp
+from routes.api_rfid import api_rfid_bp
 
 app.register_blueprint(auth_bp)
 app.register_blueprint(equipment_bp)
@@ -143,6 +146,7 @@ app.register_blueprint(users_bp)
 app.register_blueprint(financial_bp)
 app.register_blueprint(orcamento_bp)
 app.register_blueprint(scanner_bp)
+app.register_blueprint(api_rfid_bp)
 
 @app.route('/')
 def index():

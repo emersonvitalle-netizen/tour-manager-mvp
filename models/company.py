@@ -26,6 +26,9 @@ class Company(db.Model):
     state = db.Column(db.String(2))  # Estado (UF)
     zipcode = db.Column(db.String(10))  # CEP
     
+    # API para leitores externos
+    api_key = db.Column(db.String(64), unique=True)  # Chave API para leitores RFID
+    
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     is_active = db.Column(db.Boolean, default=True)
 
