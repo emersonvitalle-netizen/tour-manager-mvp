@@ -280,9 +280,9 @@
         <a href="{{ url_for('orcamento.generate_pdf', id=sep_list.id) }}" class="btn btn-pdf" style="display: flex; align-items: center; justify-content: center; gap: 10px;">
             <i class="fas fa-file-pdf"></i> Visualizar / Baixar PDF
         </a>
-        <a href="https://wa.me/?text=Orçamento%20{{ sep_list.name|urlencode }}%20-%20Valor%20R$%20{{ '%.2f'|format(sep_list.items|list|sum(attribute='total_price') if sep_list.list_type == 'complete' else sep_list.total_value or 0) }}" target="_blank" class="btn" style="background: linear-gradient(135deg, #25d366 0%, #128c7e 100%); color: white; display: flex; align-items: center; justify-content: center; gap: 10px;">
+        <button type="button" onclick="document.getElementById('whatsappModal').classList.add('show')" class="btn" style="background: linear-gradient(135deg, #25d366 0%, #128c7e 100%); color: white; display: flex; align-items: center; justify-content: center; gap: 10px; border: none; cursor: pointer;">
             <i class="fab fa-whatsapp"></i> Enviar por WhatsApp
-        </a>
+        </button>
     </div>
 </div>
 
