@@ -13,40 +13,73 @@
 
         @page {
             size: A4;
-            margin: 15mm;
+            margin: 10mm;
         }
 
         body {
             font-family: 'Segoe UI', -apple-system, sans-serif;
-            background: #f5f5f5;
-            color: #333;
+            background: #0a0a0a;
+            color: #fff;
             line-height: 1.5;
         }
 
         .container {
             max-width: 800px;
             margin: 0 auto;
-            background: white;
+            background: #0a0a0a;
             min-height: 100vh;
         }
 
         .header {
-            background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+            background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%);
             color: white;
-            padding: 30px;
+            padding: 25px;
             display: flex;
             justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 2px solid #d4a574;
+        }
+
+        .company-logo {
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            object-fit: cover;
+            border: 2px solid #d4a574;
+            margin-bottom: 10px;
+        }
+
+        .company-logo-placeholder {
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #d4a574 0%, #b8860b 100%);
+            display: flex;
             align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: #0a0a0a;
+            margin-bottom: 10px;
         }
 
         .company-info h1 {
-            font-size: 1.8rem;
+            font-size: 1.6rem;
             font-weight: 700;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
+            color: #d4a574;
         }
 
-        .company-info p {
-            font-size: 0.9rem;
+        .company-details {
+            font-size: 0.85rem;
+            color: #a0a0a0;
+            line-height: 1.6;
+        }
+
+        .company-details p {
+            margin: 2px 0;
+        }
+
+        .company-details strong {
             color: #ccc;
         }
 
@@ -54,48 +87,90 @@
             text-align: right;
         }
 
-        .doc-info .doc-type {
-            font-size: 1.2rem;
+        .doc-type {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #d4a574;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-bottom: 8px;
+        }
+
+        .doc-number {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 8px;
+        }
+
+        .doc-date {
+            font-size: 0.9rem;
+            color: #888;
+        }
+
+        .doc-status {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 10px;
+        }
+
+        .status-pending {
+            background: rgba(241, 196, 15, 0.2);
+            color: #f1c40f;
+            border: 1px solid #f1c40f;
+        }
+
+        .status-approved {
+            background: rgba(46, 204, 113, 0.2);
+            color: #2ecc71;
+            border: 1px solid #2ecc71;
+        }
+
+        .status-rejected {
+            background: rgba(231, 76, 60, 0.2);
+            color: #e74c3c;
+            border: 1px solid #e74c3c;
+        }
+
+        .content {
+            padding: 25px;
+        }
+
+        .info-section {
+            margin-bottom: 25px;
+        }
+
+        .section-title {
+            font-size: 0.9rem;
             font-weight: 700;
             color: #d4a574;
             text-transform: uppercase;
             letter-spacing: 2px;
-        }
-
-        .doc-info .doc-number {
-            font-size: 0.9rem;
-            color: #888;
-            margin-top: 5px;
-        }
-
-        .doc-info .doc-date {
-            font-size: 0.85rem;
-            color: #888;
-        }
-
-        .content {
-            padding: 30px;
-        }
-
-        .info-section {
-            margin-bottom: 30px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #333;
+            margin-bottom: 15px;
         }
 
         .info-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
+            gap: 12px;
         }
 
         .info-item {
-            background: #f8f8f8;
+            background: #1a1a1a;
             padding: 12px 15px;
             border-radius: 8px;
             border-left: 3px solid #d4a574;
         }
 
         .info-label {
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             color: #888;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -103,40 +178,32 @@
         }
 
         .info-value {
-            font-size: 1rem;
+            font-size: 0.95rem;
             font-weight: 600;
-            color: #333;
+            color: #fff;
         }
 
         .items-section {
-            margin-bottom: 30px;
-        }
-
-        .section-title {
-            font-size: 1rem;
-            font-weight: 700;
-            color: #333;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #d4a574;
-            margin-bottom: 15px;
+            margin-bottom: 25px;
         }
 
         .items-table {
             width: 100%;
             border-collapse: collapse;
+            background: #1a1a1a;
+            border-radius: 8px;
+            overflow: hidden;
         }
 
         .items-table th {
-            background: #f0f0f0;
+            background: #252525;
             padding: 12px 15px;
             text-align: left;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            color: #666;
-            border-bottom: 2px solid #ddd;
+            color: #d4a574;
+            border-bottom: 1px solid #333;
         }
 
         .items-table th:last-child {
@@ -145,29 +212,32 @@
 
         .items-table td {
             padding: 12px 15px;
-            border-bottom: 1px solid #eee;
-            font-size: 0.95rem;
+            border-bottom: 1px solid #2a2a2a;
+            font-size: 0.9rem;
+            color: #ccc;
         }
 
         .items-table td:last-child {
             text-align: right;
             font-weight: 600;
+            color: #fff;
         }
 
-        .items-table tr:hover {
-            background: #fafafa;
+        .items-table tr:last-child td {
+            border-bottom: none;
         }
 
         .qty-badge {
-            background: #e8e8e8;
+            background: #333;
             padding: 4px 12px;
             border-radius: 15px;
             font-size: 0.85rem;
             font-weight: 600;
+            color: #d4a574;
         }
 
         .totals-section {
-            background: linear-gradient(135deg, #f8f4ef 0%, #f5f0e8 100%);
+            background: linear-gradient(135deg, #1a1a1a 0%, #252525 100%);
             padding: 20px;
             border-radius: 10px;
             border: 1px solid #d4a574;
@@ -177,45 +247,60 @@
             display: flex;
             justify-content: space-between;
             padding: 8px 0;
-            font-size: 1rem;
+            font-size: 0.95rem;
+            color: #ccc;
         }
 
         .total-row.grand {
             border-top: 2px solid #d4a574;
             margin-top: 10px;
             padding-top: 15px;
-            font-size: 1.3rem;
+            font-size: 1.4rem;
             font-weight: 700;
         }
 
         .total-row.grand span:last-child {
-            color: #b8860b;
-        }
-
-        .footer {
-            background: #f5f5f5;
-            padding: 20px 30px;
-            text-align: center;
-            font-size: 0.85rem;
-            color: #888;
-            border-top: 1px solid #ddd;
+            color: #d4a574;
         }
 
         .observations {
-            background: #fffbe6;
+            background: rgba(212, 165, 116, 0.1);
             padding: 15px;
             border-radius: 8px;
-            border-left: 3px solid #f39c12;
-            margin-bottom: 30px;
-            font-size: 0.9rem;
+            border-left: 3px solid #d4a574;
+            margin-bottom: 25px;
         }
 
         .observations-title {
             font-weight: 700;
-            color: #b8860b;
+            color: #d4a574;
             margin-bottom: 5px;
             text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 1px;
+        }
+
+        .observations-text {
+            color: #a0a0a0;
+            font-size: 0.9rem;
+        }
+
+        .footer {
+            background: #0d0d0d;
+            padding: 20px 25px;
+            text-align: center;
+            border-top: 1px solid #333;
+        }
+
+        .footer p {
             font-size: 0.8rem;
+            color: #666;
+            margin: 4px 0;
+        }
+
+        .footer-brand {
+            color: #d4a574;
+            font-weight: 600;
         }
 
         .action-bar {
@@ -223,29 +308,36 @@
             bottom: 0;
             left: 0;
             right: 0;
-            background: #1a1a1a;
-            padding: 15px 30px;
+            background: #0a0a0a;
+            padding: 15px 20px;
             display: flex;
             justify-content: center;
-            gap: 15px;
-            box-shadow: 0 -4px 20px rgba(0,0,0,0.3);
+            gap: 12px;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
+            border-top: 1px solid #333;
         }
 
         .action-btn {
-            padding: 12px 30px;
+            padding: 12px 25px;
             border: none;
             border-radius: 8px;
             font-weight: 700;
-            font-size: 1rem;
+            font-size: 0.9rem;
             cursor: pointer;
             text-transform: uppercase;
             letter-spacing: 1px;
             text-decoration: none;
+            transition: all 0.3s ease;
         }
 
         .btn-download {
             background: linear-gradient(135deg, #d4a574 0%, #b8860b 100%);
-            color: #000;
+            color: #0a0a0a;
+        }
+
+        .btn-download:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(212, 165, 116, 0.4);
         }
 
         .btn-whatsapp {
@@ -253,39 +345,95 @@
             color: white;
         }
 
+        .btn-whatsapp:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(37, 211, 102, 0.4);
+        }
+
         .btn-back {
             background: #333;
             color: white;
+            border: 1px solid #444;
+        }
+
+        .btn-back:hover {
+            background: #444;
         }
 
         @media print {
             body {
-                background: white;
+                background: white !important;
+                color: #333 !important;
             }
 
             .container {
-                box-shadow: none;
+                background: white !important;
+                box-shadow: none !important;
+            }
+
+            .header {
+                background: #f5f5f5 !important;
+                border-bottom-color: #d4a574 !important;
+            }
+
+            .company-info h1 {
+                color: #333 !important;
+            }
+
+            .company-details {
+                color: #666 !important;
+            }
+
+            .doc-number {
+                color: #333 !important;
+            }
+
+            .info-item {
+                background: #f9f9f9 !important;
+            }
+
+            .info-value {
+                color: #333 !important;
+            }
+
+            .items-table {
+                background: #f9f9f9 !important;
+            }
+
+            .items-table th {
+                background: #eee !important;
+            }
+
+            .items-table td {
+                color: #333 !important;
+                border-bottom-color: #ddd !important;
+            }
+
+            .totals-section {
+                background: #f5f0e8 !important;
+            }
+
+            .total-row {
+                color: #333 !important;
+            }
+
+            .footer {
+                background: #f5f5f5 !important;
             }
 
             .action-bar {
                 display: none !important;
-            }
-
-            .header {
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
             }
         }
 
         @media (max-width: 600px) {
             .header {
                 flex-direction: column;
-                text-align: center;
-                gap: 15px;
+                gap: 20px;
             }
 
             .doc-info {
-                text-align: center;
+                text-align: left;
             }
 
             .info-grid {
@@ -294,7 +442,17 @@
 
             .items-table th, .items-table td {
                 padding: 8px 10px;
-                font-size: 0.85rem;
+                font-size: 0.8rem;
+            }
+
+            .action-bar {
+                flex-wrap: wrap;
+            }
+
+            .action-btn {
+                flex: 1;
+                min-width: 100px;
+                text-align: center;
             }
         }
     </style>
@@ -303,32 +461,42 @@
     <div class="container">
         <div class="header">
             <div class="company-info">
+                {% if company.logo_url %}
+                <img src="{{ company.logo_url }}" alt="{{ company.name }}" class="company-logo">
+                {% else %}
+                <div class="company-logo-placeholder">{{ company.name[0] if company.name else 'T' }}</div>
+                {% endif %}
                 <h1>{{ company.name }}</h1>
-                {% if company.cnpj %}<p>CNPJ: {{ company.cnpj }}</p>{% endif %}
-                {% if company.phone %}<p>Tel: {{ company.phone }}</p>{% endif %}
-                {% if company.email %}<p>{{ company.email }}</p>{% endif %}
+                <div class="company-details">
+                    {% if company.cnpj %}<p><strong>CNPJ:</strong> {{ company.cnpj }}</p>{% endif %}
+                    {% if company.address %}<p><strong>Endereço:</strong> {{ company.address }}</p>{% endif %}
+                    {% if company.phone %}<p><strong>Telefone:</strong> {{ company.phone }}</p>{% endif %}
+                    {% if company.email %}<p><strong>E-mail:</strong> {{ company.email }}</p>{% endif %}
+                </div>
             </div>
             <div class="doc-info">
                 <div class="doc-type">Orçamento</div>
                 <div class="doc-number">#{{ '%04d'|format(lista.id) }}</div>
                 <div class="doc-date">{{ lista.created_at.strftime('%d/%m/%Y') }}</div>
+                <div class="doc-status {% if lista.status == 'pending' %}status-pending{% elif lista.status == 'approved' %}status-approved{% else %}status-rejected{% endif %}">
+                    {% if lista.status == 'pending' %}Pendente
+                    {% elif lista.status == 'approved' %}Aprovado
+                    {% else %}Rejeitado{% endif %}
+                </div>
             </div>
         </div>
 
         <div class="content">
             <div class="info-section">
+                <div class="section-title">Informações do Orçamento</div>
                 <div class="info-grid">
                     <div class="info-item">
                         <div class="info-label">Nome do Orçamento</div>
                         <div class="info-value">{{ lista.name }}</div>
                     </div>
                     <div class="info-item">
-                        <div class="info-label">Status</div>
-                        <div class="info-value">
-                            {% if lista.status == 'pending' %}Pendente
-                            {% elif lista.status == 'approved' %}Aprovado
-                            {% else %}Rejeitado{% endif %}
-                        </div>
+                        <div class="info-label">Tipo</div>
+                        <div class="info-value">{{ 'Completo' if lista.list_type == 'complete' else 'Simples' }}</div>
                     </div>
                     {% if lista.tour %}
                     <div class="info-item">
@@ -346,7 +514,7 @@
             {% if lista.description %}
             <div class="observations">
                 <div class="observations-title">Observações</div>
-                {{ lista.description }}
+                <div class="observations-text">{{ lista.description }}</div>
             </div>
             {% endif %}
 
@@ -403,7 +571,7 @@
 
         <div class="footer">
             <p>Orçamento gerado em {{ now.strftime('%d/%m/%Y às %H:%M') }}</p>
-            <p>{{ company.name }}{% if company.phone %} • {{ company.phone }}{% endif %}{% if company.email %} • {{ company.email }}{% endif %}</p>
+            <p class="footer-brand">{{ company.name }}{% if company.phone %} • {{ company.phone }}{% endif %}{% if company.email %} • {{ company.email }}{% endif %}</p>
         </div>
     </div>
 
