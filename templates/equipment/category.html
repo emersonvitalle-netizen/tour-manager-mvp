@@ -226,17 +226,30 @@
     }
 
     .equipment-grid {
-        padding: var(--spacing-md);
+        padding: var(--spacing-sm);
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-        gap: var(--spacing-md);
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--spacing-sm);
+    }
+
+    @media (min-width: 480px) {
+        .equipment-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+
+    @media (min-width: 768px) {
+        .equipment-grid {
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--spacing-md);
+        }
     }
 
     .equipment-card {
         background-color: var(--bg-primary);
         border: 1px solid var(--border-subtle);
         border-radius: var(--radius-md);
-        padding: var(--spacing-md);
+        padding: var(--spacing-sm);
         text-decoration: none;
         color: inherit;
         transition: all 0.3s ease;
@@ -252,27 +265,45 @@
 
     .equipment-photo {
         width: 100%;
-        height: 150px;
+        height: 80px;
         object-fit: cover;
         border-radius: var(--radius-sm);
-        margin-bottom: var(--spacing-sm);
+        margin-bottom: var(--spacing-xs);
         background-color: var(--bg-secondary);
     }
 
+    @media (min-width: 768px) {
+        .equipment-photo {
+            height: 120px;
+        }
+    }
+
     .equipment-name {
-        font-size: 1rem;
+        font-size: 0.8rem;
         font-weight: var(--font-weight-semibold);
         color: var(--text-primary);
-        margin-bottom: var(--spacing-xs);
+        margin-bottom: 2px;
+        line-height: 1.2;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     .equipment-code {
-        font-size: 0.85rem;
+        font-size: 0.7rem;
         color: var(--text-secondary);
-        margin-bottom: var(--spacing-sm);
+        margin-bottom: var(--spacing-xs);
     }
 
     @media (min-width: 768px) {
+        .equipment-name {
+            font-size: 0.9rem;
+        }
+        
+        .equipment-code {
+            font-size: 0.8rem;
+        }
+        
         .action-section {
             flex-direction: row;
         }
@@ -284,10 +315,6 @@
 
         .search-box {
             flex: 1;
-        }
-
-        .equipment-grid {
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
         }
     }
 </style>
