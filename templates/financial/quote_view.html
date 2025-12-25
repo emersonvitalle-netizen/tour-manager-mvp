@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}Orçamento {{ quote.code }}{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 800px;">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="text-white mb-1">{{ quote.code }}</h2>
+            <span class="badge {{ quote.status_badge }} fs-6">{{ quote.status_label }}</span>
+        </div>
+        <div class="btn-group">
+            <a href="{{ url_for('financial.edit_quote', id=quote.id) }}" class="btn btn-outline-light">
+                <i class="bi bi-pencil"></i> Editar
+            </a>
+            {% if quote.status == 'draft' %}
+            <form method="POST" action="{{ url_for('financial.send_quote', id=quote.id) }}" style="display: inline;">
+                <button type="submit" class="btn btn-info">
+                    <i class="bi bi-send"></i> Marcar Enviado
+                </button>
+            </form>
+            {% endif %}
+            {% if quote.status == 'sent' %}
+            <form method="POST" action="{{ url_for('financial.approve_quote', id=quote.id) }}" style="display: inline;">
+                <button type="submit" class="btn btn-success">
+                    <i class="bi bi-check-lg"></i> Aprovar
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card bg-dark border-secondary mb-4">
+        <div class="card-header bg-transparent border-secondary">
+            <h5 class="text-white mb-0">{{ quote.title }}</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p class="text-muted mb-1">Cliente</p>
+                    <p class="text-white fs-5">{{ quote.client_name }}</p>
+                    {% if quote.client_document %}
+                    <p class="text-muted">{{ quote.client_document }}</p>
+                    {% endif %}
+                    {% if quote.client_email %}
+                    <p class="text-muted">{{ quote.client_email }}</p>
+                    {% endif %}
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="text-muted mb-1">Criado em</p>
+                    <p class="text-white">{{ quote.created_at.strftime('%d/%m/%Y') }}</p>
+                    {% if quote.valid_until %}
+                    <p class="text-muted mb-1">Válido até</p>
+                    <p class="text-white {% if quote.is_expired %}text-danger{% endif %}">
+                        {{ quote.valid_until.strftime('%d/%m/%Y') }}
+                        {% if quote.is_expired %}<span class="badge bg-danger">Expirado</span>{% endif %}
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+            {% if quote.description %}
+            <hr class="border-secondary">
+            <p class="text-white">{{ quote.description }}</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card bg-dark border-secondary mb-4">
+        <div class="card-header bg-transparent border-secondary">
+            <h5 class="text-white mb-0">Itens</h5>
+        </div>
+        <div class="card-body p-0">
+            {% if quote.items %}
+            <div class="table-responsive">
+                <table class="table table-dark mb-0">
+                    <thead>
+                        <tr>
+                            <th>Descrição</th>
+                            <th class="text-center">Qtd</th>
+                            <th class="text-end">Valor Unit.</th>
+                            <th class="text-end">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in quote.items %}
+                        <tr>
+                            <td>{{ item.description }}</td>
+                            <td class="text-center">{{ item.quantity }}</td>
+                            <td class="text-end">R$ {{ "%.2f"|format(item.unit_price|float) }}</td>
+                            <td class="text-end">R$ {{ "%.2f"|format(item.total|float) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="3" class="text-end fw-bold">Subtotal:</td>
+                            <td class="text-end text-success">R$ {{ "%.2f"|format(quote.subtotal|float) }}</td>
+                        </tr>
+                        {% if quote.discount_percent and quote.discount_percent > 0 %}
+                        <tr>
+                            <td colspan="3" class="text-end">Desconto ({{ quote.discount_percent }}%):</td>
+                            <td class="text-end text-danger">- R$ {{ "%.2f"|format(quote.discount_value|float) }}</td>
+                        </tr>
+                        {% endif %}
+                        <tr class="table-secondary">
+                            <td colspan="3" class="text-end fw-bold">TOTAL:</td>
+                            <td class="text-end fw-bold text-success fs-4">R$ {{ "%.2f"|format(quote.total|float) }}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            {% else %}
+            <div class="p-4 text-center text-muted">
+                Nenhum item adicionado
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <a href="{{ url_for('financial.quotes') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Voltar
+        </a>
+    </div>
+</div>
+{% endblock %}

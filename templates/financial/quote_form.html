@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+
+{% block title %}{% if quote %}Editar Orçamento{% else %}Novo Orçamento{% endif %}{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 800px;">
+    <h2 class="text-white mb-4">
+        <i class="bi bi-file-earmark-text"></i> 
+        {% if quote %}Editar Orçamento {{ quote.code }}{% else %}Novo Orçamento{% endif %}
+    </h2>
+
+    <form method="POST" action="{{ url_for('financial.edit_quote', id=quote.id) if quote else url_for('financial.new_quote') }}">
+        <div class="card bg-dark border-secondary mb-4">
+            <div class="card-header bg-transparent border-secondary">
+                <h5 class="text-white mb-0">Dados do Cliente</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label text-white">Nome do Cliente *</label>
+                        <input type="text" name="client_name" class="form-control bg-dark text-white border-secondary" 
+                               value="{{ quote.client_name if quote else '' }}" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-white">CPF/CNPJ</label>
+                        <input type="text" name="client_document" class="form-control bg-dark text-white border-secondary"
+                               value="{{ quote.client_document if quote else '' }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-white">Email</label>
+                        <input type="email" name="client_email" class="form-control bg-dark text-white border-secondary"
+                               value="{{ quote.client_email if quote else '' }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-white">Telefone</label>
+                        <input type="tel" name="client_phone" class="form-control bg-dark text-white border-secondary"
+                               value="{{ quote.client_phone if quote else '' }}">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card bg-dark border-secondary mb-4">
+            <div class="card-header bg-transparent border-secondary">
+                <h5 class="text-white mb-0">Detalhes do Orçamento</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label text-white">Título *</label>
+                        <input type="text" name="title" class="form-control bg-dark text-white border-secondary"
+                               value="{{ quote.title if quote else '' }}" required
+                               placeholder="Ex: Locação de equipamentos para show">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-white">Tour (opcional)</label>
+                        <select name="tour_id" class="form-select bg-dark text-white border-secondary">
+                            <option value="">Nenhuma</option>
+                            {% for tour in tours %}
+                            <option value="{{ tour.id }}" {% if quote and quote.tour_id == tour.id %}selected{% endif %}>
+                                {{ tour.name }} - {{ tour.artist }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-white">Válido até</label>
+                        <input type="date" name="valid_until" class="form-control bg-dark text-white border-secondary"
+                               value="{{ quote.valid_until.strftime('%Y-%m-%d') if quote and quote.valid_until else '' }}">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label text-white">Descrição</label>
+                        <textarea name="description" rows="3" class="form-control bg-dark text-white border-secondary"
+                                  placeholder="Detalhes do serviço">{{ quote.description if quote else '' }}</textarea>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label text-white">Observações Internas</label>
+                        <textarea name="notes" rows="2" class="form-control bg-dark text-white border-secondary"
+                                  placeholder="Notas internas (não aparecem no orçamento)">{{ quote.notes if quote else '' }}</textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if quote %}
+        <div class="card bg-dark border-secondary mb-4">
+            <div class="card-header bg-transparent border-secondary d-flex justify-content-between align-items-center">
+                <h5 class="text-white mb-0">Itens do Orçamento</h5>
+            </div>
+            <div class="card-body">
+                {% if quote.items %}
+                <div class="table-responsive mb-3">
+                    <table class="table table-dark table-sm mb-0">
+                        <thead>
+                            <tr>
+                                <th>Descrição</th>
+                                <th class="text-center">Qtd</th>
+                                <th class="text-end">Valor Unit.</th>
+                                <th class="text-end">Total</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in quote.items %}
+                            <tr>
+                                <td>{{ item.description }}</td>
+                                <td class="text-center">{{ item.quantity }}</td>
+                                <td class="text-end">R$ {{ "%.2f"|format(item.unit_price|float) }}</td>
+                                <td class="text-end">R$ {{ "%.2f"|format(item.total|float) }}</td>
+                                <td class="text-end">
+                                    <form method="POST" action="{{ url_for('financial.delete_quote_item', id=quote.id, item_id=item.id) }}" style="display: inline;">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Remover item?')">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="3" class="text-end fw-bold">Subtotal:</td>
+                                <td class="text-end text-success">R$ {{ "%.2f"|format(quote.subtotal|float) }}</td>
+                                <td></td>
+                            </tr>
+                            {% if quote.discount_percent and quote.discount_percent > 0 %}
+                            <tr>
+                                <td colspan="3" class="text-end">Desconto ({{ quote.discount_percent }}%):</td>
+                                <td class="text-end text-danger">- R$ {{ "%.2f"|format(quote.discount_value|float) }}</td>
+                                <td></td>
+                            </tr>
+                            {% endif %}
+                            <tr class="table-secondary">
+                                <td colspan="3" class="text-end fw-bold">TOTAL:</td>
+                                <td class="text-end fw-bold text-success fs-5">R$ {{ "%.2f"|format(quote.total|float) }}</td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                {% endif %}
+
+                <div class="border-top border-secondary pt-3">
+                    <h6 class="text-white mb-3">Adicionar Item</h6>
+                    <div class="row g-2">
+                        <div class="col-md-5">
+                            <input type="text" name="description" form="add-item-form" class="form-control form-control-sm bg-dark text-white border-secondary" placeholder="Descrição" required>
+                        </div>
+                        <div class="col-md-2">
+                            <input type="number" name="quantity" form="add-item-form" class="form-control form-control-sm bg-dark text-white border-secondary" placeholder="Qtd" value="1" min="1" required>
+                        </div>
+                        <div class="col-md-3">
+                            <input type="number" name="unit_price" form="add-item-form" step="0.01" class="form-control form-control-sm bg-dark text-white border-secondary" placeholder="Valor R$" required>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" form="add-item-form" class="btn btn-sm btn-success w-100">
+                                <i class="bi bi-plus"></i> Add
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <form id="add-item-form" method="POST" action="{{ url_for('financial.add_quote_item', id=quote.id) }}"></form>
+
+        <div class="card bg-dark border-secondary mb-4">
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label text-white">Desconto (%)</label>
+                        <input type="number" name="discount_percent" step="0.01" class="form-control bg-dark text-white border-secondary"
+                               value="{{ quote.discount_percent if quote else 0 }}">
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-warning">
+                <i class="bi bi-check-circle"></i> {% if quote %}Salvar{% else %}Criar Orçamento{% endif %}
+            </button>
+            <a href="{{ url_for('financial.quotes') }}" class="btn btn-outline-secondary">Cancelar</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
