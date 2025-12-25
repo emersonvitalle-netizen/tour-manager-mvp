@@ -7,7 +7,7 @@ import os
 def create_models():
     """Importa todos os models na ordem correta"""
     from models.company import Company
-    from models.user import User
+    from models.user import User, TourAccess
     from models.category import Category
     from models.equipment_type import EquipmentType
     from models.equipment import Equipment
@@ -90,6 +90,7 @@ from routes.company import company_bp
 from routes.tour import tour_bp
 from routes.separation import separation_bp
 from routes.work_list import work_list_bp
+from routes.users import users_bp
 
 app.register_blueprint(auth_bp)
 app.register_blueprint(equipment_bp)
@@ -98,6 +99,7 @@ app.register_blueprint(company_bp)
 app.register_blueprint(tour_bp)
 app.register_blueprint(separation_bp)
 app.register_blueprint(work_list_bp)
+app.register_blueprint(users_bp)
 
 @app.route('/')
 def index():
