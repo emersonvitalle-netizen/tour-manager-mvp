@@ -166,7 +166,63 @@
     }
 
     .type-content.expanded {
-        max-height: 2000px;
+        max-height: 5000px;
+    }
+
+    /* BRAND HEADER - COLAPSÁVEL */
+    .brand-section {
+        margin-bottom: 12px;
+    }
+
+    .brand-header {
+        padding: 12px 16px;
+        background: rgba(0, 217, 255, 0.1);
+        border-radius: 8px;
+        margin: 0 var(--spacing-md) 0 var(--spacing-md);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        transition: all 0.2s ease;
+    }
+
+    .brand-header:hover {
+        background: rgba(0, 217, 255, 0.15);
+    }
+
+    .brand-info {
+        flex: 1;
+    }
+
+    .brand-name {
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .brand-count {
+        font-size: 0.85rem;
+        color: #94a3b8;
+        margin-left: 10px;
+    }
+
+    .brand-collapse-icon {
+        font-size: 1rem;
+        color: var(--text-secondary);
+        transition: transform 0.3s ease;
+    }
+
+    .brand-collapse-icon.expanded {
+        transform: rotate(180deg);
+    }
+
+    .brand-content {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease;
+    }
+
+    .brand-content.expanded {
+        max-height: 3000px;
     }
 
     .equipment-grid {
@@ -253,7 +309,7 @@
 
     <div class="action-section">
         {% if current_user.role == 'admin' %}
-        <a href="{{ url_for('equipment.new_equipment') }}" class="new-button">
+        <a href="{{ url_for('equipment.new_equipment', category_id=category.id) }}" class="new-button">
             + Novo Equipamento
         </a>
         {% endif %}
@@ -272,32 +328,45 @@
                     <div class="collapse-icon" id="icon-{{ type_id }}">▼</div>
                 </div>
                 <div class="type-content" id="content-{{ type_id }}">
-                    <div class="equipment-grid">
-                        {% for equipment in data['items'] %}
-                        <a href="{{ url_for('equipment.detail_equipment', id=equipment.id) }}" class="equipment-card">
-                            {% if equipment.primary_photo_url %}
-                            <img src="{{ equipment.primary_photo_url }}" alt="{{ equipment.name }}" class="equipment-photo">
-                            {% else %}
-                            <div class="equipment-photo" style="display: flex; align-items: center; justify-content: center; color: var(--text-secondary);">
-                                Sem foto
+                    {% for brand_data in data.brands %}
+                    <div class="brand-section">
+                        <div class="brand-header" onclick="toggleBrand({{ type_id }}, {{ loop.index }})">
+                            <div class="brand-info">
+                                <span class="brand-name">{{ brand_data.brand }} • {{ brand_data.model }}</span>
+                                <span class="brand-count">{{ brand_data.total }} total / {{ brand_data.available }} disponíveis</span>
                             </div>
-                            {% endif %}
-                            
-                            <div class="equipment-name">{{ equipment.name }}</div>
-                            <div class="equipment-code">{{ equipment.code }}</div>
-                            
-                            {% if equipment.status == 'available' %}
-                                <span class="badge badge-success">Disponível</span>
-                            {% elif equipment.status == 'maintenance' %}
-                                <span class="badge badge-warning">Manutenção</span>
-                            {% elif equipment.status == 'in_repair' %}
-                                <span class="badge badge-danger">Conserto</span>
-                            {% elif equipment.status == 'in_tour' %}
-                                <span class="badge badge-info">Em Tour</span>
-                            {% endif %}
-                        </a>
-                        {% endfor %}
+                            <div class="brand-collapse-icon" id="brand-icon-{{ type_id }}-{{ loop.index }}">▼</div>
+                        </div>
+                        <div class="brand-content" id="brand-content-{{ type_id }}-{{ loop.index }}">
+                            <div class="equipment-grid">
+                                {% for equipment in brand_data['items'] %}
+                                <a href="{{ url_for('equipment.detail_equipment', id=equipment.id) }}" class="equipment-card">
+                                    {% if equipment.primary_photo_url %}
+                                    <img src="{{ equipment.primary_photo_url }}" alt="{{ equipment.name }}" class="equipment-photo">
+                                    {% else %}
+                                    <div class="equipment-photo" style="display: flex; align-items: center; justify-content: center; color: var(--text-secondary);">
+                                        Sem foto
+                                    </div>
+                                    {% endif %}
+
+                                    <div class="equipment-name">{{ equipment.name }}</div>
+                                    <div class="equipment-code">{{ equipment.code }}</div>
+
+                                    {% if equipment.status == 'available' %}
+                                        <span class="badge badge-success">Disponível</span>
+                                    {% elif equipment.status == 'maintenance' %}
+                                        <span class="badge badge-warning">Manutenção</span>
+                                    {% elif equipment.status == 'in_repair' %}
+                                        <span class="badge badge-danger">Conserto</span>
+                                    {% elif equipment.status == 'in_tour' %}
+                                        <span class="badge badge-info">Em Tour</span>
+                                    {% endif %}
+                                </a>
+                                {% endfor %}
+                            </div>
+                        </div>
                     </div>
+                    {% endfor %}
                 </div>
             </div>
             {% endfor %}
@@ -313,7 +382,22 @@
 function toggleType(typeId) {
     const content = document.getElementById('content-' + typeId);
     const icon = document.getElementById('icon-' + typeId);
-    
+
+    if (content.classList.contains('expanded')) {
+        content.classList.remove('expanded');
+        icon.classList.remove('expanded');
+    } else {
+        content.classList.add('expanded');
+        icon.classList.add('expanded');
+    }
+}
+
+function toggleBrand(typeId, brandIndex) {
+    event.stopPropagation(); // Não propaga para o toggleType
+
+    const content = document.getElementById('brand-content-' + typeId + '-' + brandIndex);
+    const icon = document.getElementById('brand-icon-' + typeId + '-' + brandIndex);
+
     if (content.classList.contains('expanded')) {
         content.classList.remove('expanded');
         icon.classList.remove('expanded');
@@ -327,7 +411,7 @@ function toggleType(typeId) {
 document.getElementById('searchInput').addEventListener('input', function(e) {
     const searchTerm = e.target.value.toLowerCase();
     const cards = document.querySelectorAll('.equipment-card');
-    
+
     cards.forEach(card => {
         const text = card.textContent.toLowerCase();
         if (text.includes(searchTerm)) {

@@ -1,45 +1,260 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Criar Conta - HARDCASE</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-{% block title %}Cadastro - Tour Manager{% endblock %}
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-{% block content %}
-<div style="max-width: 500px; margin: 50px auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-    <h1 style="text-align: center; margin-bottom: 30px;">🎵 Tour Manager</h1>
-    <h2 style="text-align: center; margin-bottom: 30px;">Criar Conta</h2>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #000;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
 
-    <form method="POST" action="{{ url_for('auth.register') }}">
-        <div style="margin-bottom: 20px;">
-            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Nome Completo</label>
-            <input type="text" name="name" required 
-                   style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+        .register-container {
+            width: 100%;
+            max-width: 440px;
+        }
+
+        .register-card {
+            background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.8);
+            border: 1px solid #2a2a2a;
+        }
+
+        .logo-section {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .logo-title {
+            font-size: 48px;
+            font-weight: 700;
+            color: #f5f5f5;
+            letter-spacing: 4px;
+            margin-bottom: 8px;
+        }
+
+        .logo-subtitle {
+            font-size: 14px;
+            color: #a0a0a0;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+
+        .page-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #d4af37;
+            text-align: center;
+            margin-top: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #a0a0a0;
+        }
+
+        .form-input,
+        .form-select {
+            width: 100%;
+            padding: 14px 16px;
+            background: #0a0a0a;
+            border: 2px solid #2a2a2a;
+            border-radius: 10px;
+            color: #f5f5f5;
+            font-size: 15px;
+            transition: all 0.3s;
+        }
+
+        .form-input:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: #d4af37;
+            box-shadow: 0 0 0 3px rgba(212,175,55,0.1);
+        }
+
+        .form-input::placeholder {
+            color: #505050;
+        }
+
+        .btn-register {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #d4af37 0%, #cd7f32 100%);
+            border: none;
+            border-radius: 10px;
+            color: #000;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 8px;
+        }
+
+        .btn-register:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(212,175,55,0.4);
+        }
+
+        .btn-register:active {
+            transform: translateY(0);
+        }
+
+        .divider {
+            text-align: center;
+            margin: 24px 0;
+            position: relative;
+        }
+
+        .divider::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            width: 100%;
+            height: 1px;
+            background: #2a2a2a;
+        }
+
+        .divider span {
+            background: #1a1a1a;
+            padding: 0 16px;
+            color: #707070;
+            font-size: 13px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .login-link {
+            text-align: center;
+        }
+
+        .login-link a {
+            color: #d4af37;
+            text-decoration: none;
+            font-weight: 600;
+            transition: 0.3s;
+        }
+
+        .login-link a:hover {
+            color: #b8941f;
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .alert-danger {
+            background: rgba(231,76,60,0.2);
+            border-left: 4px solid #e74c3c;
+            color: #e74c3c;
+        }
+
+        .alert-success {
+            background: rgba(46,204,113,0.2);
+            border-left: 4px solid #2ecc71;
+            color: #2ecc71;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 480px) {
+            .register-card {
+                padding: 32px 24px;
+            }
+
+            .logo-title {
+                font-size: 40px;
+            }
+
+            .form-group {
+                margin-bottom: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="register-container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="register-card">
+            <div class="logo-section">
+                <div class="logo-title">TOUR</div>
+                <div class="logo-subtitle">Gestão de Equipamentos e Logística</div>
+                <div class="page-title">Criar Conta</div>
+            </div>
+
+            <form method="POST" action="{{ url_for('auth.register') }}">
+                <div class="form-group">
+                    <label class="form-label">Nome Completo</label>
+                    <input type="text" name="name" class="form-input" placeholder="Seu nome" required autofocus>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" name="email" class="form-input" placeholder="seu@email.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Empresa</label>
+                    <input type="text" name="company_name" class="form-input" placeholder="Nome da empresa" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Senha</label>
+                    <input type="password" name="password" class="form-input" placeholder="Mínimo 6 caracteres" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Confirmar Senha</label>
+                    <input type="password" name="confirm_password" class="form-input" placeholder="Digite a senha novamente" required>
+                </div>
+
+                <button type="submit" class="btn-register">
+                    Criar Conta
+                </button>
+            </form>
+
+            <div class="divider">
+                <span>Já tem conta?</span>
+            </div>
+
+            <div class="login-link">
+                <a href="{{ url_for('auth.login') }}">Fazer login</a>
+            </div>
         </div>
-
-        <div style="margin-bottom: 20px;">
-            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Email</label>
-            <input type="email" name="email" required 
-                   style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
-        </div>
-
-        <div style="margin-bottom: 20px;">
-            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Telefone</label>
-            <input type="tel" name="phone" required 
-                   style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
-        </div>
-
-        <div style="margin-bottom: 30px;">
-            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Senha</label>
-            <input type="password" name="password" required minlength="6"
-                   style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
-        </div>
-
-        <button type="submit" 
-                style="width: 100%; padding: 12px; background: #007bff; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer;">
-            Criar Conta
-        </button>
-    </form>
-
-    <p style="text-align: center; margin-top: 20px;">
-        Já tem conta? <a href="{{ url_for('auth.login') }}" style="color: #007bff;">Fazer login</a>
-    </p>
-</div>
-{% endblock %}
+    </div>
+</body>
+</html>

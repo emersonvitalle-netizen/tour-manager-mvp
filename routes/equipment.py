@@ -23,7 +23,7 @@ def index():
     categories = Category.query.filter_by(
         company_id=current_user.company_id
     ).all()
-    
+
     category_counts = {}
     for category in categories:
         count = Equipment.query.filter_by(
@@ -32,7 +32,7 @@ def index():
             is_active=True
         ).count()
         category_counts[category.id] = count
-    
+
     return render_template('equipment/index.html', 
                           categories=categories,
                           category_counts=category_counts)
@@ -44,34 +44,55 @@ def list_by_category(category_id):
         id=category_id,
         company_id=current_user.company_id
     ).first_or_404()
-    
+
     # Group by type
     types = EquipmentType.query.filter_by(
         category_id=category_id,
         company_id=current_user.company_id
     ).all()
-    
+
     type_equipment = {}
     total_count = 0
     available_count = 0
-    
+
     for eq_type in types:
         items = Equipment.query.filter_by(
             type_id=eq_type.id,
             company_id=current_user.company_id,
             is_active=True
         ).order_by(Equipment.code).all()
-        
+
         if items:
+            # Agrupar por marca/modelo
+            brands_dict = {}
+            for equipment in items:
+                brand_key = equipment.brand or 'Sem marca'
+                model_key = equipment.model or 'Sem modelo'
+                full_key = f"{brand_key}|{model_key}"
+
+                if full_key not in brands_dict:
+                    brands_dict[full_key] = {
+                        'brand': brand_key,
+                        'model': model_key,
+                        'items': [],
+                        'total': 0,
+                        'available': 0
+                    }
+
+                brands_dict[full_key]['items'].append(equipment)
+                brands_dict[full_key]['total'] += 1
+                if equipment.status == 'available':
+                    brands_dict[full_key]['available'] += 1
+
             type_equipment[eq_type.id] = {
                 'type': eq_type,
-                'items': items,
+                'brands': list(brands_dict.values()),
                 'total': len(items),
                 'available': sum(1 for e in items if e.status == 'available')
             }
             total_count += len(items)
             available_count += sum(1 for e in items if e.status == 'available')
-    
+
     return render_template('equipment/category.html',
                           category=category,
                           type_equipment=type_equipment,
@@ -109,7 +130,7 @@ def detail_equipment(id):
 def new_equipment():
     if current_user.role != 'admin':
         flash('Apenas administradores podem cadastrar equipamentos.', 'danger')
-        return redirect(url_for('equipment.list_equipment'))
+        return redirect(url_for('equipment.index'))
 
     if request.method == 'POST':
         name = request.form.get('name')
@@ -124,6 +145,29 @@ def new_equipment():
         model = request.form.get('model', '').strip()
         serial_number = request.form.get('serial_number', '').strip()
         notes = request.form.get('notes', '').strip()
+
+        # Capturar valor de locacao e data de compra
+        value_str = request.form.get('value', '').strip()
+        value = float(value_str) if value_str else None
+
+        purchase_date_str = request.form.get('purchase_date', '').strip()
+        purchase_date = datetime.strptime(purchase_date_str, '%Y-%m-%d').date() if purchase_date_str else None
+
+        # Processar foto compartilhada (antes do loop)
+        photo_url = None
+        if 'photo' in request.files:
+            file = request.files['photo']
+            if file and file.filename and allowed_file(file.filename):
+                # Gerar prefixo para nome do arquivo
+                temp_prefix = custom_prefix if custom_prefix else ''.join([c for c in name if c.isupper()])[:3]
+                if not temp_prefix:
+                    temp_prefix = name[:3].upper()
+
+                filename = secure_filename(f"{temp_prefix}_shared_{file.filename}")
+                filepath = os.path.join('static', 'uploads', filename)
+                os.makedirs('static/uploads', exist_ok=True)
+                file.save(filepath)
+                photo_url = f"/static/uploads/{filename}"
 
         final_type_id = None
 
@@ -178,6 +222,9 @@ def new_equipment():
                 model=model if model else None,
                 serial_number=serial_number if serial_number else None,
                 notes=notes if notes else None,
+                value=value,
+                purchase_date=purchase_date,
+                primary_photo_url=photo_url,
                 status='available',
                 company_id=current_user.company_id,
                 created_by=current_user.id,
@@ -194,14 +241,25 @@ def new_equipment():
         db.session.commit()
 
         flash(f'{quantity} equipamento(s) cadastrado(s): {", ".join(created)}', 'success')
-        return redirect(url_for('equipment.list_equipment'))
+        return redirect(url_for('equipment.index'))
+
+    prefilled_category_id = request.args.get('category_id', type=int)
+    prefilled_category = None
+
+    if prefilled_category_id:
+        prefilled_category = Category.query.filter_by(
+            id=prefilled_category_id,
+            company_id=current_user.company_id
+        ).first()
 
     categories = Category.query.filter_by(
         company_id=current_user.company_id,
         is_active=True
     ).order_by(Category.name).all()
 
-    return render_template('equipment/new.html', categories=categories)
+    return render_template('equipment/new.html', 
+                          categories=categories,
+                          prefilled_category=prefilled_category)
 
 @equipment_bp.route('/get-types/<int:category_id>')
 @login_required
@@ -296,7 +354,7 @@ def upload_photo(id):
 @login_required
 def update_serial(id):
     if current_user.role != 'admin':
-        flash('Apenas administradores podem atualizar o número de série.', 'danger')
+        flash('Apenas administradores podem atualizar o nÃºmero de sÃ©rie.', 'danger')
         return redirect(url_for('equipment.detail_equipment', id=id))
 
     equipment = Equipment.query.filter_by(
@@ -308,7 +366,7 @@ def update_serial(id):
     if serial:
         equipment.serial_number = serial
         db.session.commit()
-        flash('Número de série atualizado!', 'success')
+        flash('NÃºmero de sÃ©rie atualizado!', 'success')
 
     return redirect(url_for('equipment.detail_equipment', id=id))
 
@@ -316,7 +374,7 @@ def update_serial(id):
 @login_required
 def send_to_maintenance(id):
     if current_user.role != 'admin':
-        flash('Apenas administradores podem enviar para manutenção.', 'danger')
+        flash('Apenas administradores podem enviar para manutenÃ§Ã£o.', 'danger')
         return redirect(url_for('equipment.detail_equipment', id=id))
 
     equipment = Equipment.query.filter_by(
@@ -343,7 +401,7 @@ def send_to_maintenance(id):
     db.session.add(maintenance)
     db.session.commit()
 
-    flash('Equipamento enviado para manutenção!', 'success')
+    flash('Equipamento enviado para manutenÃ§Ã£o!', 'success')
     return redirect(url_for('equipment.detail_equipment', id=id))
 
 @equipment_bp.route('/<int:id>/forward-to-external', methods=['POST'])
@@ -362,7 +420,7 @@ def forward_to_external(id):
     external_contact = request.form.get('external_contact', '').strip()
 
     if not external_company:
-        flash('Informe a empresa/técnico!', 'danger')
+        flash('Informe a empresa/tÃ©cnico!', 'danger')
         return redirect(url_for('equipment.detail_equipment', id=id))
 
     maintenance = Maintenance.query.filter_by(
@@ -371,7 +429,7 @@ def forward_to_external(id):
     ).order_by(Maintenance.started_at.desc()).first()
 
     if not maintenance:
-        flash('Nenhuma manutenção ativa encontrada!', 'danger')
+        flash('Nenhuma manutenÃ§Ã£o ativa encontrada!', 'danger')
         return redirect(url_for('equipment.detail_equipment', id=id))
 
     maintenance.external_company = external_company
@@ -388,7 +446,7 @@ def forward_to_external(id):
 @login_required
 def complete_maintenance(id):
     if current_user.role != 'admin':
-        flash('Apenas administradores podem concluir manutenção.', 'danger')
+        flash('Apenas administradores podem concluir manutenÃ§Ã£o.', 'danger')
         return redirect(url_for('equipment.detail_equipment', id=id))
 
     equipment = Equipment.query.filter_by(
@@ -405,7 +463,7 @@ def complete_maintenance(id):
     ).order_by(Maintenance.started_at.desc()).first()
 
     if not maintenance:
-        flash('Nenhuma manutenção ativa encontrada!', 'danger')
+        flash('Nenhuma manutenÃ§Ã£o ativa encontrada!', 'danger')
         return redirect(url_for('equipment.detail_equipment', id=id))
 
     maintenance.solution_description = solution if solution else None
@@ -418,7 +476,7 @@ def complete_maintenance(id):
 
     db.session.commit()
 
-    flash('Manutenção concluída! Equipamento liberado.', 'success')
+    flash('ManutenÃ§Ã£o concluÃ­da! Equipamento liberado.', 'success')
     return redirect(url_for('equipment.detail_equipment', id=id))
 
 @equipment_bp.route('/print-qr')

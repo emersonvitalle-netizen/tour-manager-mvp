@@ -11,7 +11,7 @@ class WorkList(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     separation_list_id = db.Column(db.Integer, nullable=True)  # Referência simples
-    tour_id = db.Column(db.Integer, nullable=False)
+    tour_id = db.Column(db.Integer, nullable=True)
     name = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text)
     status = db.Column(db.String(20), default='pending')

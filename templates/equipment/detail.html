@@ -259,7 +259,7 @@
 
 {% block content %}
 <div class="detail-container">
-    <a href="{{ url_for('equipment.list_equipment') }}" class="back-link">
+    <a href="{{ url_for('equipment.index') }}" class="back-link">
         ← Voltar para lista
     </a>
 
@@ -289,15 +289,15 @@
                     <a href="{{ url_for('equipment.edit_equipment', id=equipment.id) }}" class="btn btn-secondary">
                         Editar
                     </a>
-                    <a href="{{ url_for('equipment.print_qr', equipment_id=equipment.id) }}" target="_blank" class="btn btn-success">
-                        Imprimir QR
-                    </a>
                     <button onclick="toggleForm('photo-form')" class="btn btn-secondary">
                         Adicionar Foto
                     </button>
                     <button onclick="toggleForm('serial-form')" class="btn btn-secondary">
                         Adicionar Serial
                     </button>
+                    <a href="{{ url_for('equipment.print_qr', equipment_id=equipment.id) }}" target="_blank" class="btn btn-secondary">
+                        Imprimir QR
+                    </a>
                 </div>
                 {% endif %}
             </div>

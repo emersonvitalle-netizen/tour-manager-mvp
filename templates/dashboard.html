@@ -7,68 +7,67 @@
     .dashboard-container {
         padding: 0;
         min-height: 100vh;
-        padding-bottom: calc(var(--bottom-nav-height) + var(--spacing-md));
+        padding-bottom: 90px;
     }
 
     .dashboard-header {
-        background: linear-gradient(135deg, rgba(212, 165, 116, 0.3) 0%, rgba(212, 165, 116, 0.1) 100%);
-        padding: var(--spacing-xl) var(--spacing-lg);
+        background: linear-gradient(135deg, rgba(212,175,55,0.2) 0%, rgba(205,127,50,0.1) 100%);
+        padding: 32px 24px;
         text-align: center;
-        border-bottom: 1px solid var(--border-subtle);
+        border-bottom: 1px solid #2a2a2a;
     }
 
     .dashboard-logo {
-        font-family: var(--font-display);
         font-size: 2.5rem;
-        font-weight: var(--font-weight-bold);
-        color: var(--text-primary);
+        font-weight: 700;
+        color: #f5f5f5;
         letter-spacing: 0.15em;
-        margin-bottom: var(--spacing-xs);
+        margin-bottom: 8px;
     }
 
     .dashboard-subtitle {
         font-size: 0.9rem;
-        color: var(--text-secondary);
-        font-weight: var(--font-weight-light);
+        color: #a0a0a0;
+        font-weight: 300;
     }
 
     .user-section {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: var(--spacing-lg) var(--spacing-md);
-        background-color: var(--bg-secondary);
-        border-bottom: 1px solid var(--border-subtle);
+        padding: 24px 16px;
+        background-color: #1a1a1a;
+        border-bottom: 1px solid #2a2a2a;
     }
 
     .user-info {
         display: flex;
         align-items: center;
-        gap: var(--spacing-md);
+        gap: 16px;
     }
 
     .user-avatar {
         width: 50px;
         height: 50px;
         border-radius: 50%;
-        background: linear-gradient(135deg, var(--accent-gold) 0%, rgba(212, 165, 116, 0.6) 100%);
+        background: linear-gradient(135deg, #d4af37 0%, #cd7f32 100%);
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 1.5rem;
-        font-weight: var(--font-weight-bold);
-        color: var(--bg-primary);
+        font-weight: 700;
+        color: #000;
     }
 
     .user-details h3 {
-        color: var(--text-primary);
+        color: #f5f5f5;
         font-size: 1.1rem;
-        font-weight: var(--font-weight-semibold);
+        font-weight: 600;
         margin-bottom: 2px;
     }
 
     .user-details p {
-        color: var(--text-secondary);
+        color: #a0a0a0;
         font-size: 0.85rem;
     }
 
@@ -86,7 +85,7 @@
         position: absolute;
         top: -4px;
         right: -4px;
-        background-color: #dc3545;
+        background-color: #e74c3c;
         color: white;
         border-radius: 50%;
         width: 20px;
@@ -95,19 +94,19 @@
         align-items: center;
         justify-content: center;
         font-size: 0.7rem;
-        font-weight: var(--font-weight-bold);
+        font-weight: 700;
     }
 
     .main-cards {
-        padding: var(--spacing-lg) var(--spacing-md);
+        padding: 24px 16px;
         display: grid;
-        gap: var(--spacing-lg);
+        gap: 24px;
     }
 
     .main-card {
         position: relative;
-        padding: var(--spacing-xl);
-        border-radius: var(--radius-xl);
+        padding: 32px;
+        border-radius: 16px;
         text-decoration: none;
         color: white;
         display: flex;
@@ -117,12 +116,12 @@
         min-height: 220px;
         overflow: hidden;
         transition: transform 0.3s ease, box-shadow 0.3s ease;
-        box-shadow: var(--shadow-lg);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.6);
     }
 
     .main-card:hover {
         transform: translateY(-4px);
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+        box-shadow: 0 12px 40px rgba(0,0,0,0.8);
     }
 
     .main-card::before {
@@ -139,7 +138,7 @@
     }
 
     .card-hardcase {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #d4af37 0%, #cd7f32 100%);
     }
 
     .card-hardcase::before {
@@ -147,7 +146,7 @@
     }
 
     .card-tour {
-        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        background: linear-gradient(135deg, #b8941f 0%, #a67c1f 100%);
     }
 
     .card-tour::before {
@@ -162,28 +161,27 @@
 
     .card-icon {
         font-size: 4rem;
-        margin-bottom: var(--spacing-md);
-        filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+        margin-bottom: 16px;
+        filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5));
     }
 
     .card-title {
-        font-family: var(--font-display);
         font-size: 2rem;
-        font-weight: var(--font-weight-bold);
-        margin-bottom: var(--spacing-xs);
-        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        font-weight: 700;
+        margin-bottom: 8px;
+        text-shadow: 0 2px 8px rgba(0,0,0,0.5);
     }
 
     .card-description {
         font-size: 0.95rem;
         opacity: 0.95;
-        font-weight: var(--font-weight-light);
+        font-weight: 300;
     }
 
     @media (min-width: 768px) {
         .main-cards {
             grid-template-columns: repeat(2, 1fr);
-            padding: var(--spacing-xl);
+            padding: 32px;
         }
 
         .main-card {
@@ -196,7 +194,7 @@
 {% block content %}
 <div class="dashboard-container">
     <div class="dashboard-header">
-        <h1 class="dashboard-logo">🎸 TOUR</h1>
+        <h1 class="dashboard-logo">TOUR</h1>
         <p class="dashboard-subtitle">Bem-vindo ao sistema</p>
     </div>
 
@@ -211,7 +209,7 @@
             </div>
         </div>
         <div class="notification-badge">
-            🔔
+            <i class="fas fa-bell"></i>
             <span class="badge-count">3</span>
         </div>
     </div>
@@ -219,7 +217,7 @@
     <div class="main-cards">
         <a href="{{ url_for('equipment.index') }}" class="main-card card-hardcase">
             <div class="card-content">
-                <div class="card-icon">🎒</div>
+                <div class="card-icon"><i class="fas fa-box"></i></div>
                 <h2 class="card-title">HARDCASE</h2>
                 <p class="card-description">Gestão de patrimônio e equipamentos</p>
             </div>
@@ -227,7 +225,7 @@
 
         <a href="{{ url_for('tour.tour_menu') }}" class="main-card card-tour">
             <div class="card-content">
-                <div class="card-icon">🎸</div>
+                <div class="card-icon"><i class="fas fa-route"></i></div>
                 <h2 class="card-title">TOUR</h2>
                 <p class="card-description">Logística, kits e checkpoints</p>
             </div>
