@@ -60,15 +60,25 @@ Sistema MVP para empresas de áudio/eventos gerenciarem equipamentos, tours e ma
 │   ├── equipment.py
 │   ├── company.py
 │   ├── kit.py
-│   └── tour.py
+│   ├── tour.py
+│   ├── separation.py
+│   ├── work_list.py
+│   ├── users.py
+│   └── financial.py
 ├── services/            # Lógica de negócio
-│   └── qr_service.py
+│   ├── qr_service.py
+│   ├── payment_adapter.py   # Adaptadores PIX/Boleto (Asaas, Manual)
+│   └── nfse_adapter.py      # Adaptadores NFSe (Focus NFe, Manual)
+├── utils/
+│   └── permissions.py       # Decoradores de permissão
 ├── templates/           # Jinja2 templates
 │   ├── auth/
 │   ├── equipment/
 │   ├── company/
 │   ├── kit/
 │   ├── tour/
+│   ├── users/
+│   ├── financial/
 │   ├── base.html
 │   └── dashboard.html
 ├── static/              # Assets estáticos
@@ -340,18 +350,18 @@ Desktop: min-width: 1024px
 
 ---
 
-## 🎯 PROGRESSO ATUAL (Janeiro 2025)
+## 🎯 PROGRESSO ATUAL (Dezembro 2025)
 
 ### Concluído ✅
 - [x] Estrutura backend Flask completa
-- [x] 14 models implementados
+- [x] 14+ models implementados
 - [x] Sistema multi-tenant funcionando
 - [x] Autenticação + roles
 - [x] CRUD de equipamentos
 - [x] QR Code geração e scanner
 - [x] Sistema de Tours e Checkpoints
 - [x] Upload de fotos
-- [x] **Redesign Dark Cinematográfico** ✨
+- [x] **Redesign Dark Cinematográfico**
   - [x] CSS dark theme completo
   - [x] Dashboard com cards fotográficos
   - [x] Bottom navigation mobile
@@ -359,14 +369,30 @@ Desktop: min-width: 1024px
   - [x] Login redesenhado
   - [x] Paleta de cores dark premium
   - [x] Tipografia elegante (Playfair Display + Inter)
+- [x] **Sistema de Controle de Acesso (3 níveis)**
+  - [x] Admin: acesso total + financeiro + preços
+  - [x] Técnico Responsável: equipamentos + separação + manutenção (sem preços)
+  - [x] Técnico Tour: acesso temporário via QR Code com expiração
+  - [x] Model TourAccess para QR temporário
+  - [x] Rotas /users/ para gestão (admin only)
+  - [x] Preços ocultos de não-admins nos templates
+- [x] **Módulo Financeiro Brasileiro**
+  - [x] Models: Quote, QuoteItem, Contract, Invoice, Payment
+  - [x] Adaptador de pagamento multi-provedor (Asaas, Manual)
+  - [x] Adaptador de NFSe multi-provedor (Focus NFe, Manual)
+  - [x] Dashboard financeiro
+  - [x] CRUD de Orçamentos com itens e descontos
+  - [x] CRUD de Faturas com registro de pagamentos
+  - [x] Códigos únicos por empresa (ORC-{company}-{ano}-{seq})
 
 ### Próximas Etapas 📋
-1. Redesenhar templates secundários (equipment, tours, kits)
-2. Adicionar campos NFC/RFID ao banco
-3. Criar API endpoints RFID/NFC
-4. Implementar scanners NFC/RFID
-5. Melhorar estados focus/hover para acessibilidade
-6. Documentação de API
+1. Implementar contratos (templates e rotas)
+2. Integrar provedores de pagamento (Asaas, PagSeguro)
+3. Integrar provedores de NFSe (Focus NFe, Enotas)
+4. Adicionar campos NFC/RFID ao banco
+5. Criar API endpoints RFID/NFC
+6. Implementar scanners NFC/RFID
+7. Dashboard de relatórios financeiros
 
 ---
 
