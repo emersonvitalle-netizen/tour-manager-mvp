@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orçamento #{{ lista.id }} - {{ company.name }}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        @page {
+            size: A4;
+            margin: 15mm;
+        }
+
+        body {
+            font-family: 'Segoe UI', -apple-system, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+            color: white;
+            padding: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .company-info h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .company-info p {
+            font-size: 0.9rem;
+            color: #ccc;
+        }
+
+        .doc-info {
+            text-align: right;
+        }
+
+        .doc-info .doc-type {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #d4a574;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .doc-info .doc-number {
+            font-size: 0.9rem;
+            color: #888;
+            margin-top: 5px;
+        }
+
+        .doc-info .doc-date {
+            font-size: 0.85rem;
+            color: #888;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .info-section {
+            margin-bottom: 30px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .info-item {
+            background: #f8f8f8;
+            padding: 12px 15px;
+            border-radius: 8px;
+            border-left: 3px solid #d4a574;
+        }
+
+        .info-label {
+            font-size: 0.75rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .info-value {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .items-section {
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #333;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #d4a574;
+            margin-bottom: 15px;
+        }
+
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .items-table th {
+            background: #f0f0f0;
+            padding: 12px 15px;
+            text-align: left;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #666;
+            border-bottom: 2px solid #ddd;
+        }
+
+        .items-table th:last-child {
+            text-align: right;
+        }
+
+        .items-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+            font-size: 0.95rem;
+        }
+
+        .items-table td:last-child {
+            text-align: right;
+            font-weight: 600;
+        }
+
+        .items-table tr:hover {
+            background: #fafafa;
+        }
+
+        .qty-badge {
+            background: #e8e8e8;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .totals-section {
+            background: linear-gradient(135deg, #f8f4ef 0%, #f5f0e8 100%);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #d4a574;
+        }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            font-size: 1rem;
+        }
+
+        .total-row.grand {
+            border-top: 2px solid #d4a574;
+            margin-top: 10px;
+            padding-top: 15px;
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+
+        .total-row.grand span:last-child {
+            color: #b8860b;
+        }
+
+        .footer {
+            background: #f5f5f5;
+            padding: 20px 30px;
+            text-align: center;
+            font-size: 0.85rem;
+            color: #888;
+            border-top: 1px solid #ddd;
+        }
+
+        .observations {
+            background: #fffbe6;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 3px solid #f39c12;
+            margin-bottom: 30px;
+            font-size: 0.9rem;
+        }
+
+        .observations-title {
+            font-weight: 700;
+            color: #b8860b;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+        }
+
+        .action-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #1a1a1a;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.3);
+        }
+
+        .action-btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-decoration: none;
+        }
+
+        .btn-download {
+            background: linear-gradient(135deg, #d4a574 0%, #b8860b 100%);
+            color: #000;
+        }
+
+        .btn-whatsapp {
+            background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
+            color: white;
+        }
+
+        .btn-back {
+            background: #333;
+            color: white;
+        }
+
+        @media print {
+            body {
+                background: white;
+            }
+
+            .container {
+                box-shadow: none;
+            }
+
+            .action-bar {
+                display: none !important;
+            }
+
+            .header {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .header {
+                flex-direction: column;
+                text-align: center;
+                gap: 15px;
+            }
+
+            .doc-info {
+                text-align: center;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .items-table th, .items-table td {
+                padding: 8px 10px;
+                font-size: 0.85rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="company-info">
+                <h1>{{ company.name }}</h1>
+                {% if company.cnpj %}<p>CNPJ: {{ company.cnpj }}</p>{% endif %}
+                {% if company.phone %}<p>Tel: {{ company.phone }}</p>{% endif %}
+                {% if company.email %}<p>{{ company.email }}</p>{% endif %}
+            </div>
+            <div class="doc-info">
+                <div class="doc-type">Orçamento</div>
+                <div class="doc-number">#{{ '%04d'|format(lista.id) }}</div>
+                <div class="doc-date">{{ lista.created_at.strftime('%d/%m/%Y') }}</div>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="info-section">
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">Nome do Orçamento</div>
+                        <div class="info-value">{{ lista.name }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Status</div>
+                        <div class="info-value">
+                            {% if lista.status == 'pending' %}Pendente
+                            {% elif lista.status == 'approved' %}Aprovado
+                            {% else %}Rejeitado{% endif %}
+                        </div>
+                    </div>
+                    {% if lista.tour %}
+                    <div class="info-item">
+                        <div class="info-label">Tour/Evento</div>
+                        <div class="info-value">{{ lista.tour.name }}</div>
+                    </div>
+                    {% endif %}
+                    <div class="info-item">
+                        <div class="info-label">Data de Criação</div>
+                        <div class="info-value">{{ lista.created_at.strftime('%d/%m/%Y às %H:%M') }}</div>
+                    </div>
+                </div>
+            </div>
+
+            {% if lista.description %}
+            <div class="observations">
+                <div class="observations-title">Observações</div>
+                {{ lista.description }}
+            </div>
+            {% endif %}
+
+            <div class="items-section">
+                <div class="section-title">Itens do Orçamento</div>
+                <table class="items-table">
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>Qtd</th>
+                            {% if lista.list_type == 'complete' %}
+                            <th>Valor Unit.</th>
+                            <th>Subtotal</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in lista.items %}
+                        <tr>
+                            <td>{{ item.item_name }}</td>
+                            <td><span class="qty-badge">{{ item.quantity }}x</span></td>
+                            {% if lista.list_type == 'complete' %}
+                            <td>R$ {{ "%.2f"|format(item.unit_price or 0)|replace('.', ',') }}</td>
+                            <td>R$ {{ "%.2f"|format(item.total_price or 0)|replace('.', ',') }}</td>
+                            {% endif %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="totals-section">
+                <div class="total-row">
+                    <span>Total de itens:</span>
+                    <span>{{ lista.items|length }}</span>
+                </div>
+                <div class="total-row">
+                    <span>Total de unidades:</span>
+                    <span>{{ total_units }}</span>
+                </div>
+                {% if lista.list_type == 'complete' %}
+                <div class="total-row grand">
+                    <span>VALOR TOTAL:</span>
+                    <span>R$ {{ "%.2f"|format(subtotal)|replace('.', ',') }}</span>
+                </div>
+                {% else %}
+                <div class="total-row grand">
+                    <span>VALOR TOTAL:</span>
+                    <span>R$ {{ "%.2f"|format(lista.total_value or 0)|replace('.', ',') }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Orçamento gerado em {{ now.strftime('%d/%m/%Y às %H:%M') }}</p>
+            <p>{{ company.name }}{% if company.phone %} • {{ company.phone }}{% endif %}{% if company.email %} • {{ company.email }}{% endif %}</p>
+        </div>
+    </div>
+
+    <div class="action-bar" id="actionBar">
+        <a href="{{ url_for('orcamento.detail', id=lista.id) }}" class="action-btn btn-back">Voltar</a>
+        <button class="action-btn btn-download" onclick="downloadPDF()">Baixar PDF</button>
+        <a href="https://wa.me/?text=Orçamento%20{{ lista.name|urlencode }}%20-%20{{ company.name|urlencode }}%20-%20R$%20{{ '%.2f'|format(subtotal if lista.list_type == 'complete' else lista.total_value or 0) }}" target="_blank" class="action-btn btn-whatsapp">WhatsApp</a>
+    </div>
+
+    <script>
+        function downloadPDF() {
+            document.getElementById('actionBar').style.display = 'none';
+            window.print();
+            setTimeout(() => {
+                document.getElementById('actionBar').style.display = 'flex';
+            }, 500);
+        }
+    </script>
+</body>
+</html>
