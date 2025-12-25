@@ -300,5 +300,114 @@
 
         <button type="submit" class="submit-button">Salvar Configurações</button>
     </form>
+
+    <div class="form-section" style="margin-top: var(--spacing-lg);">
+        <div class="section-title"><i class="fas fa-key"></i> API para Leitores RFID</div>
+        
+        <p style="color: #888; font-size: 0.9rem; margin-bottom: var(--spacing-lg); line-height: 1.6;">
+            Use esta chave para integrar leitores industriais RFID (portais, antenas, pistolas) com o sistema.
+            A chave deve ser enviada no header <code style="background: #222; padding: 2px 6px; border-radius: 4px;">X-API-Key</code> das requisições.
+        </p>
+
+        <div id="apiKeyContainer">
+            {% if company.api_key %}
+            <div style="background: #0a0a0a; border: 2px solid #333; border-radius: var(--radius-md); padding: var(--spacing-md); margin-bottom: var(--spacing-md);">
+                <label class="form-label">Chave API Atual</label>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <input type="text" id="apiKeyDisplay" value="{{ company.api_key }}" class="form-input" style="font-family: monospace; font-size: 0.85rem;" readonly>
+                    <button type="button" onclick="copyApiKey()" style="background: #d4a574; color: #0a0a0a; border: none; padding: 10px 15px; border-radius: var(--radius-md); cursor: pointer; white-space: nowrap;">
+                        <i class="fas fa-copy"></i> Copiar
+                    </button>
+                </div>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button type="button" onclick="regenerateApiKey()" style="background: #333; color: white; border: none; padding: 12px 20px; border-radius: var(--radius-md); cursor: pointer; flex: 1;">
+                    <i class="fas fa-sync"></i> Regenerar Chave
+                </button>
+                <button type="button" onclick="revokeApiKey()" style="background: transparent; border: 1px solid #e74c3c; color: #e74c3c; padding: 12px 20px; border-radius: var(--radius-md); cursor: pointer;">
+                    <i class="fas fa-trash"></i> Revogar
+                </button>
+            </div>
+            {% else %}
+            <p style="color: #888; margin-bottom: var(--spacing-md);">Nenhuma chave API configurada.</p>
+            <button type="button" onclick="generateApiKey()" style="background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%); color: white; border: none; padding: 15px 30px; border-radius: var(--radius-md); cursor: pointer; font-size: 1rem; width: 100%;">
+                <i class="fas fa-plus"></i> Gerar Chave API
+            </button>
+            {% endif %}
+        </div>
+
+        <div style="margin-top: var(--spacing-lg); padding: var(--spacing-md); background: rgba(155, 89, 182, 0.1); border: 1px solid rgba(155, 89, 182, 0.3); border-radius: var(--radius-md);">
+            <h4 style="color: #9b59b6; margin-bottom: 10px; font-size: 0.9rem;">Endpoints Disponíveis:</h4>
+            <ul style="color: #888; font-size: 0.85rem; line-height: 1.8; padding-left: 20px;">
+                <li><code>POST /api/v1/rfid/scan</code> - Leitura única</li>
+                <li><code>POST /api/v1/rfid/batch</code> - Leitura em lote (portal)</li>
+                <li><code>POST /api/v1/rfid/inventory</code> - Verificação de inventário</li>
+                <li><code>POST /api/v1/rfid/checkpoint</code> - Registro de passagem</li>
+            </ul>
+        </div>
+    </div>
 </div>
+
+<script>
+function copyApiKey() {
+    const input = document.getElementById('apiKeyDisplay');
+    input.select();
+    document.execCommand('copy');
+    alert('Chave API copiada!');
+}
+
+async function generateApiKey() {
+    if (!confirm('Deseja gerar uma nova chave API?')) return;
+    
+    try {
+        const response = await fetch('/company/generate-api-key', { method: 'POST' });
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('Chave gerada: ' + data.api_key + '\n\nGuarde esta chave em local seguro!');
+            window.location.reload();
+        } else {
+            alert('Erro: ' + data.error);
+        }
+    } catch (error) {
+        alert('Erro ao gerar chave');
+    }
+}
+
+async function regenerateApiKey() {
+    if (!confirm('ATENÇÃO: Regenerar a chave irá invalidar a chave atual. Todos os leitores precisarão ser reconfigurados. Continuar?')) return;
+    
+    try {
+        const response = await fetch('/company/generate-api-key', { method: 'POST' });
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('Nova chave: ' + data.api_key + '\n\nAtualize seus leitores!');
+            window.location.reload();
+        } else {
+            alert('Erro: ' + data.error);
+        }
+    } catch (error) {
+        alert('Erro ao regenerar chave');
+    }
+}
+
+async function revokeApiKey() {
+    if (!confirm('ATENÇÃO: Revogar a chave irá desativar TODOS os leitores RFID conectados. Continuar?')) return;
+    
+    try {
+        const response = await fetch('/company/revoke-api-key', { method: 'POST' });
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('Chave revogada com sucesso');
+            window.location.reload();
+        } else {
+            alert('Erro: ' + data.error);
+        }
+    } catch (error) {
+        alert('Erro ao revogar chave');
+    }
+}
+</script>
 {% endblock %}

@@ -1,9 +1,10 @@
-from flask import Blueprint, render_template, redirect, url_for, request, flash
+from flask import Blueprint, render_template, redirect, url_for, request, flash, jsonify
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 from extensions import db
 from models.company import Company
 import os
+import secrets
 
 company_bp = Blueprint('company', __name__, url_prefix='/company')
 
@@ -59,3 +60,36 @@ def settings():
         return redirect(url_for('company.settings'))
 
     return render_template('company/settings.html', company=company)
+
+@company_bp.route('/generate-api-key', methods=['POST'])
+@login_required
+def generate_api_key():
+    """Gera ou regenera chave API para leitores RFID"""
+    if current_user.role != 'admin':
+        return jsonify({'success': False, 'error': 'Acesso negado'}), 403
+    
+    company = Company.query.get(current_user.company_id)
+    company.api_key = secrets.token_hex(32)  # 64 caracteres hex
+    db.session.commit()
+    
+    return jsonify({
+        'success': True,
+        'api_key': company.api_key,
+        'message': 'Chave API gerada com sucesso'
+    })
+
+@company_bp.route('/revoke-api-key', methods=['POST'])
+@login_required
+def revoke_api_key():
+    """Revoga chave API"""
+    if current_user.role != 'admin':
+        return jsonify({'success': False, 'error': 'Acesso negado'}), 403
+    
+    company = Company.query.get(current_user.company_id)
+    company.api_key = None
+    db.session.commit()
+    
+    return jsonify({
+        'success': True,
+        'message': 'Chave API revogada'
+    })
