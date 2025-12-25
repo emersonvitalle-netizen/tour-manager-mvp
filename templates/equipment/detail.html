@@ -351,6 +351,52 @@
             </div>
         </div>
 
+        <div class="info-section" style="border-top: 1px solid var(--border-subtle); padding-top: var(--spacing-xl); margin-top: var(--spacing-xl);">
+            <h3 class="section-title">📡 Tags RFID/NFC</h3>
+            <div class="info-grid" style="margin-bottom: var(--spacing-lg);">
+                <div class="info-item">
+                    <span class="info-label">Tag NFC</span>
+                    <span class="info-value">
+                        {% if equipment.nfc_tag_id %}
+                        <code style="background: rgba(52, 152, 219, 0.2); padding: 4px 8px; border-radius: 4px; font-family: monospace;">{{ equipment.nfc_tag_id }}</code>
+                        {% else %}
+                        <span style="color: var(--text-secondary);">Não associada</span>
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Tag RFID UHF</span>
+                    <span class="info-value">
+                        {% if equipment.rfid_uhf_tag %}
+                        <code style="background: rgba(155, 89, 182, 0.2); padding: 4px 8px; border-radius: 4px; font-family: monospace;">{{ equipment.rfid_uhf_tag[:20] }}...</code>
+                        {% else %}
+                        <span style="color: var(--text-secondary);">Não associada</span>
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+            {% if current_user.role == 'admin' %}
+            <div style="display: flex; gap: var(--spacing-sm); flex-wrap: wrap;">
+                <a href="{{ url_for('scanner.nfc', equipment_id=equipment.id, mode='associate') }}" class="btn" style="background: linear-gradient(135deg, #3498db 0%, #2980b9 100%); color: white; text-decoration: none; padding: 8px 16px; border-radius: 8px; font-size: 0.9rem;">
+                    📱 Associar NFC
+                </a>
+                <a href="{{ url_for('scanner.rfid', equipment_id=equipment.id, mode='associate') }}" class="btn" style="background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%); color: white; text-decoration: none; padding: 8px 16px; border-radius: 8px; font-size: 0.9rem;">
+                    📡 Associar RFID
+                </a>
+                {% if equipment.nfc_tag_id %}
+                <button onclick="removeTag('nfc')" class="btn" style="background: transparent; border: 1px solid #e74c3c; color: #e74c3c; padding: 8px 16px; border-radius: 8px; font-size: 0.9rem; cursor: pointer;">
+                    Remover NFC
+                </button>
+                {% endif %}
+                {% if equipment.rfid_uhf_tag %}
+                <button onclick="removeTag('rfid')" class="btn" style="background: transparent; border: 1px solid #e74c3c; color: #e74c3c; padding: 8px 16px; border-radius: 8px; font-size: 0.9rem; cursor: pointer;">
+                    Remover RFID
+                </button>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+
         <div class="info-section">
             <h3 class="section-title">Informações</h3>
             <div class="info-grid">
@@ -486,6 +532,29 @@ function toggleForm(formId) {
     } else {
         document.querySelectorAll('.form-section').forEach(f => f.classList.remove('show'));
         form.classList.add('show');
+    }
+}
+
+async function removeTag(tagType) {
+    if (!confirm('Tem certeza que deseja remover a tag ' + tagType.toUpperCase() + '?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('/scanner/remove/{{ equipment.id }}/' + tagType, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('Tag removida com sucesso!');
+            window.location.reload();
+        } else {
+            alert('Erro: ' + data.error);
+        }
+    } catch (error) {
+        alert('Erro ao comunicar com servidor');
     }
 }
 </script>

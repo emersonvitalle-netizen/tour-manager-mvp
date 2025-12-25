@@ -27,10 +27,6 @@
         transition: transform 0.2s ease;
     }
 
-    .back-button:hover {
-        transform: translateX(-4px);
-    }
-
     .scanner-title {
         display: flex;
         align-items: center;
@@ -60,6 +56,21 @@
         border-radius: var(--radius-md);
         padding: var(--spacing-md);
         margin-bottom: var(--spacing-lg);
+        display: none;
+    }
+
+    .alert-box.show {
+        display: block;
+    }
+
+    .alert-box.success {
+        background-color: rgba(46, 204, 113, 0.15);
+        border-color: rgba(46, 204, 113, 0.3);
+    }
+
+    .alert-box.error {
+        background-color: rgba(231, 76, 60, 0.15);
+        border-color: rgba(231, 76, 60, 0.3);
     }
 
     .alert-header {
@@ -83,14 +94,94 @@
     }
 
     .nfc-icon {
-        font-size: 8rem;
+        font-size: 6rem;
         margin-bottom: var(--spacing-md);
         opacity: 0.7;
+        animation: pulse 2s infinite;
+    }
+
+    .nfc-icon.scanning {
+        animation: pulse 1s infinite;
+        opacity: 1;
+    }
+
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); opacity: 0.7; }
+        50% { transform: scale(1.1); opacity: 1; }
     }
 
     .status-text {
         font-size: 1rem;
         color: var(--text-secondary);
+    }
+
+    .status-text.active {
+        color: #3498db;
+        font-weight: 600;
+    }
+
+    .equipment-info {
+        background: linear-gradient(135deg, rgba(52, 152, 219, 0.1) 0%, rgba(41, 128, 185, 0.05) 100%);
+        border: 1px solid rgba(52, 152, 219, 0.3);
+        border-radius: var(--radius-md);
+        padding: var(--spacing-md);
+        margin-bottom: var(--spacing-lg);
+    }
+
+    .equipment-info h3 {
+        color: #3498db;
+        font-size: 0.85rem;
+        margin-bottom: var(--spacing-sm);
+        text-transform: uppercase;
+    }
+
+    .equipment-info .name {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .equipment-info .code {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+    }
+
+    .result-card {
+        background: var(--bg-primary);
+        border-radius: var(--radius-md);
+        padding: var(--spacing-lg);
+        margin-bottom: var(--spacing-lg);
+        display: none;
+    }
+
+    .result-card.show {
+        display: block;
+    }
+
+    .result-card h3 {
+        color: var(--accent-gold);
+        margin-bottom: var(--spacing-md);
+    }
+
+    .result-card .equipment-name {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .result-card .equipment-code {
+        color: var(--text-secondary);
+        margin-bottom: var(--spacing-md);
+    }
+
+    .result-card .btn-view {
+        display: inline-block;
+        padding: var(--spacing-sm) var(--spacing-lg);
+        background: var(--accent-gold);
+        color: #0a0a0a;
+        text-decoration: none;
+        border-radius: var(--radius-md);
+        font-weight: 600;
     }
 
     .scanner-actions {
@@ -111,11 +202,6 @@
         transition: all 0.3s ease;
     }
 
-    .btn-secondary:hover {
-        background-color: var(--bg-secondary);
-        border-color: var(--text-secondary);
-    }
-
     .btn-primary-nfc {
         flex: 1;
         padding: var(--spacing-md);
@@ -130,9 +216,9 @@
         transition: all 0.3s ease;
     }
 
-    .btn-primary-nfc:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 16px rgba(52, 152, 219, 0.4);
+    .btn-primary-nfc:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
     }
 
     @media (min-width: 768px) {
@@ -150,50 +236,168 @@
         <a href="{{ url_for('equipment.index') }}" class="back-button">←</a>
         <div>
             <h1 class="scanner-title">📱 Scanner NFC</h1>
-            <p class="scanner-subtitle">Aproxime o celular da tag NFC</p>
+            <p class="scanner-subtitle">
+                {% if mode == 'associate' and equipment %}
+                    Associar tag ao equipamento
+                {% else %}
+                    Aproxime o celular da tag NFC
+                {% endif %}
+            </p>
         </div>
     </div>
 
     <div class="scanner-card">
-        <div class="alert-box">
-            <div class="alert-header">⚠️ NFC não suportado:</div>
-            <div class="alert-text">
-                Seu navegador não suporta Web NFC API. Use Chrome no Android ou um app nativo.
-            </div>
+        <div id="alertBox" class="alert-box">
+            <div class="alert-header" id="alertHeader">⚠️ Aviso</div>
+            <div class="alert-text" id="alertText"></div>
         </div>
 
+        {% if mode == 'associate' and equipment %}
+        <div class="equipment-info">
+            <h3>Equipamento Selecionado</h3>
+            <div class="name">{{ equipment.name }}</div>
+            <div class="code">{{ equipment.code }}</div>
+        </div>
+        {% endif %}
+
         <div class="nfc-preview">
-            <div class="nfc-icon">📱</div>
-            <div class="status-text">Pronto para ler</div>
+            <div class="nfc-icon" id="nfcIcon">📱</div>
+            <div class="status-text" id="statusText">Pronto para ler</div>
+        </div>
+
+        <div id="resultCard" class="result-card">
+            <h3>Equipamento Encontrado</h3>
+            <div class="equipment-name" id="resultName"></div>
+            <div class="equipment-code" id="resultCode"></div>
+            <a href="#" id="resultLink" class="btn-view">Ver Detalhes</a>
         </div>
 
         <div class="scanner-actions">
             <button class="btn-secondary" onclick="window.history.back()">Voltar</button>
-            <button class="btn-primary-nfc" onclick="activateNFC()">Ativar NFC</button>
+            <button class="btn-primary-nfc" id="nfcButton" onclick="activateNFC()">Ativar NFC</button>
         </div>
     </div>
 </div>
 
 <script>
-async function activateNFC() {
-    if ('NDEFReader' in window) {
+const mode = "{{ mode }}";
+const equipmentId = {{ equipment.id if equipment else 'null' }};
+let isScanning = false;
+
+function showAlert(type, header, text) {
+    const box = document.getElementById('alertBox');
+    const headerEl = document.getElementById('alertHeader');
+    const textEl = document.getElementById('alertText');
+    
+    box.className = 'alert-box show ' + type;
+    headerEl.textContent = header;
+    textEl.textContent = text;
+}
+
+function hideAlert() {
+    document.getElementById('alertBox').classList.remove('show');
+}
+
+function showResult(equipment) {
+    const card = document.getElementById('resultCard');
+    document.getElementById('resultName').textContent = equipment.name;
+    document.getElementById('resultCode').textContent = equipment.code;
+    document.getElementById('resultLink').href = equipment.url;
+    card.classList.add('show');
+}
+
+async function handleTagRead(serialNumber) {
+    const tagId = serialNumber.replace(/:/g, '');
+    
+    if (mode === 'associate' && equipmentId) {
         try {
-            const ndef = new NDEFReader();
-            await ndef.scan();
-            
-            ndef.addEventListener("reading", ({ serialNumber }) => {
-                console.log('NFC tag detectado:', serialNumber);
-                alert('Tag NFC detectada: ' + serialNumber);
+            const response = await fetch('/scanner/associate/nfc', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ equipment_id: equipmentId, tag_id: tagId })
             });
+            const data = await response.json();
             
-            document.querySelector('.status-text').textContent = 'Aguardando tag NFC...';
+            if (data.success) {
+                showAlert('success', '✅ Sucesso!', 'Tag NFC associada ao equipamento ' + data.equipment.code);
+                setTimeout(() => {
+                    window.location.href = '/equipment/' + equipmentId;
+                }, 2000);
+            } else {
+                showAlert('error', '❌ Erro', data.error);
+            }
         } catch (error) {
-            console.error('Erro NFC:', error);
-            alert('Erro ao ativar NFC: ' + error.message);
+            showAlert('error', '❌ Erro', 'Falha na comunicação com o servidor');
         }
     } else {
-        alert('Web NFC API não suportada neste navegador.');
+        try {
+            const response = await fetch('/scanner/nfc/scan', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ tag_id: tagId })
+            });
+            const data = await response.json();
+            
+            if (data.found) {
+                showResult(data.equipment);
+                showAlert('success', '✅ Encontrado!', 'Equipamento identificado');
+            } else {
+                showAlert('', '📱 Tag Lida', 'Tag: ' + tagId + ' - Não associada a nenhum equipamento');
+            }
+        } catch (error) {
+            showAlert('error', '❌ Erro', 'Falha na comunicação com o servidor');
+        }
     }
+}
+
+async function activateNFC() {
+    if (!('NDEFReader' in window)) {
+        showAlert('error', '❌ NFC não suportado', 'Seu navegador não suporta Web NFC. Use Chrome no Android.');
+        return;
+    }
+
+    const button = document.getElementById('nfcButton');
+    const icon = document.getElementById('nfcIcon');
+    const status = document.getElementById('statusText');
+
+    if (isScanning) {
+        return;
+    }
+
+    try {
+        button.disabled = true;
+        button.textContent = 'Ativando...';
+        
+        const ndef = new NDEFReader();
+        await ndef.scan();
+        
+        isScanning = true;
+        icon.classList.add('scanning');
+        status.textContent = 'Aguardando tag NFC...';
+        status.classList.add('active');
+        button.textContent = 'Escaneando...';
+        hideAlert();
+        
+        ndef.addEventListener("reading", ({ serialNumber }) => {
+            handleTagRead(serialNumber);
+        });
+        
+        ndef.addEventListener("error", (error) => {
+            showAlert('error', '❌ Erro NFC', error.message);
+        });
+        
+    } catch (error) {
+        showAlert('error', '❌ Erro', error.message);
+        button.disabled = false;
+        button.textContent = 'Ativar NFC';
+    }
+}
+
+if ('NDEFReader' in window) {
+    document.getElementById('statusText').textContent = 'NFC disponível - Clique para ativar';
+} else {
+    showAlert('error', '❌ NFC não suportado', 'Seu navegador não suporta Web NFC. Use Chrome no Android.');
+    document.getElementById('nfcButton').disabled = true;
 }
 </script>
 {% endblock %}
