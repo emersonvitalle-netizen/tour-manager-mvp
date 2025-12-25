@@ -280,8 +280,8 @@
         <a href="{{ url_for('orcamento.generate_pdf', id=sep_list.id) }}" class="btn btn-pdf" style="display: flex; align-items: center; justify-content: center; gap: 10px;">
             <i class="fas fa-file-pdf"></i> Visualizar / Baixar PDF
         </a>
-        <button type="button" onclick="document.getElementById('whatsappModal').classList.add('show')" class="btn" style="background: linear-gradient(135deg, #25d366 0%, #128c7e 100%); color: white; display: flex; align-items: center; justify-content: center; gap: 10px; border: none; cursor: pointer;">
-            <i class="fab fa-whatsapp"></i> Enviar por WhatsApp
+        <button type="button" onclick="shareOrcamento()" class="btn" style="background: linear-gradient(135deg, #25d366 0%, #128c7e 100%); color: white; display: flex; align-items: center; justify-content: center; gap: 10px; border: none; cursor: pointer;">
+            <i class="fas fa-share-alt"></i> Compartilhar
         </button>
     </div>
 </div>
@@ -317,4 +317,45 @@
         </form>
     </div>
 </div>
+
+<script>
+async function shareOrcamento() {
+    const orcamentoNome = "{{ sep_list.name }}";
+    const companyName = "{{ current_user.company.name }}";
+    {% if sep_list.list_type == 'complete' %}
+    const valorTotal = "R$ {{ '%.2f'|format(sep_list.items|list|sum(attribute='total_price') or 0)|replace('.', ',') }}";
+    {% else %}
+    const valorTotal = "R$ {{ '%.2f'|format(sep_list.total_value or 0)|replace('.', ',') }}";
+    {% endif %}
+    
+    const mensagem = `*${companyName}*\n\n` +
+        `Orçamento: *${orcamentoNome}*\n` +
+        `Valor Total: *${valorTotal}*\n\n` +
+        `Acesse o link para visualizar os detalhes completos.`;
+    
+    const pdfUrl = window.location.origin + "{{ url_for('orcamento.generate_pdf', id=sep_list.id) }}";
+    
+    if (navigator.share) {
+        try {
+            await navigator.share({
+                title: `Orçamento - ${orcamentoNome}`,
+                text: mensagem,
+                url: pdfUrl
+            });
+        } catch (err) {
+            if (err.name !== 'AbortError') {
+                fallbackShare(mensagem, pdfUrl);
+            }
+        }
+    } else {
+        fallbackShare(mensagem, pdfUrl);
+    }
+}
+
+function fallbackShare(mensagem, pdfUrl) {
+    const textoCompleto = mensagem + '\n\n' + pdfUrl;
+    const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(textoCompleto)}`;
+    window.open(whatsappUrl, '_blank');
+}
+</script>
 {% endblock %}
