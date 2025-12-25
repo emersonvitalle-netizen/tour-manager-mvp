@@ -1,6 +1,8 @@
 from flask import Blueprint, render_template, request, jsonify, redirect, url_for, flash
 from flask_login import login_required, current_user
 from models.equipment import Equipment
+from models.category import Category
+from models.equipment_type import EquipmentType
 from services import tag_service
 from extensions import db
 from datetime import datetime
@@ -226,3 +228,25 @@ def remove_tag(equipment_id, tag_type):
         })
     else:
         return jsonify(result), 400
+
+@scanner_bp.route('/rfid/batch-associate')
+@login_required
+def rfid_batch_associate():
+    """Página para associação em lote de tags RFID"""
+    equipments = Equipment.query.filter_by(
+        company_id=current_user.company_id,
+        is_active=True
+    ).order_by(Equipment.code).all()
+    
+    categories = Category.query.filter_by(
+        company_id=current_user.company_id
+    ).all()
+    
+    equipment_types = EquipmentType.query.filter_by(
+        company_id=current_user.company_id
+    ).all()
+    
+    return render_template('scanner/rfid_batch_associate.html',
+                         equipments=equipments,
+                         categories=categories,
+                         equipment_types=equipment_types)

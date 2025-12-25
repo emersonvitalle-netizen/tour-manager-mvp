@@ -1,0 +1,556 @@
+{% extends "base.html" %}
+
+{% block title %}Associação em Lote RFID - TOUR{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-container {
+        padding: var(--spacing-md);
+        min-height: 100vh;
+        padding-bottom: calc(var(--bottom-nav-height) + var(--spacing-md));
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    .page-header {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-md);
+        margin-bottom: var(--spacing-lg);
+    }
+
+    .back-button {
+        color: var(--text-primary);
+        font-size: 1.5rem;
+        text-decoration: none;
+    }
+
+    .page-title {
+        font-size: 1.3rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .info-card {
+        background: linear-gradient(135deg, rgba(155, 89, 182, 0.15) 0%, rgba(142, 68, 173, 0.1) 100%);
+        border: 1px solid rgba(155, 89, 182, 0.3);
+        border-radius: var(--radius-lg);
+        padding: var(--spacing-lg);
+        margin-bottom: var(--spacing-lg);
+    }
+
+    .info-card h3 {
+        color: #9b59b6;
+        margin-bottom: var(--spacing-sm);
+    }
+
+    .info-card p {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        line-height: 1.6;
+    }
+
+    .steps-list {
+        list-style: none;
+        padding: 0;
+        margin-top: var(--spacing-md);
+    }
+
+    .steps-list li {
+        display: flex;
+        align-items: flex-start;
+        gap: var(--spacing-sm);
+        margin-bottom: var(--spacing-sm);
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+    }
+
+    .step-number {
+        background: #9b59b6;
+        color: white;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+        font-weight: bold;
+        flex-shrink: 0;
+    }
+
+    .section-card {
+        background: var(--bg-secondary);
+        border-radius: var(--radius-lg);
+        padding: var(--spacing-lg);
+        margin-bottom: var(--spacing-lg);
+        border: 1px solid var(--border-subtle);
+    }
+
+    .section-title {
+        color: var(--accent-gold);
+        font-size: 1.1rem;
+        margin-bottom: var(--spacing-md);
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+    }
+
+    .equipment-list {
+        max-height: 300px;
+        overflow-y: auto;
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-md);
+        margin-bottom: var(--spacing-md);
+    }
+
+    .equipment-item {
+        display: flex;
+        align-items: center;
+        padding: var(--spacing-sm) var(--spacing-md);
+        border-bottom: 1px solid var(--border-subtle);
+        gap: var(--spacing-md);
+    }
+
+    .equipment-item:last-child {
+        border-bottom: none;
+    }
+
+    .equipment-item.has-tag {
+        background: rgba(46, 204, 113, 0.1);
+    }
+
+    .equipment-item.pending {
+        background: rgba(243, 156, 18, 0.1);
+    }
+
+    .equipment-item.current {
+        background: rgba(155, 89, 182, 0.2);
+        border: 2px solid #9b59b6;
+    }
+
+    .eq-checkbox {
+        width: 20px;
+        height: 20px;
+        accent-color: #9b59b6;
+    }
+
+    .eq-code {
+        font-family: monospace;
+        font-weight: bold;
+        color: var(--accent-gold);
+        min-width: 100px;
+    }
+
+    .eq-name {
+        flex: 1;
+        color: var(--text-primary);
+    }
+
+    .eq-tag {
+        font-family: monospace;
+        font-size: 0.8rem;
+        color: #2ecc71;
+        max-width: 150px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .eq-status {
+        font-size: 0.8rem;
+        padding: 4px 8px;
+        border-radius: 4px;
+    }
+
+    .status-pending {
+        background: rgba(243, 156, 18, 0.2);
+        color: #f39c12;
+    }
+
+    .status-done {
+        background: rgba(46, 204, 113, 0.2);
+        color: #2ecc71;
+    }
+
+    .scan-area {
+        background: var(--bg-primary);
+        border: 2px dashed #9b59b6;
+        border-radius: var(--radius-lg);
+        padding: var(--spacing-xl);
+        text-align: center;
+        margin-bottom: var(--spacing-md);
+    }
+
+    .scan-icon {
+        font-size: 4rem;
+        margin-bottom: var(--spacing-md);
+        opacity: 0.7;
+    }
+
+    .scan-icon.scanning {
+        animation: pulse 1s infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); opacity: 0.7; }
+        50% { transform: scale(1.1); opacity: 1; }
+    }
+
+    .scan-status {
+        font-size: 1.1rem;
+        color: var(--text-secondary);
+        margin-bottom: var(--spacing-md);
+    }
+
+    .scan-status.active {
+        color: #9b59b6;
+        font-weight: 600;
+    }
+
+    .current-eq {
+        background: rgba(212, 165, 116, 0.2);
+        padding: var(--spacing-md);
+        border-radius: var(--radius-md);
+        margin-bottom: var(--spacing-md);
+    }
+
+    .current-eq-label {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        margin-bottom: 4px;
+    }
+
+    .current-eq-name {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: var(--accent-gold);
+    }
+
+    .epc-input {
+        width: 100%;
+        padding: var(--spacing-md);
+        background: var(--bg-primary);
+        border: 2px solid var(--border-subtle);
+        border-radius: var(--radius-md);
+        color: var(--text-primary);
+        font-family: monospace;
+        font-size: 1rem;
+        margin-bottom: var(--spacing-md);
+    }
+
+    .epc-input:focus {
+        outline: none;
+        border-color: #9b59b6;
+    }
+
+    .btn-row {
+        display: flex;
+        gap: var(--spacing-sm);
+    }
+
+    .btn {
+        flex: 1;
+        padding: var(--spacing-md);
+        border: none;
+        border-radius: var(--radius-md);
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+        color: white;
+    }
+
+    .btn-secondary {
+        background: var(--bg-primary);
+        color: var(--text-secondary);
+        border: 1px solid var(--border-subtle);
+    }
+
+    .btn-success {
+        background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+        color: white;
+    }
+
+    .progress-bar {
+        background: var(--bg-primary);
+        height: 8px;
+        border-radius: 4px;
+        overflow: hidden;
+        margin-bottom: var(--spacing-md);
+    }
+
+    .progress-fill {
+        background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+        height: 100%;
+        transition: width 0.3s ease;
+    }
+
+    .progress-text {
+        text-align: center;
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        margin-bottom: var(--spacing-md);
+    }
+
+    .filter-row {
+        display: flex;
+        gap: var(--spacing-sm);
+        margin-bottom: var(--spacing-md);
+    }
+
+    .filter-select {
+        flex: 1;
+        padding: var(--spacing-sm) var(--spacing-md);
+        background: var(--bg-primary);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-md);
+        color: var(--text-primary);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <a href="{{ url_for('equipment.index') }}" class="back-button">←</a>
+        <h1 class="page-title">📡 Associação em Lote RFID</h1>
+    </div>
+
+    <div class="info-card">
+        <h3>Como funciona?</h3>
+        <p>Associe tags RFID a múltiplos equipamentos de forma rápida e sequencial.</p>
+        <ol class="steps-list">
+            <li><span class="step-number">1</span> Filtre os equipamentos sem tag RFID</li>
+            <li><span class="step-number">2</span> Selecione os equipamentos que deseja etiquetar</li>
+            <li><span class="step-number">3</span> Cole a tag no primeiro equipamento</li>
+            <li><span class="step-number">4</span> Escaneie ou digite o EPC da tag</li>
+            <li><span class="step-number">5</span> Repita para o próximo equipamento</li>
+        </ol>
+    </div>
+
+    <div class="section-card">
+        <div class="section-title"><i class="fas fa-filter"></i> Filtrar Equipamentos</div>
+        
+        <div class="filter-row">
+            <select id="filterCategory" class="filter-select" onchange="filterEquipments()">
+                <option value="">Todas as categorias</option>
+                {% for cat in categories %}
+                <option value="{{ cat.id }}">{{ cat.name }}</option>
+                {% endfor %}
+            </select>
+            <select id="filterType" class="filter-select" onchange="filterEquipments()">
+                <option value="">Todos os tipos</option>
+                {% for type in equipment_types %}
+                <option value="{{ type.id }}">{{ type.name }}</option>
+                {% endfor %}
+            </select>
+            <select id="filterStatus" class="filter-select" onchange="filterEquipments()">
+                <option value="no_tag">Sem tag RFID</option>
+                <option value="all">Todos</option>
+                <option value="with_tag">Com tag RFID</option>
+            </select>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+        </div>
+        <div class="progress-text" id="progressText">Selecione equipamentos para iniciar</div>
+
+        <div class="equipment-list" id="equipmentList">
+            {% for eq in equipments %}
+            <div class="equipment-item {% if eq.rfid_uhf_tag %}has-tag{% endif %}" 
+                 data-id="{{ eq.id }}" 
+                 data-code="{{ eq.code }}"
+                 data-name="{{ eq.name }}"
+                 data-category="{{ eq.category_id or '' }}"
+                 data-type="{{ eq.type_id or '' }}"
+                 data-has-tag="{{ 'yes' if eq.rfid_uhf_tag else 'no' }}">
+                <input type="checkbox" class="eq-checkbox" {% if eq.rfid_uhf_tag %}disabled{% endif %}>
+                <span class="eq-code">{{ eq.code }}</span>
+                <span class="eq-name">{{ eq.name }}</span>
+                {% if eq.rfid_uhf_tag %}
+                <span class="eq-tag">{{ eq.rfid_uhf_tag[:16] }}...</span>
+                <span class="eq-status status-done">✓</span>
+                {% else %}
+                <span class="eq-status status-pending">Pendente</span>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="btn-row">
+            <button class="btn btn-secondary" onclick="selectAll()">Selecionar Todos</button>
+            <button class="btn btn-primary" onclick="startAssociation()">Iniciar Associação</button>
+        </div>
+    </div>
+
+    <div class="section-card" id="scanSection" style="display: none;">
+        <div class="section-title"><i class="fas fa-broadcast-tower"></i> Escaneando Tags</div>
+        
+        <div class="current-eq">
+            <div class="current-eq-label">Próximo equipamento:</div>
+            <div class="current-eq-name" id="currentEquipment">-</div>
+        </div>
+
+        <div class="scan-area">
+            <div class="scan-icon" id="scanIcon">📡</div>
+            <div class="scan-status" id="scanStatus">Aguardando tag...</div>
+        </div>
+
+        <input type="text" id="epcInput" class="epc-input" placeholder="Digite ou escaneie o EPC da tag" autofocus>
+
+        <div class="btn-row">
+            <button class="btn btn-secondary" onclick="skipEquipment()">Pular</button>
+            <button class="btn btn-success" onclick="associateTag()">Associar Tag</button>
+        </div>
+    </div>
+</div>
+
+<script>
+let selectedEquipments = [];
+let currentIndex = 0;
+let associatedCount = 0;
+
+function filterEquipments() {
+    const category = document.getElementById('filterCategory').value;
+    const type = document.getElementById('filterType').value;
+    const status = document.getElementById('filterStatus').value;
+    
+    document.querySelectorAll('.equipment-item').forEach(item => {
+        let show = true;
+        
+        if (category && item.dataset.category !== category) show = false;
+        if (type && item.dataset.type !== type) show = false;
+        if (status === 'no_tag' && item.dataset.hasTag === 'yes') show = false;
+        if (status === 'with_tag' && item.dataset.hasTag === 'no') show = false;
+        
+        item.style.display = show ? 'flex' : 'none';
+    });
+}
+
+function selectAll() {
+    document.querySelectorAll('.equipment-item:not([style*="display: none"]) .eq-checkbox:not(:disabled)').forEach(cb => {
+        cb.checked = true;
+    });
+    updateSelection();
+}
+
+function updateSelection() {
+    selectedEquipments = [];
+    document.querySelectorAll('.equipment-item .eq-checkbox:checked').forEach(cb => {
+        const item = cb.closest('.equipment-item');
+        selectedEquipments.push({
+            id: item.dataset.id,
+            code: item.dataset.code,
+            name: item.dataset.name
+        });
+    });
+    
+    const total = selectedEquipments.length;
+    document.getElementById('progressText').textContent = 
+        total > 0 ? `${total} equipamento(s) selecionado(s)` : 'Selecione equipamentos para iniciar';
+}
+
+document.querySelectorAll('.eq-checkbox').forEach(cb => {
+    cb.addEventListener('change', updateSelection);
+});
+
+function startAssociation() {
+    if (selectedEquipments.length === 0) {
+        alert('Selecione pelo menos um equipamento');
+        return;
+    }
+    
+    currentIndex = 0;
+    associatedCount = 0;
+    document.getElementById('scanSection').style.display = 'block';
+    showCurrentEquipment();
+    document.getElementById('epcInput').focus();
+}
+
+function showCurrentEquipment() {
+    if (currentIndex >= selectedEquipments.length) {
+        finishAssociation();
+        return;
+    }
+    
+    const eq = selectedEquipments[currentIndex];
+    document.getElementById('currentEquipment').textContent = `${eq.code} - ${eq.name}`;
+    document.getElementById('epcInput').value = '';
+    document.getElementById('epcInput').focus();
+    
+    const progress = (currentIndex / selectedEquipments.length) * 100;
+    document.getElementById('progressFill').style.width = progress + '%';
+    document.getElementById('progressText').textContent = 
+        `${currentIndex + 1} de ${selectedEquipments.length} (${associatedCount} associados)`;
+    
+    document.querySelectorAll('.equipment-item').forEach(item => item.classList.remove('current'));
+    const currentItem = document.querySelector(`.equipment-item[data-id="${eq.id}"]`);
+    if (currentItem) {
+        currentItem.classList.add('current');
+        currentItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+}
+
+async function associateTag() {
+    const epc = document.getElementById('epcInput').value.trim();
+    if (!epc) {
+        alert('Digite o EPC da tag');
+        return;
+    }
+    
+    const eq = selectedEquipments[currentIndex];
+    
+    try {
+        const response = await fetch('/scanner/associate/rfid', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ equipment_id: eq.id, epc: epc })
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+            associatedCount++;
+            const item = document.querySelector(`.equipment-item[data-id="${eq.id}"]`);
+            if (item) {
+                item.classList.add('has-tag');
+                item.classList.remove('current');
+                item.querySelector('.eq-status').textContent = '✓';
+                item.querySelector('.eq-status').className = 'eq-status status-done';
+            }
+            currentIndex++;
+            showCurrentEquipment();
+        } else {
+            alert('Erro: ' + data.error);
+        }
+    } catch (error) {
+        alert('Erro ao associar tag');
+    }
+}
+
+function skipEquipment() {
+    currentIndex++;
+    showCurrentEquipment();
+}
+
+function finishAssociation() {
+    document.getElementById('scanSection').style.display = 'none';
+    document.getElementById('progressFill').style.width = '100%';
+    document.getElementById('progressText').textContent = 
+        `Concluído! ${associatedCount} de ${selectedEquipments.length} equipamentos associados.`;
+    alert(`Associação concluída!\n\n${associatedCount} equipamentos com tags RFID.`);
+}
+
+document.getElementById('epcInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        associateTag();
+    }
+});
+
+filterEquipments();
+</script>
+{% endblock %}
