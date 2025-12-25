@@ -16,6 +16,7 @@ def create_models():
     from models.tour import Tour, Show, TourRequirement, TourEquipment, EquipmentCheckpoint, EquipmentTransfer, EquipmentReplacement
     from models.separation_list import SeparationList, SeparationListItem
     from models.work_list import WorkList, WorkListItem
+    from models.financial import Quote, QuoteItem, Contract, Invoice, Payment
 
 def migrate_database():
     """Adiciona colunas que podem estar faltando sem quebrar"""
