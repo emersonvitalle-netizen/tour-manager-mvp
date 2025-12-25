@@ -61,7 +61,8 @@ Sistema MVP para empresas de áudio/eventos gerenciarem equipamentos, tours e ma
 │   ├── company.py
 │   ├── kit.py
 │   ├── tour.py
-│   ├── separation.py
+│   ├── orcamento.py     # Orçamentos (propostas comerciais)
+│   ├── separation.py    # Redirects legados → orcamento
 │   ├── work_list.py
 │   ├── users.py
 │   └── financial.py
@@ -77,6 +78,7 @@ Sistema MVP para empresas de áudio/eventos gerenciarem equipamentos, tours e ma
 │   ├── company/
 │   ├── kit/
 │   ├── tour/
+│   ├── orcamento/       # Templates de orçamento (dark theme)
 │   ├── users/
 │   ├── financial/
 │   ├── base.html
