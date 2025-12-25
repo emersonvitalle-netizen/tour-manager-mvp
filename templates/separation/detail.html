@@ -5,228 +5,134 @@
 {% block extra_css %}
 <style>
     .page-container {
-        padding: 0;
+        padding: var(--spacing-md);
         min-height: 100vh;
         padding-bottom: calc(var(--bottom-nav-height) + var(--spacing-md));
     }
 
     .page-header {
-        background: linear-gradient(135deg, rgba(243, 156, 18, 0.3) 0%, rgba(230, 126, 34, 0.2) 100%);
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.3) 0%, rgba(118, 75, 162, 0.2) 100%);
         padding: var(--spacing-lg) var(--spacing-md);
-        border-bottom: 1px solid var(--border-subtle);
-    }
-
-    .header-content {
-        display: flex;
-        align-items: center;
-        gap: var(--spacing-md);
-        margin-bottom: var(--spacing-sm);
-    }
-
-    .back-button {
-        color: var(--text-primary);
-        font-size: 1.5rem;
-        text-decoration: none;
+        border-radius: var(--radius-lg);
+        margin-bottom: var(--spacing-lg);
     }
 
     .header-title {
-        font-size: 1.3rem;
+        font-size: 1.5rem;
         font-weight: var(--font-weight-bold);
-        color: var(--text-primary);
-        flex: 1;
+        margin-bottom: var(--spacing-xs);
     }
 
-    .info-section {
-        padding: var(--spacing-md);
+    .status-badge {
+        display: inline-block;
+        padding: 6px 16px;
+        border-radius: var(--radius-sm);
+        font-size: 0.85rem;
+        font-weight: var(--font-weight-bold);
+        margin-top: var(--spacing-xs);
+    }
+
+    .status-pending {
+        background: rgba(255, 193, 7, 0.2);
+        color: #ffc107;
+    }
+
+    .status-approved {
+        background: rgba(76, 175, 80, 0.2);
+        color: #4caf50;
+    }
+
+    .status-rejected {
+        background: rgba(244, 67, 54, 0.2);
+        color: #f44336;
+    }
+
+    .info-card {
         background-color: var(--bg-secondary);
-        border-bottom: 1px solid var(--border-subtle);
+        padding: var(--spacing-md);
+        border-radius: var(--radius-md);
+        margin-bottom: var(--spacing-md);
     }
 
     .info-row {
         display: flex;
         justify-content: space-between;
-        padding: var(--spacing-xs) 0;
-        font-size: 0.9rem;
+        padding: var(--spacing-sm) 0;
+        border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .info-row:last-child {
+        border-bottom: none;
     }
 
     .info-label {
         color: var(--text-secondary);
+        font-size: 0.9rem;
     }
 
     .info-value {
-        color: var(--text-primary);
-        font-weight: var(--font-weight-medium);
+        font-weight: var(--font-weight-semibold);
     }
 
-    .list-type-badge {
-        display: inline-block;
-        padding: 4px 12px;
-        border-radius: var(--radius-sm);
-        font-size: 0.75rem;
-        font-weight: var(--font-weight-bold);
-        margin-bottom: var(--spacing-sm);
-    }
-
-    .badge-complete {
-        background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
-        color: white;
-    }
-
-    .badge-simple {
-        background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
-        color: white;
-    }
-
-    .items-list {
-        padding: var(--spacing-md);
-    }
-
-    .item-row {
-        padding: var(--spacing-md);
+    .items-section {
         background-color: var(--bg-secondary);
+        padding: var(--spacing-md);
         border-radius: var(--radius-md);
+        margin-bottom: var(--spacing-md);
+    }
+
+    .item-card {
+        background-color: var(--bg-primary);
+        padding: var(--spacing-md);
+        border-radius: var(--radius-md);
+        border: 1px solid var(--border-subtle);
         margin-bottom: var(--spacing-sm);
-        display: grid;
-        grid-template-columns: 3fr 80px {% if sep_list.list_type == 'complete' %}100px 100px{% endif %};
-        gap: var(--spacing-sm);
-        align-items: center;
     }
 
     .item-name {
-        font-size: 0.95rem;
-        font-weight: var(--font-weight-medium);
+        font-weight: var(--font-weight-semibold);
+        margin-bottom: var(--spacing-xs);
     }
 
-    .item-quantity {
-        text-align: center;
-        font-size: 0.95rem;
-        font-weight: var(--font-weight-bold);
-        color: #3498db;
-    }
-
-    .item-price {
-        text-align: right;
+    .item-details {
+        display: flex;
+        gap: var(--spacing-md);
         font-size: 0.85rem;
         color: var(--text-secondary);
     }
 
-    .item-total {
-        text-align: right;
-        font-size: 0.95rem;
-        font-weight: var(--font-weight-bold);
-        color: #f39c12;
-    }
-
-    .total-section {
-        padding: var(--spacing-lg) var(--spacing-md);
-        background: linear-gradient(135deg, rgba(243, 156, 18, 0.2) 0%, rgba(230, 126, 34, 0.15) 100%);
-        border-top: 2px solid var(--border-subtle);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .total-label {
-        font-size: 1.2rem;
-        font-weight: var(--font-weight-bold);
-    }
-
-    .total-value {
-        font-size: 1.5rem;
-        font-weight: var(--font-weight-bold);
-        color: #f39c12;
-    }
-
-    .approval-section {
-        padding: var(--spacing-md);
-        background-color: var(--bg-secondary);
-        border-top: 1px solid var(--border-subtle);
-    }
-
-    .approval-buttons {
+    .action-buttons {
+        position: fixed;
+        bottom: calc(var(--bottom-nav-height) + var(--spacing-md));
+        left: var(--spacing-md);
+        right: var(--spacing-md);
         display: flex;
         gap: var(--spacing-sm);
+        z-index: 999;
     }
 
-    .btn-approve, .btn-reject {
+    .btn {
         flex: 1;
         padding: var(--spacing-md);
         border: none;
         border-radius: var(--radius-md);
-        font-size: 1rem;
-        font-weight: var(--font-weight-semibold);
+        font-weight: var(--font-weight-bold);
         cursor: pointer;
     }
 
-    .btn-approve {
-        background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
-        color: white;
-    }
-
-    .btn-reject {
+    .btn-pdf {
         background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
         color: white;
     }
 
-    .admin-only-notice {
-        background: rgba(231, 76, 60, 0.1);
-        padding: var(--spacing-sm);
-        border-radius: var(--radius-sm);
-        font-size: 0.8rem;
-        color: #e74c3c;
-        margin-top: var(--spacing-sm);
-        text-align: center;
+    .btn-approve {
+        background: linear-gradient(135deg, #4caf50 0%, #8bc34a 100%);
+        color: white;
     }
 
-    .modal {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.8);
-        z-index: 1000;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .modal-content {
-        background-color: var(--bg-secondary);
-        padding: var(--spacing-xl);
-        border-radius: var(--radius-lg);
-        width: 90%;
-        max-width: 400px;
-    }
-
-    .modal-title {
-        font-size: 1.2rem;
-        font-weight: var(--font-weight-bold);
-        margin-bottom: var(--spacing-md);
-    }
-
-    .modal-input {
-        width: 100%;
-        padding: var(--spacing-sm);
-        background-color: var(--bg-primary);
-        border: 1px solid var(--border-subtle);
-        border-radius: var(--radius-sm);
-        color: var(--text-primary);
-        margin-bottom: var(--spacing-md);
-    }
-
-    .modal-buttons {
-        display: flex;
-        gap: var(--spacing-sm);
-    }
-
-    .modal-buttons button {
-        flex: 1;
-        padding: var(--spacing-sm);
-        border: none;
-        border-radius: var(--radius-sm);
-        font-weight: var(--font-weight-semibold);
-        cursor: pointer;
+    .btn-reject {
+        background: linear-gradient(135deg, #f44336 0%, #e53935 100%);
+        color: white;
     }
 </style>
 {% endblock %}
@@ -234,139 +140,90 @@
 {% block content %}
 <div class="page-container">
     <div class="page-header">
-        <div class="header-content">
-            <a href="{{ url_for('separation.index') }}" class="back-button">←</a>
-            <h1 class="header-title">{{ sep_list.name }}</h1>
-            <span class="badge {{ sep_list.status_badge_class }}">{{ sep_list.status_label }}</span>
+        <div class="header-title">{{ sep_list.name }}</div>
+        <div class="status-badge status-{{ sep_list.status }}">
+            {% if sep_list.status == 'pending' %}⏳ Pendente
+            {% elif sep_list.status == 'approved' %}✓ Aprovada
+            {% elif sep_list.status == 'rejected' %}✗ Rejeitada
+            {% endif %}
         </div>
-        {% if sep_list.list_type == 'complete' %}
-        <span class="list-type-badge badge-complete">💰 COMPLETA</span>
-        {% else %}
-        <span class="list-type-badge badge-simple">📋 SIMPLES</span>
-        {% endif %}
     </div>
 
-    <div class="info-section">
+    <div class="info-card">
         <div class="info-row">
             <span class="info-label">Tour:</span>
-            <span class="info-value">{{ sep_list.tour.name }}</span>
+            <span class="info-value">{{ sep_list.tour.name }} - {{ sep_list.tour.artist }}</span>
         </div>
         <div class="info-row">
-            <span class="info-label">Criado por:</span>
-            <span class="info-value">{{ sep_list.creator.name }}</span>
+            <span class="info-label">Tipo:</span>
+            <span class="info-value">
+                {% if sep_list.list_type == 'complete' %}💰 Lista Completa (com precos)
+                {% else %}📋 Lista Simples
+                {% endif %}
+            </span>
         </div>
         <div class="info-row">
-            <span class="info-label">Data:</span>
+            <span class="info-label">Criado em:</span>
             <span class="info-value">{{ sep_list.created_at.strftime('%d/%m/%Y %H:%M') }}</span>
         </div>
         {% if sep_list.description %}
         <div class="info-row">
-            <span class="info-label">Observações:</span>
+            <span class="info-label">Observacoes:</span>
             <span class="info-value">{{ sep_list.description }}</span>
         </div>
         {% endif %}
     </div>
 
-    <div class="items-list">
-        <h3 style="font-size: 1rem; margin-bottom: var(--spacing-md); color: var(--text-secondary);">Itens ({{ sep_list.total_items }})</h3>
-        
+    <div class="items-section">
+        <h3 style="font-size: 1.1rem; margin-bottom: var(--spacing-md);">Itens ({{ sep_list.items.count() }})</h3>
+
         {% for item in sep_list.items %}
-        <div class="item-row">
+        <div class="item-card">
             <div class="item-name">{{ item.item_name }}</div>
-            <div class="item-quantity">{{ item.quantity }}x</div>
-            {% if sep_list.list_type == 'complete' and (current_user.role == 'admin' or sep_list.status == 'approved') %}
-            <div class="item-price">R$ {{ "%.2f"|format(item.unit_price or 0)|replace('.', ',') }}</div>
-            <div class="item-total">R$ {{ "%.2f"|format(item.total_price or 0)|replace('.', ',') }}</div>
-            {% endif %}
+            <div class="item-details">
+                <span>Qtd: {{ item.quantity }}</span>
+                {% if sep_list.list_type == 'complete' %}
+                <span>Unit: R$ {{ "%.2f"|format(item.unit_price or 0)|replace('.', ',') }}</span>
+                <span>Total: R$ {{ "%.2f"|format(item.total_price or 0)|replace('.', ',') }}</span>
+                {% endif %}
+            </div>
         </div>
         {% endfor %}
     </div>
 
-    {% if current_user.role == 'admin' %}
-        {% if sep_list.list_type == 'complete' %}
-        <div class="total-section">
-            <span class="total-label">TOTAL</span>
-            <span class="total-value">R$ {{ "%.2f"|format(sep_list.calculated_total)|replace('.', ',') }}</span>
+    {% if sep_list.list_type == 'complete' %}
+    <div class="info-card">
+        <div class="info-row">
+            <span class="info-label">TOTAL GERAL:</span>
+            <span class="info-value" style="color: #f39c12; font-size: 1.2rem;">
+                R$ {{ "%.2f"|format(sep_list.items|sum(attribute='total_price') or 0)|replace('.', ',') }}
+            </span>
         </div>
-        {% elif sep_list.list_type == 'simple' %}
-        <div class="total-section">
-            <span class="total-label">VALOR TOTAL</span>
-            <span class="total-value">R$ {{ "%.2f"|format(sep_list.total_value or 0)|replace('.', ',') }}</span>
-        </div>
-        <div class="admin-only-notice">
-            ⚠️ Valor total visível apenas para administradores
-        </div>
-        {% endif %}
-    {% elif sep_list.list_type == 'complete' and sep_list.status == 'approved' %}
-        <div class="total-section">
-            <span class="total-label">TOTAL</span>
-            <span class="total-value">R$ {{ "%.2f"|format(sep_list.calculated_total)|replace('.', ',') }}</span>
-        </div>
-    {% endif %}
-
-    {% if sep_list.status == 'pending' and current_user.role == 'admin' %}
-    <div class="approval-section">
-        <div class="approval-buttons">
-            <button class="btn-approve" onclick="approveList()">✓ Aprovar</button>
-            <button class="btn-reject" onclick="showRejectModal()">✗ Rejeitar</button>
+    </div>
+    {% else %}
+    <div class="info-card">
+        <div class="info-row">
+            <span class="info-label">VALOR TOTAL:</span>
+            <span class="info-value" style="color: #4caf50; font-size: 1.2rem;">
+                R$ {{ "%.2f"|format(sep_list.total_value or 0)|replace('.', ',') }}
+            </span>
         </div>
     </div>
     {% endif %}
 
-    {% if sep_list.status == 'approved' and sep_list.approval_notes %}
-    <div class="approval-section">
-        <div style="background-color: rgba(46, 204, 113, 0.1); padding: var(--spacing-md); border-radius: var(--radius-md); border-left: 4px solid #2ecc71;">
-            <strong>Aprovado por {{ sep_list.approver.name }}</strong><br>
-            {{ sep_list.approval_notes }}
-        </div>
-    </div>
-    {% endif %}
+    <div style="height: 80px;"></div>
 
-    {% if sep_list.status == 'rejected' %}
-    <div class="approval-section">
-        <div style="background-color: rgba(231, 76, 60, 0.1); padding: var(--spacing-md); border-radius: var(--radius-md); border-left: 4px solid #e74c3c;">
-            <strong>Rejeitado por {{ sep_list.approver.name }}</strong><br>
-            {{ sep_list.rejection_reason }}
-        </div>
-    </div>
-    {% endif %}
-</div>
-
-<!-- Modal de Rejeição -->
-<div class="modal" id="rejectModal">
-    <div class="modal-content">
-        <div class="modal-title">Motivo da Rejeição</div>
-        <form method="POST" action="{{ url_for('separation.reject', id=sep_list.id) }}">
-            <textarea name="reason" class="modal-input" rows="4" placeholder="Informe o motivo..." required></textarea>
-            <div class="modal-buttons">
-                <button type="button" onclick="closeRejectModal()" style="background-color: var(--bg-primary); color: var(--text-primary);">
-                    Cancelar
-                </button>
-                <button type="submit" style="background-color: #e74c3c; color: white;">
-                    Rejeitar
-                </button>
-            </div>
+    {% if sep_list.status == 'pending' %}
+    <div class="action-buttons">
+        <a href="{{ url_for('separation.generate_pdf', id=sep_list.id) }}" class="btn btn-pdf">📄 PDF</a>
+        <form method="POST" action="{{ url_for('separation.approve', id=sep_list.id) }}" style="flex: 1;">
+            <button type="submit" class="btn btn-approve" onclick="return confirm('Aprovar esta lista?')">✓ Aprovar</button>
         </form>
     </div>
+    {% else %}
+    <div class="action-buttons">
+        <a href="{{ url_for('separation.generate_pdf', id=sep_list.id) }}" class="btn btn-pdf" style="flex: 1;">📄 Download PDF</a>
+    </div>
+    {% endif %}
 </div>
-
-<script>
-function approveList() {
-    if (confirm('Confirma a aprovação desta lista?')) {
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = '{{ url_for("separation.approve", id=sep_list.id) }}';
-        document.body.appendChild(form);
-        form.submit();
-    }
-}
-
-function showRejectModal() {
-    document.getElementById('rejectModal').style.display = 'flex';
-}
-
-function closeRejectModal() {
-    document.getElementById('rejectModal').style.display = 'none';
-}
-</script>
 {% endblock %}

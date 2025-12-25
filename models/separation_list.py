@@ -6,7 +6,7 @@ class SeparationList(db.Model):
     __tablename__ = 'separation_list'
     
     id = db.Column(db.Integer, primary_key=True)
-    tour_id = db.Column(db.Integer, db.ForeignKey('tour.id'), nullable=False)
+    tour_id = db.Column(db.Integer, db.ForeignKey('tour.id'), nullable=True)
     name = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text)
     
