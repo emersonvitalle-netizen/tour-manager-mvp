@@ -118,6 +118,12 @@ def dashboard():
         return redirect(url_for('auth.login'))
     return render_template('dashboard.html')
 
+@app.route('/docs/project')
+def project_docs():
+    if not current_user.is_authenticated:
+        return redirect(url_for('auth.login'))
+    return render_template('docs/project_overview.html')
+
 with app.app_context():
     create_models()
     db.create_all()
