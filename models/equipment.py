@@ -19,6 +19,13 @@ class Equipment(db.Model):
     notes = db.Column(db.Text)
     qr_code_url = db.Column(db.String(500))
     primary_photo_url = db.Column(db.String(500))
+    
+    # ========== RFID/NFC Tags ==========
+    nfc_tag_id = db.Column(db.String(64))  # UID da tag NFC (hex string)
+    rfid_uhf_tag = db.Column(db.String(128))  # EPC da tag RFID UHF
+    tag_associated_at = db.Column(db.DateTime)  # Data de associação da tag
+    tag_associated_by = db.Column(db.Integer, db.ForeignKey('user.id'))  # Quem associou
+    
     company_id = db.Column(db.Integer, db.ForeignKey('company.id'), nullable=False)
     created_by = db.Column(db.Integer, db.ForeignKey('user.id'))
     created_at = db.Column(db.DateTime, default=datetime.now)

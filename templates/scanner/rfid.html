@@ -12,7 +12,7 @@
     }
 
     .scanner-header {
-        background: linear-gradient(135deg, rgba(240, 147, 251, 0.3) 0%, rgba(245, 87, 108, 0.2) 100%);
+        background: linear-gradient(135deg, rgba(155, 89, 182, 0.3) 0%, rgba(142, 68, 173, 0.2) 100%);
         padding: var(--spacing-lg) var(--spacing-md);
         border-bottom: 1px solid var(--border-subtle);
         display: flex;
@@ -24,17 +24,9 @@
         color: var(--text-primary);
         font-size: 1.5rem;
         text-decoration: none;
-        transition: transform 0.2s ease;
-    }
-
-    .back-button:hover {
-        transform: translateX(-4px);
     }
 
     .scanner-title {
-        display: flex;
-        align-items: center;
-        gap: var(--spacing-sm);
         font-size: 1.3rem;
         font-weight: var(--font-weight-semibold);
         color: var(--text-primary);
@@ -54,27 +46,42 @@
         box-shadow: var(--shadow-lg);
     }
 
-    .alert-box {
-        background-color: rgba(243, 156, 18, 0.15);
-        border: 1px solid rgba(243, 156, 18, 0.3);
+    .info-box {
+        background-color: rgba(155, 89, 182, 0.15);
+        border: 1px solid rgba(155, 89, 182, 0.3);
         border-radius: var(--radius-md);
         padding: var(--spacing-md);
         margin-bottom: var(--spacing-lg);
     }
 
-    .alert-header {
+    .info-header {
         display: flex;
         align-items: center;
         gap: var(--spacing-sm);
         font-weight: var(--font-weight-semibold);
-        color: var(--status-maintenance);
+        color: #9b59b6;
         margin-bottom: var(--spacing-xs);
     }
 
-    .alert-text {
+    .info-text {
         font-size: 0.85rem;
         color: var(--text-secondary);
         line-height: 1.5;
+    }
+
+    .alert-box {
+        background-color: rgba(46, 204, 113, 0.15);
+        border: 1px solid rgba(46, 204, 113, 0.3);
+        border-radius: var(--radius-md);
+        padding: var(--spacing-md);
+        margin-bottom: var(--spacing-lg);
+        display: none;
+    }
+
+    .alert-box.show { display: block; }
+    .alert-box.error {
+        background-color: rgba(231, 76, 60, 0.15);
+        border-color: rgba(231, 76, 60, 0.3);
     }
 
     .rfid-preview {
@@ -83,7 +90,7 @@
     }
 
     .rfid-icon {
-        font-size: 8rem;
+        font-size: 6rem;
         margin-bottom: var(--spacing-md);
         opacity: 0.7;
     }
@@ -91,6 +98,75 @@
     .status-text {
         font-size: 1rem;
         color: var(--text-secondary);
+    }
+
+    .equipment-info {
+        background: linear-gradient(135deg, rgba(155, 89, 182, 0.1) 0%, rgba(142, 68, 173, 0.05) 100%);
+        border: 1px solid rgba(155, 89, 182, 0.3);
+        border-radius: var(--radius-md);
+        padding: var(--spacing-md);
+        margin-bottom: var(--spacing-lg);
+    }
+
+    .equipment-info h3 {
+        color: #9b59b6;
+        font-size: 0.85rem;
+        margin-bottom: var(--spacing-sm);
+        text-transform: uppercase;
+    }
+
+    .manual-input {
+        margin-bottom: var(--spacing-lg);
+    }
+
+    .manual-input label {
+        display: block;
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+        margin-bottom: var(--spacing-xs);
+    }
+
+    .manual-input input {
+        width: 100%;
+        padding: var(--spacing-md);
+        background: var(--bg-primary);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-md);
+        color: var(--text-primary);
+        font-size: 1rem;
+        font-family: monospace;
+    }
+
+    .result-card {
+        background: var(--bg-primary);
+        border-radius: var(--radius-md);
+        padding: var(--spacing-lg);
+        margin-bottom: var(--spacing-lg);
+        display: none;
+    }
+
+    .result-card.show { display: block; }
+
+    .result-card h3 {
+        color: var(--accent-gold);
+        margin-bottom: var(--spacing-md);
+    }
+
+    .result-card .equipment-name {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .result-card .btn-view {
+        display: inline-block;
+        padding: var(--spacing-sm) var(--spacing-lg);
+        background: var(--accent-gold);
+        color: #0a0a0a;
+        text-decoration: none;
+        border-radius: var(--radius-md);
+        font-weight: 600;
+        margin-top: var(--spacing-md);
     }
 
     .scanner-actions {
@@ -106,33 +182,20 @@
         border: 1px solid var(--border-subtle);
         border-radius: var(--radius-md);
         font-size: 1rem;
-        font-weight: var(--font-weight-medium);
         cursor: pointer;
-        transition: all 0.3s ease;
-    }
-
-    .btn-secondary:hover {
-        background-color: var(--bg-secondary);
-        border-color: var(--text-secondary);
     }
 
     .btn-primary-rfid {
         flex: 1;
         padding: var(--spacing-md);
-        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
         color: white;
         border: none;
         border-radius: var(--radius-md);
         font-size: 1rem;
         font-weight: var(--font-weight-semibold);
         cursor: pointer;
-        box-shadow: 0 4px 12px rgba(240, 147, 251, 0.3);
-        transition: all 0.3s ease;
-    }
-
-    .btn-primary-rfid:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 16px rgba(240, 147, 251, 0.4);
+        box-shadow: 0 4px 12px rgba(155, 89, 182, 0.3);
     }
 
     @media (min-width: 768px) {
@@ -150,40 +213,134 @@
         <a href="{{ url_for('equipment.index') }}" class="back-button">←</a>
         <div>
             <h1 class="scanner-title">📡 Leitura RFID</h1>
-            <p class="scanner-subtitle">Aproxime o leitor dos equipamentos</p>
+            <p class="scanner-subtitle">
+                {% if mode == 'associate' and equipment %}
+                    Associar tag RFID ao equipamento
+                {% else %}
+                    Para leitores industriais RFID UHF
+                {% endif %}
+            </p>
         </div>
     </div>
 
     <div class="scanner-card">
-        <div class="alert-box">
-            <div class="alert-header">💡 Dica:</div>
-            <div class="alert-text">
-                O leitor RFID captura múltiplos equipamentos simultaneamente. Posicione próximo aos itens.
+        <div class="info-box">
+            <div class="info-header">📡 Sobre RFID UHF</div>
+            <div class="info-text">
+                RFID UHF permite leitura em massa a distância (1-12m). 
+                Ideal para inventário rápido e controle de carregamento.
+                Requer leitor industrial (Zebra, Impinj, etc).
             </div>
         </div>
 
+        <div id="alertBox" class="alert-box">
+            <div id="alertText"></div>
+        </div>
+
+        {% if mode == 'associate' and equipment %}
+        <div class="equipment-info">
+            <h3>Equipamento Selecionado</h3>
+            <div class="name">{{ equipment.name }}</div>
+            <div class="code">{{ equipment.code }}</div>
+        </div>
+        {% endif %}
+
         <div class="rfid-preview">
             <div class="rfid-icon">📡</div>
-            <div class="status-text">Aguardando leitura...</div>
+            <div class="status-text">Digite ou escaneie o código EPC</div>
+        </div>
+
+        <div class="manual-input">
+            <label for="epcInput">Código EPC da Tag RFID</label>
+            <input type="text" id="epcInput" placeholder="Ex: 300833B2DDD9014000000001" maxlength="128">
+        </div>
+
+        <div id="resultCard" class="result-card">
+            <h3>Equipamento Encontrado</h3>
+            <div class="equipment-name" id="resultName"></div>
+            <div class="equipment-code" id="resultCode"></div>
+            <a href="#" id="resultLink" class="btn-view">Ver Detalhes</a>
         </div>
 
         <div class="scanner-actions">
-            <button class="btn-secondary" onclick="window.history.back()">Cancelar</button>
-            <button class="btn-primary-rfid" onclick="startRFIDReading()">📡 Iniciar Leitura</button>
+            <button class="btn-secondary" onclick="window.history.back()">Voltar</button>
+            <button class="btn-primary-rfid" onclick="processRFID()">
+                {% if mode == 'associate' %}Associar Tag{% else %}Buscar{% endif %}
+            </button>
         </div>
     </div>
 </div>
 
 <script>
-function startRFIDReading() {
-    document.querySelector('.status-text').textContent = 'Lendo tags RFID...';
-    
-    // Simular leitura de múltiplas tags
-    setTimeout(() => {
-        const count = Math.floor(Math.random() * 5) + 1;
-        alert(`${count} equipamento(s) detectado(s) via RFID!`);
-        document.querySelector('.status-text').textContent = `✓ ${count} tags lidas com sucesso`;
-    }, 2000);
+const mode = "{{ mode }}";
+const equipmentId = {{ equipment.id if equipment else 'null' }};
+
+function showAlert(type, text) {
+    const box = document.getElementById('alertBox');
+    box.className = 'alert-box show ' + type;
+    document.getElementById('alertText').textContent = text;
 }
+
+function showResult(equipment) {
+    document.getElementById('resultName').textContent = equipment.name;
+    document.getElementById('resultCode').textContent = equipment.code;
+    document.getElementById('resultLink').href = equipment.url;
+    document.getElementById('resultCard').classList.add('show');
+}
+
+async function processRFID() {
+    const epc = document.getElementById('epcInput').value.trim();
+    
+    if (!epc) {
+        showAlert('error', 'Digite o código EPC da tag RFID');
+        return;
+    }
+
+    if (mode === 'associate' && equipmentId) {
+        try {
+            const response = await fetch('/scanner/associate/rfid', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ equipment_id: equipmentId, epc: epc })
+            });
+            const data = await response.json();
+            
+            if (data.success) {
+                showAlert('', '✅ Tag RFID associada com sucesso!');
+                setTimeout(() => {
+                    window.location.href = '/equipment/' + equipmentId;
+                }, 2000);
+            } else {
+                showAlert('error', data.error);
+            }
+        } catch (error) {
+            showAlert('error', 'Erro ao comunicar com servidor');
+        }
+    } else {
+        try {
+            const response = await fetch('/scanner/rfid/scan', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ epc: epc })
+            });
+            const data = await response.json();
+            
+            if (data.found) {
+                showResult(data.equipment);
+                showAlert('', '✅ Equipamento encontrado!');
+            } else {
+                showAlert('error', 'Tag não associada a nenhum equipamento');
+            }
+        } catch (error) {
+            showAlert('error', 'Erro ao comunicar com servidor');
+        }
+    }
+}
+
+document.getElementById('epcInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        processRFID();
+    }
+});
 </script>
 {% endblock %}

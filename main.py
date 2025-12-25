@@ -61,6 +61,11 @@ def migrate_database():
         'ALTER TABLE separation_list ADD COLUMN discount_value DECIMAL(10,2)',
         # SeparationListItem
         'ALTER TABLE separation_list_item ADD COLUMN item_description VARCHAR(500)',
+        # Equipment - RFID/NFC
+        'ALTER TABLE equipment ADD COLUMN nfc_tag_id VARCHAR(64)',
+        'ALTER TABLE equipment ADD COLUMN rfid_uhf_tag VARCHAR(128)',
+        'ALTER TABLE equipment ADD COLUMN tag_associated_at DATETIME',
+        'ALTER TABLE equipment ADD COLUMN tag_associated_by INTEGER',
     ]
 
     for migration in migrations:
@@ -125,6 +130,7 @@ from routes.work_list import work_list_bp
 from routes.users import users_bp
 from routes.financial import financial_bp
 from routes.orcamento import orcamento_bp
+from routes.scanner import scanner_bp
 
 app.register_blueprint(auth_bp)
 app.register_blueprint(equipment_bp)
@@ -136,6 +142,7 @@ app.register_blueprint(work_list_bp)
 app.register_blueprint(users_bp)
 app.register_blueprint(financial_bp)
 app.register_blueprint(orcamento_bp)
+app.register_blueprint(scanner_bp)
 
 @app.route('/')
 def index():
