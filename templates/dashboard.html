@@ -153,6 +153,10 @@
         background-image: url('/static/images/backgrounds/stage-lights.jpg');
     }
 
+    .card-orcamento {
+        background: linear-gradient(135deg, #d4a574 0%, #b8860b 100%);
+    }
+
     .card-financial {
         background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%);
     }
@@ -227,6 +231,16 @@
             </div>
         </a>
 
+        {% if current_user.is_admin %}
+        <a href="{{ url_for('orcamento.index') }}" class="main-card card-orcamento">
+            <div class="card-content">
+                <div class="card-icon"><i class="fas fa-file-invoice"></i></div>
+                <h2 class="card-title">ORÇAMENTO</h2>
+                <p class="card-description">Propostas e aprovações comerciais</p>
+            </div>
+        </a>
+        {% endif %}
+
         <a href="{{ url_for('tour.tour_menu') }}" class="main-card card-tour">
             <div class="card-content">
                 <div class="card-icon"><i class="fas fa-route"></i></div>
@@ -240,7 +254,7 @@
             <div class="card-content">
                 <div class="card-icon"><i class="fas fa-dollar-sign"></i></div>
                 <h2 class="card-title">FINANCEIRO</h2>
-                <p class="card-description">Orçamentos, faturas e pagamentos</p>
+                <p class="card-description">Faturas, pagamentos e NFSe</p>
             </div>
         </a>
         {% endif %}

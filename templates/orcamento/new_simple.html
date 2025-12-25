@@ -1,0 +1,531 @@
+{% extends "base.html" %}
+
+{% block title %}Orçamento Simples{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-container {
+        padding: var(--spacing-md);
+        min-height: 100vh;
+        padding-bottom: calc(var(--bottom-nav-height) + 80px);
+    }
+
+    .page-header {
+        background: linear-gradient(135deg, rgba(46, 204, 113, 0.3) 0%, rgba(39, 174, 96, 0.2) 100%);
+        padding: var(--spacing-lg) var(--spacing-md);
+        border-radius: var(--radius-lg);
+        margin-bottom: var(--spacing-lg);
+    }
+
+    .header-title {
+        font-size: 1.5rem;
+        font-weight: var(--font-weight-bold);
+        margin-bottom: var(--spacing-xs);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #f5f5f5;
+    }
+
+    .header-subtitle { font-size: 0.9rem; color: var(--text-secondary); }
+
+    .badge {
+        display: inline-block;
+        background: rgba(46, 204, 113, 0.3);
+        color: #2ecc71;
+        padding: 4px 12px;
+        border-radius: var(--radius-sm);
+        font-size: 0.75rem;
+        font-weight: var(--font-weight-bold);
+        margin-top: var(--spacing-xs);
+        text-transform: uppercase;
+    }
+
+    .form-section {
+        background-color: #111111;
+        padding: var(--spacing-lg);
+        border-radius: var(--radius-lg);
+        margin-bottom: var(--spacing-md);
+        border: 1px solid #2a2a2a;
+    }
+
+    .form-group { margin-bottom: var(--spacing-md); }
+
+    .form-label {
+        display: block;
+        font-size: 0.9rem;
+        font-weight: var(--font-weight-bold);
+        margin-bottom: var(--spacing-xs);
+        color: #e0e0e0;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .form-input, .form-select {
+        width: 100%;
+        padding: var(--spacing-md);
+        background-color: #0a0a0a;
+        border: 2px solid #333;
+        border-radius: var(--radius-md);
+        color: #f5f5f5;
+        font-size: 1rem;
+    }
+
+    .form-input:focus, .form-select:focus { outline: none; border-color: #2ecc71; }
+
+    .search-section {
+        background-color: #111111;
+        padding: var(--spacing-lg);
+        border-radius: var(--radius-lg);
+        margin-bottom: var(--spacing-md);
+        position: relative;
+        border: 1px solid #2a2a2a;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: var(--spacing-md);
+        background-color: #0a0a0a;
+        border: 2px solid #333;
+        border-radius: var(--radius-md);
+        color: #f5f5f5;
+        font-size: 1rem;
+    }
+
+    .search-input:focus { outline: none; border-color: #2ecc71; }
+
+    .autocomplete-results {
+        position: absolute;
+        top: calc(100% - 8px);
+        left: var(--spacing-lg);
+        right: var(--spacing-lg);
+        background-color: #1a1a1a;
+        border: 2px solid #2ecc71;
+        border-radius: var(--radius-lg);
+        max-height: 350px;
+        overflow-y: auto;
+        z-index: 1000;
+        display: none;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.8);
+    }
+
+    .autocomplete-results.show { display: block; }
+
+    .autocomplete-item {
+        padding: var(--spacing-md);
+        border-bottom: 1px solid #333;
+        cursor: pointer;
+    }
+
+    .autocomplete-item:hover { background-color: #252525; }
+    .autocomplete-item:last-child { border-bottom: none; }
+    .autocomplete-name { font-weight: var(--font-weight-bold); font-size: 1rem; color: #f5f5f5; }
+    .autocomplete-info { font-size: 0.85rem; color: #aaa; margin-top: 4px; }
+
+    .items-list-section { margin-bottom: var(--spacing-md); }
+
+    .list-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-md); }
+    .list-title { font-size: 1.1rem; font-weight: var(--font-weight-bold); text-transform: uppercase; color: #e0e0e0; }
+    .list-count { font-size: 0.9rem; color: #2ecc71; }
+
+    .empty-state {
+        text-align: center;
+        padding: var(--spacing-xl) var(--spacing-md);
+        color: var(--text-secondary);
+        background-color: #111111;
+        border-radius: var(--radius-lg);
+        border: 1px solid #2a2a2a;
+    }
+
+    .item-card {
+        background-color: #111111;
+        border-radius: var(--radius-md);
+        padding: 16px;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        border: 1px solid #2a2a2a;
+    }
+
+    .item-info-wrapper { flex: 1; min-width: 0; }
+    .item-name { font-weight: var(--font-weight-bold); font-size: 1rem; color: #f5f5f5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .item-details { font-size: 0.85rem; color: #888; margin-top: 4px; }
+
+    .item-controls-wrapper { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+
+    .quantity-stepper {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background-color: #0a0a0a;
+        padding: 6px 12px;
+        border-radius: 25px;
+        border: 1px solid #333;
+    }
+
+    .stepper-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        border: none;
+        background-color: #1a1a1a;
+        color: #2ecc71;
+        font-size: 1.2rem;
+        font-weight: var(--font-weight-bold);
+        cursor: pointer;
+    }
+
+    .stepper-value { min-width: 30px; text-align: center; font-weight: var(--font-weight-bold); color: #f5f5f5; }
+
+    .delete-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: none;
+        background-color: rgba(231, 76, 60, 0.2);
+        color: #e74c3c;
+        font-size: 1.5rem;
+        cursor: pointer;
+    }
+
+    .value-section {
+        background: linear-gradient(135deg, rgba(46, 204, 113, 0.15) 0%, rgba(39, 174, 96, 0.1) 100%);
+        padding: var(--spacing-lg);
+        border-radius: var(--radius-lg);
+        border-left: 4px solid #2ecc71;
+        margin-bottom: var(--spacing-md);
+    }
+
+    .value-label { font-size: 1rem; font-weight: var(--font-weight-bold); margin-bottom: var(--spacing-sm); display: block; color: #e0e0e0; text-transform: uppercase; }
+
+    .value-input {
+        width: 100%;
+        padding: var(--spacing-md);
+        background-color: #0a0a0a;
+        border: 2px solid #2ecc71;
+        border-radius: var(--radius-md);
+        color: #f5f5f5;
+        font-size: 1.3rem;
+        font-weight: var(--font-weight-bold);
+    }
+
+    .totals-section {
+        background-color: #111111;
+        padding: var(--spacing-lg);
+        border-radius: var(--radius-lg);
+        margin-bottom: var(--spacing-md);
+        border: 1px solid #2a2a2a;
+    }
+
+    .total-row { display: flex; justify-content: space-between; padding: var(--spacing-sm) 0; font-size: 1rem; color: #ccc; }
+
+    .submit-button {
+        position: fixed;
+        bottom: 20px;
+        left: var(--spacing-md);
+        right: var(--spacing-md);
+        padding: var(--spacing-md);
+        background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+        color: #000;
+        border: none;
+        border-radius: var(--radius-md);
+        font-size: 1rem;
+        font-weight: var(--font-weight-bold);
+        box-shadow: 0 4px 16px rgba(46, 204, 113, 0.4);
+        cursor: pointer;
+        z-index: 999;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .modal-overlay {
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0, 0, 0, 0.85);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 2000;
+        padding: var(--spacing-md);
+    }
+
+    .modal-overlay.show { display: flex; }
+
+    .modal {
+        background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%);
+        border-radius: var(--radius-lg);
+        padding: var(--spacing-xl);
+        width: 100%;
+        max-width: 420px;
+        border: 2px solid #2ecc71;
+        box-shadow: 0 16px 64px rgba(0,0,0,0.9);
+    }
+
+    .modal-header { text-align: center; margin-bottom: var(--spacing-lg); padding-bottom: var(--spacing-md); border-bottom: 1px solid #333; }
+    .modal-title { font-size: 1.3rem; font-weight: var(--font-weight-bold); color: #f5f5f5; text-transform: uppercase; }
+    .modal-subtitle { font-size: 0.9rem; color: #888; margin-top: var(--spacing-xs); }
+    .modal .form-label { color: #e0e0e0; }
+
+    .modal-buttons { display: flex; gap: var(--spacing-md); margin-top: var(--spacing-lg); }
+    .btn { flex: 1; padding: var(--spacing-md); border-radius: var(--radius-md); border: none; font-weight: var(--font-weight-bold); font-size: 1rem; cursor: pointer; text-transform: uppercase; }
+    .btn-secondary { background-color: #333; color: #f5f5f5; }
+    .btn-primary { background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%); color: #000; }
+
+    @media (min-width: 768px) {
+        .item-card { padding: 20px; gap: 20px; }
+        .submit-button { max-width: 600px; left: 50%; transform: translateX(-50%); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <h1 class="header-title">Orçamento Simples</h1>
+        <div class="badge">SÓ VALOR TOTAL</div>
+        <p class="header-subtitle">Para uso interno sem detalhamento de preços</p>
+    </div>
+
+    <form method="POST" action="{{ url_for('orcamento.new_simple') }}" id="listForm">
+        <div class="form-section">
+            <div class="form-group">
+                <label class="form-label">TOUR (OPCIONAL)</label>
+                <select name="tour_id" class="form-select">
+                    <option value="">Selecione uma tour...</option>
+                    {% for tour in tours %}
+                    <option value="{{ tour.id }}">{{ tour.name }} - {{ tour.artist }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">NOME DO ORÇAMENTO *</label>
+                <input type="text" name="name" class="form-input" placeholder="Ex: Show ABC - Dia 1" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">OBSERVAÇÕES</label>
+                <input type="text" name="description" class="form-input" placeholder="Observações opcionais">
+            </div>
+        </div>
+
+        <div class="search-section">
+            <label class="form-label" style="margin-bottom: var(--spacing-sm);">BUSCAR EQUIPAMENTO</label>
+            <input type="text" class="search-input" id="searchInput" placeholder="Digite nome, marca ou modelo..." autocomplete="off">
+            <div class="autocomplete-results" id="autocompleteResults"></div>
+        </div>
+
+        <div class="items-list-section">
+            <div class="list-header">
+                <div class="list-title">Itens do Orçamento</div>
+                <div class="list-count" id="itemCount">0 itens</div>
+            </div>
+            <div id="itemsList">
+                <div class="empty-state">
+                    <div style="font-size:2.5rem;opacity:0.5;margin-bottom:var(--spacing-md);">📦</div>
+                    <div>Nenhum item adicionado</div>
+                    <div style="font-size:0.85rem;margin-top:8px;">Use a busca acima para adicionar equipamentos</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="totals-section" id="totalsSection" style="display: none;">
+            <div class="total-row"><span>Total de itens:</span><span id="totalItems">0</span></div>
+            <div class="total-row"><span>Total de unidades:</span><span id="totalUnits">0</span></div>
+        </div>
+
+        <div class="value-section">
+            <label class="value-label">VALOR TOTAL DA LOCAÇÃO *</label>
+            <input type="number" name="total_value" class="value-input" placeholder="R$ 0,00" min="0" step="0.01" required>
+            <p style="font-size:0.85rem;color:#888;margin-top:8px;">Este valor não será visível para técnicos</p>
+        </div>
+
+        <div style="height: 80px;"></div>
+        <button type="submit" class="submit-button">CRIAR ORÇAMENTO</button>
+    </form>
+</div>
+
+<div class="modal-overlay" id="quantityModal">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title" id="modalTitle">Equipamento</div>
+            <div class="modal-subtitle" id="modalSubtitle">disponíveis</div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">QUANTIDADE</label>
+            <input type="number" class="form-input" id="quantityInput" min="1" value="1">
+        </div>
+
+        <div class="modal-buttons">
+            <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+            <button type="button" class="btn btn-primary" onclick="addItemFromModal()">Adicionar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+window.items = [];
+window.selectedItem = null;
+window.allEquipment = [];
+
+const equipmentTypes = {{ types_by_category|tojson }};
+
+Object.keys(equipmentTypes).forEach(categoryName => {
+    const category = equipmentTypes[categoryName];
+    if (category.types) {
+        category.types.forEach(eq => {
+            window.allEquipment.push({
+                id: eq.id, name: eq.name, code: eq.code, brand: eq.brand, model: eq.model,
+                available: eq.available, total: eq.total, category: categoryName, type_name: eq.type_name
+            });
+        });
+    }
+});
+
+document.getElementById('searchInput').addEventListener('input', function(e) {
+    const term = e.target.value.toLowerCase().trim();
+    const results = document.getElementById('autocompleteResults');
+    if (term.length < 2) { results.classList.remove('show'); return; }
+
+    const filtered = window.allEquipment.filter(eq => 
+        eq.name.toLowerCase().includes(term) || eq.code.toLowerCase().includes(term) ||
+        (eq.brand && eq.brand.toLowerCase().includes(term)) ||
+        (eq.model && eq.model.toLowerCase().includes(term))
+    );
+
+    const grouped = {};
+    filtered.forEach(eq => {
+        const key = `${eq.brand}|${eq.model}|${eq.type_name}`;
+        if (!grouped[key]) {
+            grouped[key] = { items: [], brand: eq.brand, model: eq.model, type_name: eq.type_name, category: eq.category, total: 0, available: 0 };
+        }
+        grouped[key].items.push(eq);
+        grouped[key].total++;
+        grouped[key].available += eq.available;
+    });
+
+    const groupedArray = Object.values(grouped).slice(0, 8);
+    if (groupedArray.length === 0) {
+        results.innerHTML = '<div style="padding:20px;text-align:center;color:#888;">Nenhum resultado</div>';
+        results.classList.add('show');
+        return;
+    }
+
+    results.innerHTML = groupedArray.map(g => `
+        <div class="autocomplete-item" data-brand="${g.brand}" data-model="${g.model}" data-typename="${g.type_name}">
+            <div class="autocomplete-name">${g.type_name}</div>
+            <div class="autocomplete-info">${g.brand} • ${g.model} • ${g.available}/${g.total} disponíveis</div>
+        </div>
+    `).join('');
+
+    results.querySelectorAll('.autocomplete-item').forEach(el => {
+        el.addEventListener('click', function() {
+            selectGroup(this.getAttribute('data-brand'), this.getAttribute('data-model'), this.getAttribute('data-typename'));
+        });
+    });
+    results.classList.add('show');
+});
+
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.search-section')) document.getElementById('autocompleteResults').classList.remove('show');
+});
+
+function selectGroup(brand, model, typeName) {
+    const groupItems = window.allEquipment.filter(eq => eq.brand === brand && eq.model === model && eq.type_name === typeName);
+    if (!groupItems.length) return;
+    const totalAvailable = groupItems.reduce((sum, eq) => sum + eq.available, 0);
+    const first = groupItems[0];
+    window.selectedItem = { id: first.id, name: first.name, brand: first.brand, model: first.model, maxQuantity: totalAvailable };
+    document.getElementById('modalTitle').textContent = first.type_name;
+    document.getElementById('modalSubtitle').textContent = `${first.brand} • ${first.model} • ${totalAvailable} disponíveis`;
+    document.getElementById('quantityInput').value = 1;
+    document.getElementById('quantityModal').classList.add('show');
+    document.getElementById('autocompleteResults').classList.remove('show');
+    document.getElementById('searchInput').value = '';
+}
+
+function closeModal() { document.getElementById('quantityModal').classList.remove('show'); }
+
+function addItemFromModal() {
+    const quantity = parseInt(document.getElementById('quantityInput').value);
+    if (!quantity || quantity < 1) { alert('Digite uma quantidade válida'); return; }
+
+    const existingIndex = window.items.findIndex(i => i.id === window.selectedItem.id);
+    if (existingIndex !== -1) {
+        window.items[existingIndex].quantity += quantity;
+    } else {
+        window.items.push({
+            id: window.selectedItem.id, name: window.selectedItem.name, brand: window.selectedItem.brand,
+            model: window.selectedItem.model, quantity: quantity, available: window.selectedItem.maxQuantity
+        });
+    }
+    renderItems();
+    closeModal();
+}
+
+function renderItems() {
+    const container = document.getElementById('itemsList');
+    if (!window.items.length) {
+        container.innerHTML = `<div class="empty-state"><div style="font-size:2.5rem;opacity:0.5;margin-bottom:var(--spacing-md);">📦</div><div>Nenhum item adicionado</div><div style="font-size:0.85rem;margin-top:8px;">Use a busca acima para adicionar equipamentos</div></div>`;
+        document.getElementById('totalsSection').style.display = 'none';
+        updateCounts();
+        return;
+    }
+
+    container.innerHTML = window.items.map((item, index) => `
+        <div class="item-card">
+            <div class="item-info-wrapper">
+                <div class="item-name">${item.name}</div>
+                ${item.brand || item.model ? `<div class="item-details">${[item.brand, item.model].filter(Boolean).join(' • ')}</div>` : ''}
+            </div>
+            <div class="item-controls-wrapper">
+                <div class="quantity-stepper">
+                    <button type="button" class="stepper-btn" data-action="decrease" data-index="${index}">−</button>
+                    <div class="stepper-value">${item.quantity}</div>
+                    <button type="button" class="stepper-btn" data-action="increase" data-index="${index}">+</button>
+                </div>
+                <button type="button" class="delete-btn" data-index="${index}">×</button>
+            </div>
+            <input type="hidden" name="quantity-${item.id}" value="${item.quantity}">
+        </div>
+    `).join('');
+
+    container.querySelectorAll('.stepper-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const index = parseInt(this.getAttribute('data-index'));
+            const action = this.getAttribute('data-action');
+            if (action === 'increase' && window.items[index].quantity < window.items[index].available) {
+                window.items[index].quantity++;
+                renderItems();
+            } else if (action === 'decrease' && window.items[index].quantity > 1) {
+                window.items[index].quantity--;
+                renderItems();
+            }
+        });
+    });
+
+    container.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            window.items.splice(parseInt(this.getAttribute('data-index')), 1);
+            renderItems();
+        });
+    });
+
+    document.getElementById('totalsSection').style.display = 'block';
+    updateCounts();
+}
+
+function updateCounts() {
+    const totalItems = window.items.length;
+    const totalUnits = window.items.reduce((sum, item) => sum + item.quantity, 0);
+    document.getElementById('itemCount').textContent = `${totalItems} itens • ${totalUnits} un`;
+    document.getElementById('totalItems').textContent = totalItems;
+    document.getElementById('totalUnits').textContent = totalUnits;
+}
+</script>
+{% endblock %}
