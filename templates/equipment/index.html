@@ -207,9 +207,14 @@
             <a href="{{ url_for('dashboard') }}" class="back-button">←</a>
             <h1 class="header-title">🎒 HARDCASE</h1>
         </div>
-        <a href="{{ url_for('equipment.scan') }}" class="scan-button">
-            📷 Scan
-        </a>
+        <div style="display: flex; gap: 8px;">
+            <a href="{{ url_for('scanner.rfid_batch_associate') }}" class="scan-button" style="background: rgba(155, 89, 182, 0.2); border-color: rgba(155, 89, 182, 0.3);">
+                📡 RFID Lote
+            </a>
+            <a href="{{ url_for('equipment.scan') }}" class="scan-button">
+                📷 Scan
+            </a>
+        </div>
     </div>
 
     <div class="categories-grid">
