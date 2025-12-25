@@ -473,41 +473,14 @@ def generate_pdf(id):
         company_id=current_user.company_id
     ).first_or_404()
 
-    try:
-        from weasyprint import HTML
-        import io
+    total_units = sum(item.quantity for item in sep_list.items)
+    subtotal = sum(item.total_price or 0 for item in sep_list.items)
 
-        total_units = sum(item.quantity for item in sep_list.items)
-        subtotal = sum(item.total_price or 0 for item in sep_list.items)
-
-        template_name = 'pdf/orcamento_completo.html' if sep_list.list_type == 'complete' else 'pdf/orcamento_simples.html'
-
-        html_content = render_template(
-            template_name,
-            lista=sep_list,
-            company=current_user.company,
-            total_units=total_units,
-            subtotal=subtotal,
-            now=datetime.utcnow()
-        )
-
-        pdf_buffer = io.BytesIO()
-        HTML(string=html_content).write_pdf(pdf_buffer)
-        pdf_buffer.seek(0)
-
-        from flask import send_file
-        filename = f"orcamento_{sep_list.id}_{sep_list.name.replace(' ', '_')}.pdf"
-
-        return send_file(
-            pdf_buffer,
-            mimetype='application/pdf',
-            as_attachment=True,
-            download_name=filename
-        )
-
-    except ImportError:
-        flash('Biblioteca WeasyPrint nao instalada. Use: pip install weasyprint', 'danger')
-        return redirect(url_for('orcamento.detail', id=id))
-    except Exception as e:
-        flash(f'Erro ao gerar PDF: {str(e)}', 'danger')
-        return redirect(url_for('orcamento.detail', id=id))
+    return render_template(
+        'pdf/orcamento_view.html',
+        lista=sep_list,
+        company=current_user.company,
+        total_units=total_units,
+        subtotal=subtotal,
+        now=datetime.utcnow()
+    )
