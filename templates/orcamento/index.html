@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Separação - Listas{% endblock %}
+{% block title %}Orçamentos{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -11,7 +11,7 @@
     }
 
     .page-header {
-        background: linear-gradient(135deg, rgba(243, 156, 18, 0.3) 0%, rgba(230, 126, 34, 0.2) 100%);
+        background: linear-gradient(135deg, rgba(212, 165, 116, 0.3) 0%, rgba(180, 130, 80, 0.2) 100%);
         padding: var(--spacing-lg) var(--spacing-md);
         border-bottom: 1px solid var(--border-subtle);
     }
@@ -29,45 +29,38 @@
         transition: transform 0.2s ease;
     }
 
-    .back-button:hover {
-        transform: translateX(-4px);
-    }
-
     .header-title {
         font-size: 1.5rem;
         font-weight: var(--font-weight-bold);
         color: var(--text-primary);
+        text-transform: uppercase;
+        letter-spacing: 1px;
     }
 
     .new-button {
         margin: var(--spacing-md);
         padding: var(--spacing-md);
-        background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
-        color: white;
+        background: linear-gradient(135deg, #d4a574 0%, #b8860b 100%);
+        color: #000;
         border: none;
         border-radius: var(--radius-md);
         font-size: 1rem;
-        font-weight: var(--font-weight-semibold);
+        font-weight: var(--font-weight-bold);
         text-decoration: none;
         text-align: center;
         display: flex;
         align-items: center;
         justify-content: center;
         gap: var(--spacing-xs);
-        box-shadow: 0 4px 12px rgba(243, 156, 18, 0.3);
-        transition: all 0.3s ease;
-    }
-
-    .new-button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 16px rgba(243, 156, 18, 0.4);
+        box-shadow: 0 4px 12px rgba(212, 165, 116, 0.3);
+        text-transform: uppercase;
+        letter-spacing: 1px;
     }
 
     .tabs {
         display: flex;
         border-bottom: 1px solid var(--border-subtle);
         background-color: var(--bg-secondary);
-        overflow-x: auto;
     }
 
     .tab {
@@ -78,13 +71,14 @@
         color: var(--text-secondary);
         font-weight: var(--font-weight-medium);
         border-bottom: 3px solid transparent;
-        transition: all 0.3s ease;
         position: relative;
+        text-transform: uppercase;
+        font-size: 0.85rem;
     }
 
     .tab.active {
-        color: #f39c12;
-        border-bottom-color: #f39c12;
+        color: #d4a574;
+        border-bottom-color: #d4a574;
     }
 
     .tab-badge {
@@ -119,14 +113,7 @@
         display: flex;
         flex-direction: column;
         gap: var(--spacing-sm);
-        box-shadow: var(--shadow-sm);
-        transition: all 0.3s ease;
-        border-left: 4px solid #f39c12;
-    }
-
-    .list-card:hover {
-        transform: translateY(-2px);
-        box-shadow: var(--shadow-md);
+        border-left: 4px solid #d4a574;
     }
 
     .list-header {
@@ -145,7 +132,7 @@
 
     .list-tour {
         font-size: 0.9rem;
-        color: var(--accent-gold);
+        color: #d4a574;
         font-weight: var(--font-weight-medium);
     }
 
@@ -157,28 +144,23 @@
         color: var(--text-secondary);
     }
 
-    .list-meta span {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-    }
-
     .empty-state {
         text-align: center;
         padding: var(--spacing-xl);
         color: var(--text-secondary);
     }
 
-    .empty-icon {
-        font-size: 3rem;
-        margin-bottom: var(--spacing-md);
-        opacity: 0.5;
+    .badge {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: var(--font-weight-bold);
+        text-transform: uppercase;
     }
 
-    .empty-text {
-        font-size: 1rem;
-        margin-bottom: var(--spacing-sm);
-    }
+    .badge-pending { background: rgba(243, 156, 18, 0.2); color: #f39c12; }
+    .badge-approved { background: rgba(46, 204, 113, 0.2); color: #2ecc71; }
+    .badge-rejected { background: rgba(231, 76, 60, 0.2); color: #e74c3c; }
 </style>
 {% endblock %}
 
@@ -186,50 +168,42 @@
 <div class="page-container">
     <div class="page-header">
         <div class="header-content">
-            <a href="{{ url_for('tour.tour_menu') }}" class="back-button">←</a>
-            <h1 class="header-title">📋 Separação</h1>
+            <a href="{{ url_for('dashboard') }}" class="back-button">←</a>
+            <h1 class="header-title">Orçamentos</h1>
         </div>
     </div>
 
-    <a href="{{ url_for('separation.new') }}" class="new-button">
-        + Nova Lista
-    </a>
+    <a href="{{ url_for('orcamento.new') }}" class="new-button">+ NOVO ORÇAMENTO</a>
 
     <div class="tabs">
-        <a href="{{ url_for('separation.index', status='pending') }}" 
+        <a href="{{ url_for('orcamento.index', status='pending') }}" 
            class="tab {% if status_filter == 'pending' %}active{% endif %}">
             Pendentes
-            {% if pending_count > 0 %}
-            <span class="tab-badge">{{ pending_count }}</span>
-            {% endif %}
+            {% if pending_count > 0 %}<span class="tab-badge">{{ pending_count }}</span>{% endif %}
         </a>
-        <a href="{{ url_for('separation.index', status='approved') }}"
+        <a href="{{ url_for('orcamento.index', status='approved') }}"
            class="tab {% if status_filter == 'approved' %}active{% endif %}">
-            Aprovadas
-            {% if approved_count > 0 %}
-            <span class="tab-badge">{{ approved_count }}</span>
-            {% endif %}
+            Aprovados
+            {% if approved_count > 0 %}<span class="tab-badge" style="background:#2ecc71;">{{ approved_count }}</span>{% endif %}
         </a>
-        <a href="{{ url_for('separation.index', status='rejected') }}"
+        <a href="{{ url_for('orcamento.index', status='rejected') }}"
            class="tab {% if status_filter == 'rejected' %}active{% endif %}">
-            Rejeitadas
-            {% if rejected_count > 0 %}
-            <span class="tab-badge">{{ rejected_count }}</span>
-            {% endif %}
+            Rejeitados
+            {% if rejected_count > 0 %}<span class="tab-badge">{{ rejected_count }}</span>{% endif %}
         </a>
     </div>
 
     <div class="lists-container">
         {% if lists %}
             {% for list in lists %}
-            <a href="{{ url_for('separation.detail', id=list.id) }}" class="list-card">
+            <a href="{{ url_for('orcamento.detail', id=list.id) }}" class="list-card">
                 <div class="list-header">
                     <div class="list-name">{{ list.name }}</div>
-                    <span class="badge {{ list.status_badge_class }}">{{ list.status_label }}</span>
+                    <span class="badge badge-{{ list.status }}">
+                        {% if list.status == 'pending' %}Pendente{% elif list.status == 'approved' %}Aprovado{% else %}Rejeitado{% endif %}
+                    </span>
                 </div>
-                
-                <div class="list-tour">🎸 {{ list.tour.name }}</div>
-                
+                {% if list.tour %}<div class="list-tour">🎸 {{ list.tour.name }}</div>{% endif %}
                 <div class="list-meta">
                     <span>📦 {{ list.total_items }} itens</span>
                     <span>👤 {{ list.creator.name }}</span>
@@ -239,8 +213,8 @@
             {% endfor %}
         {% else %}
             <div class="empty-state">
-                <div class="empty-icon">📋</div>
-                <div class="empty-text">Nenhuma lista {{ status_filter == 'pending' and 'pendente' or status_filter == 'approved' and 'aprovada' or 'rejeitada' }}</div>
+                <div style="font-size:3rem;opacity:0.5;">📋</div>
+                <div>Nenhum orçamento {{ status_filter == 'pending' and 'pendente' or status_filter == 'approved' and 'aprovado' or 'rejeitado' }}</div>
             </div>
         {% endif %}
     </div>

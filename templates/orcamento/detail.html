@@ -1,0 +1,315 @@
+{% extends "base.html" %}
+
+{% block title %}Orçamento - {{ sep_list.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-container {
+        padding: 0;
+        min-height: 100vh;
+        padding-bottom: calc(var(--bottom-nav-height) + var(--spacing-md));
+    }
+
+    .page-header {
+        background: linear-gradient(135deg, rgba(212, 165, 116, 0.3) 0%, rgba(180, 130, 80, 0.2) 100%);
+        padding: var(--spacing-lg) var(--spacing-md);
+        border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .header-content {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-md);
+        margin-bottom: var(--spacing-md);
+    }
+
+    .back-button {
+        color: var(--text-primary);
+        font-size: 1.5rem;
+        text-decoration: none;
+    }
+
+    .header-title {
+        font-size: 1.3rem;
+        font-weight: var(--font-weight-bold);
+        color: #f5f5f5;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        flex: 1;
+    }
+
+    .badge {
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: var(--font-weight-bold);
+        text-transform: uppercase;
+    }
+
+    .badge-pending { background: rgba(243, 156, 18, 0.2); color: #f39c12; }
+    .badge-approved { background: rgba(46, 204, 113, 0.2); color: #2ecc71; }
+    .badge-rejected { background: rgba(231, 76, 60, 0.2); color: #e74c3c; }
+
+    .info-section {
+        padding: var(--spacing-md);
+    }
+
+    .info-card {
+        background-color: #111111;
+        border-radius: var(--radius-lg);
+        padding: var(--spacing-lg);
+        margin-bottom: var(--spacing-md);
+        border: 1px solid #2a2a2a;
+    }
+
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: var(--spacing-sm) 0;
+        border-bottom: 1px solid #222;
+        font-size: 0.95rem;
+    }
+
+    .info-row:last-child { border-bottom: none; }
+    .info-label { color: #888; text-transform: uppercase; font-size: 0.85rem; }
+    .info-value { color: #f5f5f5; font-weight: var(--font-weight-medium); }
+
+    .section-title {
+        font-size: 1.1rem;
+        font-weight: var(--font-weight-bold);
+        color: #e0e0e0;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: var(--spacing-md);
+        padding-bottom: var(--spacing-sm);
+        border-bottom: 2px solid #d4a574;
+    }
+
+    .item-row {
+        background-color: #0d0d0d;
+        border-radius: var(--radius-md);
+        padding: var(--spacing-md);
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--spacing-md);
+    }
+
+    .item-name { font-weight: var(--font-weight-semibold); color: #f5f5f5; flex: 1; }
+    .item-qty { background: #1a1a1a; padding: 6px 14px; border-radius: 20px; font-size: 0.9rem; color: #d4a574; font-weight: var(--font-weight-bold); }
+    .item-price { color: #d4a574; font-weight: var(--font-weight-bold); min-width: 80px; text-align: right; }
+
+    .total-section {
+        background: linear-gradient(135deg, rgba(212, 165, 116, 0.2) 0%, rgba(180, 130, 80, 0.1) 100%);
+        border-radius: var(--radius-lg);
+        padding: var(--spacing-lg);
+        margin-top: var(--spacing-md);
+        border: 1px solid #d4a574;
+    }
+
+    .total-row {
+        display: flex;
+        justify-content: space-between;
+        padding: var(--spacing-sm) 0;
+        font-size: 1rem;
+        color: #ccc;
+    }
+
+    .total-row.grand {
+        border-top: 2px solid #d4a574;
+        margin-top: var(--spacing-md);
+        padding-top: var(--spacing-md);
+        font-size: 1.3rem;
+        font-weight: var(--font-weight-bold);
+        color: #f5f5f5;
+    }
+
+    .total-row.grand span:last-child { color: #d4a574; font-size: 1.5rem; }
+
+    .action-buttons {
+        display: flex;
+        gap: var(--spacing-md);
+        padding: var(--spacing-md);
+    }
+
+    .btn {
+        flex: 1;
+        padding: var(--spacing-md);
+        border-radius: var(--radius-md);
+        border: none;
+        font-weight: var(--font-weight-bold);
+        font-size: 1rem;
+        cursor: pointer;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        text-align: center;
+        text-decoration: none;
+    }
+
+    .btn-approve { background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%); color: #000; }
+    .btn-reject { background: rgba(231, 76, 60, 0.2); color: #e74c3c; border: 2px solid #e74c3c; }
+    .btn-pdf { background: linear-gradient(135deg, #d4a574 0%, #b8860b 100%); color: #000; }
+
+    .modal-overlay {
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0, 0, 0, 0.85);
+        backdrop-filter: blur(8px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 2000;
+        padding: var(--spacing-md);
+    }
+
+    .modal-overlay.show { display: flex; }
+
+    .modal {
+        background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%);
+        border-radius: var(--radius-lg);
+        padding: var(--spacing-xl);
+        width: 100%;
+        max-width: 420px;
+        border: 2px solid #d4a574;
+    }
+
+    .modal-title {
+        font-size: 1.2rem;
+        font-weight: var(--font-weight-bold);
+        color: #f5f5f5;
+        text-transform: uppercase;
+        margin-bottom: var(--spacing-lg);
+        text-align: center;
+    }
+
+    .form-group { margin-bottom: var(--spacing-md); }
+    .form-label { display: block; font-size: 0.9rem; font-weight: var(--font-weight-bold); margin-bottom: var(--spacing-xs); color: #e0e0e0; text-transform: uppercase; }
+    .form-input { width: 100%; padding: var(--spacing-md); background-color: #0a0a0a; border: 2px solid #333; border-radius: var(--radius-md); color: #f5f5f5; font-size: 1rem; }
+
+    .modal-buttons { display: flex; gap: var(--spacing-md); margin-top: var(--spacing-lg); }
+    .btn-secondary { background-color: #333; color: #f5f5f5; flex: 1; padding: var(--spacing-md); border-radius: var(--radius-md); border: none; font-weight: var(--font-weight-bold); cursor: pointer; }
+    .btn-primary { background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%); color: #000; flex: 1; padding: var(--spacing-md); border-radius: var(--radius-md); border: none; font-weight: var(--font-weight-bold); cursor: pointer; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <div class="header-content">
+            <a href="{{ url_for('orcamento.index') }}" class="back-button">←</a>
+            <h1 class="header-title">{{ sep_list.name }}</h1>
+            <span class="badge badge-{{ sep_list.status }}">
+                {% if sep_list.status == 'pending' %}Pendente{% elif sep_list.status == 'approved' %}Aprovado{% else %}Rejeitado{% endif %}
+            </span>
+        </div>
+    </div>
+
+    <div class="info-section">
+        <div class="info-card">
+            <div class="info-row">
+                <span class="info-label">Criado por</span>
+                <span class="info-value">{{ sep_list.creator.name }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Data</span>
+                <span class="info-value">{{ sep_list.created_at.strftime('%d/%m/%Y às %H:%M') }}</span>
+            </div>
+            {% if sep_list.tour %}
+            <div class="info-row">
+                <span class="info-label">Tour</span>
+                <span class="info-value">{{ sep_list.tour.name }}</span>
+            </div>
+            {% endif %}
+            <div class="info-row">
+                <span class="info-label">Tipo</span>
+                <span class="info-value">{{ 'Completo' if sep_list.list_type == 'complete' else 'Simples' }}</span>
+            </div>
+            {% if sep_list.description %}
+            <div class="info-row">
+                <span class="info-label">Observações</span>
+                <span class="info-value">{{ sep_list.description }}</span>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="info-card">
+            <div class="section-title">Itens do Orçamento</div>
+            {% for item in sep_list.items %}
+            <div class="item-row">
+                <span class="item-name">{{ item.item_name }}</span>
+                <span class="item-qty">{{ item.quantity }}x</span>
+                {% if sep_list.list_type == 'complete' and item.unit_price %}
+                <span class="item-price">R$ {{ "%.2f"|format(item.total_price or 0)|replace('.', ',') }}</span>
+                {% endif %}
+            </div>
+            {% endfor %}
+
+            <div class="total-section">
+                <div class="total-row">
+                    <span>Total de itens:</span>
+                    <span>{{ sep_list.items|length }}</span>
+                </div>
+                <div class="total-row">
+                    <span>Total de unidades:</span>
+                    <span>{{ sep_list.items|sum(attribute='quantity') }}</span>
+                </div>
+                {% if sep_list.list_type == 'complete' %}
+                <div class="total-row grand">
+                    <span>TOTAL:</span>
+                    <span>R$ {{ "%.2f"|format(sep_list.items|sum(attribute='total_price') or 0)|replace('.', ',') }}</span>
+                </div>
+                {% else %}
+                <div class="total-row grand">
+                    <span>VALOR TOTAL:</span>
+                    <span>R$ {{ "%.2f"|format(sep_list.total_value or 0)|replace('.', ',') }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    {% if sep_list.status == 'pending' %}
+    <div class="action-buttons">
+        <button type="button" class="btn btn-approve" onclick="document.getElementById('approveModal').classList.add('show')">Aprovar</button>
+        <button type="button" class="btn btn-reject" onclick="document.getElementById('rejectModal').classList.add('show')">Rejeitar</button>
+    </div>
+    {% endif %}
+
+    <div class="action-buttons">
+        <a href="{{ url_for('orcamento.generate_pdf', id=sep_list.id) }}" class="btn btn-pdf">Gerar PDF</a>
+    </div>
+</div>
+
+<div class="modal-overlay" id="approveModal">
+    <div class="modal">
+        <div class="modal-title">Aprovar Orçamento</div>
+        <form method="POST" action="{{ url_for('orcamento.approve', id=sep_list.id) }}">
+            <div class="form-group">
+                <label class="form-label">Observações (opcional)</label>
+                <input type="text" name="notes" class="form-input" placeholder="Notas sobre a aprovação">
+            </div>
+            <div class="modal-buttons">
+                <button type="button" class="btn-secondary" onclick="document.getElementById('approveModal').classList.remove('show')">Cancelar</button>
+                <button type="submit" class="btn-primary">Confirmar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal-overlay" id="rejectModal">
+    <div class="modal">
+        <div class="modal-title">Rejeitar Orçamento</div>
+        <form method="POST" action="{{ url_for('orcamento.reject', id=sep_list.id) }}">
+            <div class="form-group">
+                <label class="form-label">Motivo da rejeição *</label>
+                <input type="text" name="reason" class="form-input" placeholder="Informe o motivo" required>
+            </div>
+            <div class="modal-buttons">
+                <button type="button" class="btn-secondary" onclick="document.getElementById('rejectModal').classList.remove('show')">Cancelar</button>
+                <button type="submit" class="btn-primary" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);">Rejeitar</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

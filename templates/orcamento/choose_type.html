@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Nova Lista de Separação{% endblock %}
+{% block title %}Novo Orçamento{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -19,6 +19,9 @@
         font-size: 1.8rem;
         font-weight: var(--font-weight-bold);
         margin-bottom: var(--spacing-sm);
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        color: #f5f5f5;
     }
 
     .page-subtitle {
@@ -34,20 +37,20 @@
     }
 
     .type-card {
-        background: linear-gradient(135deg, var(--bg-secondary) 0%, #1f1f1f 100%);
+        background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%);
         border-radius: var(--radius-lg);
         padding: var(--spacing-xl);
         text-decoration: none;
         color: var(--text-primary);
+        box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+        border: 2px solid #2a2a2a;
         transition: all 0.3s ease;
-        box-shadow: var(--shadow-md);
-        border: 2px solid transparent;
     }
 
     .type-card:hover {
         transform: translateY(-4px);
-        box-shadow: 0 8px 24px rgba(212, 165, 116, 0.2);
-        border-color: rgba(212, 165, 116, 0.3);
+        border-color: #d4a574;
+        box-shadow: 0 12px 40px rgba(212, 165, 116, 0.2);
     }
 
     .type-icon {
@@ -61,6 +64,8 @@
         font-weight: var(--font-weight-bold);
         margin-bottom: var(--spacing-sm);
         text-align: center;
+        text-transform: uppercase;
+        letter-spacing: 1px;
     }
 
     .type-description {
@@ -95,13 +100,22 @@
 
     .recommended-badge {
         display: inline-block;
-        background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
-        color: white;
+        background: linear-gradient(135deg, #d4a574 0%, #b8860b 100%);
+        color: #000;
         padding: 4px 12px;
         border-radius: var(--radius-sm);
         font-size: 0.75rem;
         font-weight: var(--font-weight-bold);
         margin-bottom: var(--spacing-sm);
+        text-transform: uppercase;
+    }
+
+    .back-link {
+        display: block;
+        text-align: center;
+        margin-top: var(--spacing-xl);
+        color: var(--text-secondary);
+        text-decoration: none;
     }
 </style>
 {% endblock %}
@@ -109,41 +123,39 @@
 {% block content %}
 <div class="page-container">
     <div class="page-header">
-        <h1 class="page-title">Nova Lista de Separação</h1>
-        <p class="page-subtitle">Escolha o tipo de lista que deseja criar</p>
+        <h1 class="page-title">Novo Orçamento</h1>
+        <p class="page-subtitle">Escolha o tipo de orçamento</p>
     </div>
 
     <div class="type-options">
-        <a href="{{ url_for('separation.new_complete') }}" class="type-card">
+        <a href="{{ url_for('orcamento.new_complete') }}" class="type-card">
             <div class="type-icon">💰</div>
             <div style="text-align: center;">
                 <span class="recommended-badge">RECOMENDADO</span>
             </div>
-            <div class="type-name">Lista Completa</div>
-            <div class="type-description">
-                Para orçamentos detalhados que serão enviados ao cliente
-            </div>
+            <div class="type-name">Orçamento Completo</div>
+            <div class="type-description">Para propostas detalhadas com preços por item</div>
             <ul class="type-features">
-                <li>Preço unitário por item</li>
+                <li>Preço unitário por equipamento</li>
                 <li>Cálculo automático de totais</li>
-                <li>Visualização completa de valores</li>
+                <li>PDF profissional para cliente</li>
                 <li>Ideal para aprovação comercial</li>
             </ul>
         </a>
 
-        <a href="{{ url_for('separation.new_simple') }}" class="type-card">
+        <a href="{{ url_for('orcamento.new_simple') }}" class="type-card">
             <div class="type-icon">📋</div>
-            <div class="type-name">Lista Simples</div>
-            <div class="type-description">
-                Para listas internas sem detalhamento de preços
-            </div>
+            <div class="type-name">Orçamento Simples</div>
+            <div class="type-description">Para uso interno sem detalhamento de preços</div>
             <ul class="type-features">
                 <li>Apenas nome e quantidade</li>
                 <li>Valor total único</li>
-                <li>Técnicos não veem margem</li>
+                <li>Técnicos não veem valores</li>
                 <li>Ideal para controle interno</li>
             </ul>
         </a>
     </div>
+
+    <a href="{{ url_for('orcamento.index') }}" class="back-link">← Voltar para orçamentos</a>
 </div>
 {% endblock %}

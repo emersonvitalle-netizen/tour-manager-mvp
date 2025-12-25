@@ -93,6 +93,7 @@ from routes.separation import separation_bp
 from routes.work_list import work_list_bp
 from routes.users import users_bp
 from routes.financial import financial_bp
+from routes.orcamento import orcamento_bp
 
 app.register_blueprint(auth_bp)
 app.register_blueprint(equipment_bp)
@@ -103,6 +104,7 @@ app.register_blueprint(separation_bp)
 app.register_blueprint(work_list_bp)
 app.register_blueprint(users_bp)
 app.register_blueprint(financial_bp)
+app.register_blueprint(orcamento_bp)
 
 @app.route('/')
 def index():
