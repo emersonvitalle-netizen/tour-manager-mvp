@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block title %}Financeiro{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-white mb-0">
+            <i class="bi bi-currency-dollar"></i> Financeiro
+        </h2>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card bg-dark border-secondary h-100">
+                <div class="card-body text-center">
+                    <div class="text-warning fs-1 mb-2">{{ quotes_pending }}</div>
+                    <div class="text-muted small">Orçamentos Pendentes</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card bg-dark border-secondary h-100">
+                <div class="card-body text-center">
+                    <div class="text-info fs-1 mb-2">{{ contracts_active }}</div>
+                    <div class="text-muted small">Contratos Ativos</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card bg-dark border-secondary h-100">
+                <div class="card-body text-center">
+                    <div class="text-primary fs-1 mb-2">{{ invoices_pending }}</div>
+                    <div class="text-muted small">Faturas Pendentes</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card bg-dark border-secondary h-100">
+                <div class="card-body text-center">
+                    <div class="text-danger fs-1 mb-2">{{ invoices_overdue }}</div>
+                    <div class="text-muted small">Faturas Vencidas</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-4">
+            <a href="{{ url_for('financial.quotes') }}" class="card bg-dark border-secondary text-decoration-none h-100">
+                <div class="card-body text-center py-4">
+                    <i class="bi bi-file-earmark-text text-warning" style="font-size: 3rem;"></i>
+                    <h4 class="text-white mt-3">Orçamentos</h4>
+                    <p class="text-muted mb-0">Propostas para clientes</p>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a href="#" class="card bg-dark border-secondary text-decoration-none h-100">
+                <div class="card-body text-center py-4">
+                    <i class="bi bi-file-earmark-check text-info" style="font-size: 3rem;"></i>
+                    <h4 class="text-white mt-3">Contratos</h4>
+                    <p class="text-muted mb-0">Contratos de locação</p>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a href="{{ url_for('financial.invoices') }}" class="card bg-dark border-secondary text-decoration-none h-100">
+                <div class="card-body text-center py-4">
+                    <i class="bi bi-receipt text-success" style="font-size: 3rem;"></i>
+                    <h4 class="text-white mt-3">Faturas</h4>
+                    <p class="text-muted mb-0">Cobranças e recebimentos</p>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4 mt-2">
+        <div class="col-lg-6">
+            <div class="card bg-dark border-secondary">
+                <div class="card-header bg-transparent border-secondary d-flex justify-content-between align-items-center">
+                    <h5 class="text-white mb-0">Orçamentos Recentes</h5>
+                    <a href="{{ url_for('financial.new_quote') }}" class="btn btn-sm btn-warning">
+                        <i class="bi bi-plus"></i> Novo
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    {% if recent_quotes %}
+                    <div class="list-group list-group-flush">
+                        {% for quote in recent_quotes %}
+                        <a href="{{ url_for('financial.view_quote', id=quote.id) }}" class="list-group-item list-group-item-action bg-dark border-secondary">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="text-white">{{ quote.code }}</div>
+                                    <small class="text-muted">{{ quote.client_name }} - {{ quote.title }}</small>
+                                </div>
+                                <div class="text-end">
+                                    <div class="text-success">R$ {{ "%.2f"|format(quote.total|float) }}</div>
+                                    <span class="badge {{ quote.status_badge }}">{{ quote.status_label }}</span>
+                                </div>
+                            </div>
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="p-4 text-center text-muted">
+                        <i class="bi bi-file-earmark-text" style="font-size: 2rem;"></i>
+                        <p class="mt-2 mb-0">Nenhum orçamento ainda</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card bg-dark border-secondary">
+                <div class="card-header bg-transparent border-secondary d-flex justify-content-between align-items-center">
+                    <h5 class="text-white mb-0">Faturas Recentes</h5>
+                    <a href="{{ url_for('financial.new_invoice') }}" class="btn btn-sm btn-success">
+                        <i class="bi bi-plus"></i> Nova
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    {% if recent_invoices %}
+                    <div class="list-group list-group-flush">
+                        {% for invoice in recent_invoices %}
+                        <a href="{{ url_for('financial.view_invoice', id=invoice.id) }}" class="list-group-item list-group-item-action bg-dark border-secondary">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="text-white">{{ invoice.code }}</div>
+                                    <small class="text-muted">{{ invoice.client_name }}</small>
+                                </div>
+                                <div class="text-end">
+                                    <div class="text-success">R$ {{ "%.2f"|format(invoice.total|float) }}</div>
+                                    <span class="badge {{ invoice.status_badge }}">{{ invoice.status_label }}</span>
+                                </div>
+                            </div>
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="p-4 text-center text-muted">
+                        <i class="bi bi-receipt" style="font-size: 2rem;"></i>
+                        <p class="mt-2 mb-0">Nenhuma fatura ainda</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Voltar
+        </a>
+    </div>
+</div>
+{% endblock %}
