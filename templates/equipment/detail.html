@@ -366,7 +366,7 @@
                     <span class="info-label">Número de Série</span>
                     <span class="info-value">{{ equipment.serial_number or 'N/A' }}</span>
                 </div>
-                {% if equipment.value %}
+                {% if equipment.value and current_user.is_admin %}
                 <div class="info-item">
                     <span class="info-label">Valor</span>
                     <span class="info-value">R$ {{ "%.2f"|format(equipment.value) }}</span>
