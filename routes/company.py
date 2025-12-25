@@ -22,11 +22,25 @@ def settings():
     company = Company.query.get(current_user.company_id)
 
     if request.method == 'POST':
+        # Dados básicos
         company.name = request.form.get('name')
         company.cnpj = request.form.get('cnpj', '').strip() or None
-        company.email = request.form.get('email', '').strip() or None
+        company.inscricao_estadual = request.form.get('inscricao_estadual', '').strip() or None
+        
+        # Endereço
+        company.street = request.form.get('street', '').strip() or None
+        company.number = request.form.get('number', '').strip() or None
+        company.complement = request.form.get('complement', '').strip() or None
+        company.neighborhood = request.form.get('neighborhood', '').strip() or None
+        company.city = request.form.get('city', '').strip() or None
+        company.state = request.form.get('state', '').strip() or None
+        company.zipcode = request.form.get('zipcode', '').strip() or None
+        
+        # Contato
         company.phone = request.form.get('phone', '').strip() or None
-        company.address = request.form.get('address', '').strip() or None
+        company.cellphone = request.form.get('cellphone', '').strip() or None
+        company.email = request.form.get('email', '').strip() or None
+        company.website = request.form.get('website', '').strip() or None
 
         # Upload do logo
         if 'logo' in request.files:

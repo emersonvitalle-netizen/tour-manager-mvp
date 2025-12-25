@@ -23,13 +23,44 @@ def migrate_database():
     from sqlalchemy import text
 
     migrations = [
+        # Company - campos originais
         'ALTER TABLE company ADD COLUMN logo_url VARCHAR(500)',
         'ALTER TABLE company ADD COLUMN email VARCHAR(120)',
         'ALTER TABLE company ADD COLUMN phone VARCHAR(20)',
         'ALTER TABLE company ADD COLUMN address TEXT',
+        # Company - novos campos de endereço
+        'ALTER TABLE company ADD COLUMN cellphone VARCHAR(20)',
+        'ALTER TABLE company ADD COLUMN website VARCHAR(200)',
+        'ALTER TABLE company ADD COLUMN inscricao_estadual VARCHAR(20)',
+        'ALTER TABLE company ADD COLUMN street VARCHAR(200)',
+        'ALTER TABLE company ADD COLUMN number VARCHAR(20)',
+        'ALTER TABLE company ADD COLUMN complement VARCHAR(100)',
+        'ALTER TABLE company ADD COLUMN neighborhood VARCHAR(100)',
+        'ALTER TABLE company ADD COLUMN city VARCHAR(100)',
+        'ALTER TABLE company ADD COLUMN state VARCHAR(2)',
+        'ALTER TABLE company ADD COLUMN zipcode VARCHAR(10)',
+        # Maintenance
         'ALTER TABLE maintenance ADD COLUMN created_at DATETIME',
+        # Equipment
         'ALTER TABLE equipment ADD COLUMN qr_code_url VARCHAR(500)',
         'ALTER TABLE equipment ADD COLUMN type_id INTEGER',
+        # SeparationList - dados do cliente
+        'ALTER TABLE separation_list ADD COLUMN client_name VARCHAR(200)',
+        'ALTER TABLE separation_list ADD COLUMN client_phone VARCHAR(20)',
+        'ALTER TABLE separation_list ADD COLUMN client_email VARCHAR(120)',
+        'ALTER TABLE separation_list ADD COLUMN client_address TEXT',
+        # SeparationList - dados do evento
+        'ALTER TABLE separation_list ADD COLUMN event_name VARCHAR(200)',
+        'ALTER TABLE separation_list ADD COLUMN event_date DATE',
+        'ALTER TABLE separation_list ADD COLUMN event_time VARCHAR(10)',
+        'ALTER TABLE separation_list ADD COLUMN event_location TEXT',
+        # SeparationList - outros
+        'ALTER TABLE separation_list ADD COLUMN validity_date DATE',
+        'ALTER TABLE separation_list ADD COLUMN observations TEXT',
+        'ALTER TABLE separation_list ADD COLUMN discount_percent DECIMAL(5,2)',
+        'ALTER TABLE separation_list ADD COLUMN discount_value DECIMAL(10,2)',
+        # SeparationListItem
+        'ALTER TABLE separation_list_item ADD COLUMN item_description VARCHAR(500)',
     ]
 
     for migration in migrations:
