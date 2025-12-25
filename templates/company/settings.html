@@ -8,7 +8,7 @@
         padding: var(--spacing-md);
         min-height: 100vh;
         padding-bottom: calc(var(--bottom-nav-height) + var(--spacing-md));
-        max-width: 700px;
+        max-width: 800px;
         margin: 0 auto;
     }
 
@@ -42,15 +42,52 @@
         padding: var(--spacing-xl);
         border-radius: var(--radius-lg);
         border: 1px solid #2a2a2a;
+        margin-bottom: var(--spacing-lg);
+    }
+
+    .section-title {
+        font-size: 1.1rem;
+        font-weight: var(--font-weight-bold);
+        color: #d4a574;
+        margin-bottom: var(--spacing-lg);
+        padding-bottom: var(--spacing-sm);
+        border-bottom: 1px solid #333;
+        display: flex;
+        align-items: center;
+        gap: 10px;
     }
 
     .form-group {
         margin-bottom: var(--spacing-lg);
     }
 
+    .form-row {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--spacing-md);
+    }
+
+    .form-row-3 {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr;
+        gap: var(--spacing-md);
+    }
+
+    .form-row-4 {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr 1fr;
+        gap: var(--spacing-md);
+    }
+
+    @media (max-width: 600px) {
+        .form-row, .form-row-3, .form-row-4 {
+            grid-template-columns: 1fr;
+        }
+    }
+
     .form-label {
         display: block;
-        font-size: 0.9rem;
+        font-size: 0.85rem;
         font-weight: var(--font-weight-bold);
         margin-bottom: var(--spacing-sm);
         color: #e0e0e0;
@@ -58,7 +95,7 @@
         letter-spacing: 0.5px;
     }
 
-    .form-input, .form-textarea {
+    .form-input, .form-textarea, .form-select {
         width: 100%;
         padding: var(--spacing-md);
         background-color: #0a0a0a;
@@ -69,14 +106,14 @@
         transition: border-color 0.2s;
     }
 
-    .form-input:focus, .form-textarea:focus {
+    .form-input:focus, .form-textarea:focus, .form-select:focus {
         outline: none;
         border-color: #d4a574;
     }
 
     .form-textarea {
         resize: vertical;
-        min-height: 100px;
+        min-height: 80px;
     }
 
     .logo-preview {
@@ -97,10 +134,6 @@
         font-size: 0.85rem;
         color: #888;
         margin-top: 8px;
-    }
-
-    .file-input-wrapper {
-        position: relative;
     }
 
     .file-input {
@@ -143,6 +176,11 @@
         transform: translateY(-2px);
         box-shadow: 0 4px 16px rgba(212, 165, 116, 0.4);
     }
+
+    .form-select option {
+        background-color: #1a1a1a;
+        color: #f5f5f5;
+    }
 </style>
 {% endblock %}
 
@@ -153,42 +191,111 @@
         <h1 class="page-title"><i class="fas fa-cog"></i> Configurações da Empresa</h1>
     </div>
 
-    <form method="POST" action="{{ url_for('company.settings') }}" enctype="multipart/form-data" class="form-section">
-        <div class="form-group">
-            <label class="form-label">NOME DA EMPRESA *</label>
-            <input type="text" name="name" value="{{ company.name }}" required class="form-input">
-        </div>
-
-        <div class="form-group">
-            <label class="form-label">CNPJ</label>
-            <input type="text" name="cnpj" value="{{ company.cnpj or '' }}" class="form-input" placeholder="00.000.000/0000-00">
-        </div>
-
-        <div class="form-group">
-            <label class="form-label">EMAIL</label>
-            <input type="email" name="email" value="{{ company.email or '' }}" class="form-input" placeholder="contato@empresa.com">
-        </div>
-
-        <div class="form-group">
-            <label class="form-label">TELEFONE</label>
-            <input type="text" name="phone" value="{{ company.phone or '' }}" class="form-input" placeholder="(00) 00000-0000">
-        </div>
-
-        <div class="form-group">
-            <label class="form-label">ENDEREÇO</label>
-            <textarea name="address" class="form-textarea" placeholder="Endereço completo...">{{ company.address or '' }}</textarea>
-        </div>
-
-        <div class="form-group">
-            <label class="form-label">LOGO DA EMPRESA</label>
-            {% if company.logo_url %}
-            <div class="logo-preview">
-                <img src="{{ company.logo_url }}" alt="Logo atual">
-                <div class="logo-preview-label">Logo atual</div>
+    <form method="POST" action="{{ url_for('company.settings') }}" enctype="multipart/form-data">
+        
+        <div class="form-section">
+            <div class="section-title"><i class="fas fa-building"></i> Dados da Empresa</div>
+            
+            <div class="form-group">
+                <label class="form-label">Nome da Empresa *</label>
+                <input type="text" name="name" value="{{ company.name }}" required class="form-input">
             </div>
-            {% endif %}
-            <input type="file" name="logo" accept=".png,.jpg,.jpeg" class="file-input">
-            <div class="file-hint">Formatos aceitos: PNG, JPG. Recomendado: fundo transparente (PNG).</div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">CNPJ</label>
+                    <input type="text" name="cnpj" value="{{ company.cnpj or '' }}" class="form-input" placeholder="00.000.000/0000-00">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Inscrição Estadual</label>
+                    <input type="text" name="inscricao_estadual" value="{{ company.inscricao_estadual or '' }}" class="form-input" placeholder="000.000.000.000">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Logo da Empresa</label>
+                {% if company.logo_url %}
+                <div class="logo-preview">
+                    <img src="{{ company.logo_url }}" alt="Logo atual">
+                    <div class="logo-preview-label">Logo atual</div>
+                </div>
+                {% endif %}
+                <input type="file" name="logo" accept=".png,.jpg,.jpeg" class="file-input">
+                <div class="file-hint">Formatos: PNG, JPG. Recomendado: fundo transparente (PNG).</div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <div class="section-title"><i class="fas fa-map-marker-alt"></i> Endereço</div>
+            
+            <div class="form-row-3">
+                <div class="form-group">
+                    <label class="form-label">Rua / Avenida / Praça</label>
+                    <input type="text" name="street" value="{{ company.street or '' }}" class="form-input" placeholder="Av. Atlântica">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Número</label>
+                    <input type="text" name="number" value="{{ company.number or '' }}" class="form-input" placeholder="4500">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Complemento</label>
+                    <input type="text" name="complement" value="{{ company.complement or '' }}" class="form-input" placeholder="Sala 101">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Bairro</label>
+                    <input type="text" name="neighborhood" value="{{ company.neighborhood or '' }}" class="form-input" placeholder="Centro">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">CEP</label>
+                    <input type="text" name="zipcode" value="{{ company.zipcode or '' }}" class="form-input" placeholder="00000-000">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Cidade</label>
+                    <input type="text" name="city" value="{{ company.city or '' }}" class="form-input" placeholder="Balneário Camboriú">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Estado (UF)</label>
+                    <select name="state" class="form-select">
+                        <option value="">Selecione...</option>
+                        {% set estados = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'] %}
+                        {% for uf in estados %}
+                        <option value="{{ uf }}" {% if company.state == uf %}selected{% endif %}>{{ uf }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <div class="section-title"><i class="fas fa-phone"></i> Contato</div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Telefone Fixo</label>
+                    <input type="text" name="phone" value="{{ company.phone or '' }}" class="form-input" placeholder="(47) 3366-7788">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Celular / WhatsApp</label>
+                    <input type="text" name="cellphone" value="{{ company.cellphone or '' }}" class="form-input" placeholder="(47) 99999-8888">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" name="email" value="{{ company.email or '' }}" class="form-input" placeholder="contato@empresa.com">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Website</label>
+                    <input type="text" name="website" value="{{ company.website or '' }}" class="form-input" placeholder="www.empresa.com.br">
+                </div>
+            </div>
         </div>
 
         <button type="submit" class="submit-button">Salvar Configurações</button>

@@ -3,244 +3,232 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Orçamento #{{ lista.id }} - {{ company.name }}</title>
+    <title>Orçamento {{ lista.orcamento_number }}</title>
     <style>
+        @page {
+            size: A4;
+            margin: 15mm;
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
-        @page {
-            size: A4;
-            margin: 10mm;
-        }
-
         body {
             font-family: 'Segoe UI', -apple-system, sans-serif;
             background: #0a0a0a;
-            color: #fff;
+            color: #e0e0e0;
             line-height: 1.5;
+            padding: 20px;
         }
 
         .container {
             max-width: 800px;
             margin: 0 auto;
             background: #0a0a0a;
-            min-height: 100vh;
         }
 
         .header {
-            background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%);
-            color: white;
-            padding: 25px;
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
+            padding-bottom: 20px;
             border-bottom: 2px solid #d4a574;
+            margin-bottom: 20px;
         }
 
-        .company-logo {
-            width: 80px;
-            height: 80px;
-            border-radius: 8px;
-            object-fit: cover;
-            border: 2px solid #d4a574;
-            margin-bottom: 10px;
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
         }
 
-        .company-logo-placeholder {
-            width: 80px;
-            height: 80px;
-            border-radius: 8px;
+        .logo-placeholder {
+            width: 60px;
+            height: 60px;
             background: linear-gradient(135deg, #d4a574 0%, #b8860b 100%);
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 2rem;
+            font-size: 1.5rem;
+            font-weight: bold;
             color: #0a0a0a;
-            margin-bottom: 10px;
         }
 
-        .company-info h1 {
-            font-size: 1.6rem;
-            font-weight: 700;
-            margin-bottom: 8px;
+        .logo-img {
+            max-width: 80px;
+            max-height: 60px;
+            object-fit: contain;
+        }
+
+        .company-name {
+            font-size: 1.5rem;
+            font-weight: bold;
             color: #d4a574;
         }
 
-        .company-details {
-            font-size: 0.85rem;
-            color: #a0a0a0;
-            line-height: 1.6;
-        }
-
-        .company-details p {
-            margin: 2px 0;
-        }
-
-        .company-details strong {
-            color: #ccc;
-        }
-
-        .doc-info {
+        .company-info {
             text-align: right;
-        }
-
-        .doc-type {
-            font-size: 1.4rem;
-            font-weight: 700;
-            color: #d4a574;
-            text-transform: uppercase;
-            letter-spacing: 3px;
-            margin-bottom: 8px;
-        }
-
-        .doc-number {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: #fff;
-            margin-bottom: 8px;
-        }
-
-        .doc-date {
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             color: #888;
         }
 
-        .doc-status {
-            display: inline-block;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-top: 10px;
+        .company-info p {
+            margin: 2px 0;
         }
 
-        .status-pending {
-            background: rgba(241, 196, 15, 0.2);
-            color: #f1c40f;
-            border: 1px solid #f1c40f;
+        .doc-title {
+            background: linear-gradient(135deg, #d4a574 0%, #b8860b 100%);
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
         }
 
-        .status-approved {
-            background: rgba(46, 204, 113, 0.2);
-            color: #2ecc71;
-            border: 1px solid #2ecc71;
+        .doc-title h1 {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #0a0a0a;
+            margin-bottom: 5px;
         }
 
-        .status-rejected {
-            background: rgba(231, 76, 60, 0.2);
-            color: #e74c3c;
-            border: 1px solid #e74c3c;
+        .doc-dates {
+            font-size: 0.85rem;
+            color: #333;
         }
 
-        .content {
-            padding: 25px;
-        }
-
-        .info-section {
-            margin-bottom: 25px;
+        .section {
+            background: #1a1a1a;
+            border-radius: 8px;
+            padding: 15px 20px;
+            margin-bottom: 15px;
+            border: 1px solid #333;
         }
 
         .section-title {
-            font-size: 0.9rem;
-            font-weight: 700;
+            font-size: 0.85rem;
+            font-weight: bold;
             color: #d4a574;
             text-transform: uppercase;
-            letter-spacing: 2px;
-            padding-bottom: 10px;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
             border-bottom: 1px solid #333;
-            margin-bottom: 15px;
         }
 
         .info-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
+            gap: 10px;
         }
 
         .info-item {
-            background: #1a1a1a;
-            padding: 12px 15px;
-            border-radius: 8px;
-            border-left: 3px solid #d4a574;
+            display: flex;
+            flex-direction: column;
         }
 
         .info-label {
-            font-size: 0.7rem;
+            font-size: 0.75rem;
             color: #888;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
         }
 
         .info-value {
             font-size: 0.95rem;
-            font-weight: 600;
-            color: #fff;
+            color: #f5f5f5;
         }
 
-        .items-section {
-            margin-bottom: 25px;
+        .event-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 2fr;
+            gap: 15px;
+            background: #252525;
+            padding: 15px;
+            border-radius: 6px;
+        }
+
+        .event-item {
+            text-align: center;
+        }
+
+        .event-label {
+            font-size: 0.7rem;
+            color: #888;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .event-value {
+            font-size: 1rem;
+            font-weight: bold;
+            color: #d4a574;
         }
 
         .items-table {
             width: 100%;
             border-collapse: collapse;
-            background: #1a1a1a;
-            border-radius: 8px;
-            overflow: hidden;
+            margin-top: 10px;
         }
 
         .items-table th {
             background: #252525;
-            padding: 12px 15px;
+            padding: 10px;
             text-align: left;
             font-size: 0.75rem;
+            font-weight: bold;
+            color: #888;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: #d4a574;
-            border-bottom: 1px solid #333;
+            border-bottom: 2px solid #d4a574;
         }
 
-        .items-table th:last-child {
+        .items-table th:last-child,
+        .items-table th:nth-child(4),
+        .items-table th:nth-child(5) {
             text-align: right;
         }
 
         .items-table td {
-            padding: 12px 15px;
-            border-bottom: 1px solid #2a2a2a;
+            padding: 12px 10px;
+            border-bottom: 1px solid #333;
             font-size: 0.9rem;
-            color: #ccc;
         }
 
-        .items-table td:last-child {
+        .items-table td:first-child {
+            width: 40px;
+            text-align: center;
+            color: #888;
+        }
+
+        .items-table td:nth-child(2) {
+            width: 50px;
+            text-align: center;
+        }
+
+        .items-table td:nth-child(4),
+        .items-table td:nth-child(5) {
             text-align: right;
-            font-weight: 600;
-            color: #fff;
+            white-space: nowrap;
         }
 
-        .items-table tr:last-child td {
-            border-bottom: none;
+        .item-name {
+            font-weight: 600;
+            color: #f5f5f5;
         }
 
-        .qty-badge {
-            background: #333;
-            padding: 4px 12px;
-            border-radius: 15px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: #d4a574;
+        .item-desc {
+            font-size: 0.8rem;
+            color: #888;
         }
 
         .totals-section {
-            background: linear-gradient(135deg, #1a1a1a 0%, #252525 100%);
+            background: #1a1a1a;
+            border-radius: 8px;
             padding: 20px;
-            border-radius: 10px;
-            border: 1px solid #d4a574;
+            margin-top: 15px;
+            border: 1px solid #333;
         }
 
         .total-row {
@@ -248,59 +236,81 @@
             justify-content: space-between;
             padding: 8px 0;
             font-size: 0.95rem;
-            color: #ccc;
+        }
+
+        .total-row.subtotal {
+            color: #888;
+        }
+
+        .total-row.discount {
+            color: #e74c3c;
         }
 
         .total-row.grand {
             border-top: 2px solid #d4a574;
             margin-top: 10px;
             padding-top: 15px;
-            font-size: 1.4rem;
-            font-weight: 700;
+            font-size: 1.2rem;
+            font-weight: bold;
         }
 
-        .total-row.grand span:last-child {
+        .total-row.grand .label {
             color: #d4a574;
         }
 
-        .observations {
-            background: rgba(212, 165, 116, 0.1);
-            padding: 15px;
+        .total-row.grand .value {
+            background: linear-gradient(135deg, #d4a574 0%, #b8860b 100%);
+            color: #0a0a0a;
+            padding: 8px 20px;
+            border-radius: 6px;
+        }
+
+        .observations-section {
+            background: #1a1a1a;
             border-radius: 8px;
-            border-left: 3px solid #d4a574;
-            margin-bottom: 25px;
+            padding: 20px;
+            margin-top: 15px;
+            border: 1px solid #333;
         }
 
-        .observations-title {
-            font-weight: 700;
+        .observations-section h3 {
+            font-size: 0.85rem;
+            font-weight: bold;
             color: #d4a574;
-            margin-bottom: 5px;
             text-transform: uppercase;
-            font-size: 0.75rem;
-            letter-spacing: 1px;
+            margin-bottom: 10px;
         }
 
-        .observations-text {
-            color: #a0a0a0;
+        .observations-section p {
             font-size: 0.9rem;
+            color: #ccc;
+            white-space: pre-line;
         }
 
-        .footer {
-            background: #0d0d0d;
-            padding: 20px 25px;
+        .signature-section {
+            margin-top: 40px;
+            padding-top: 20px;
             text-align: center;
-            border-top: 1px solid #333;
         }
 
-        .footer p {
+        .signature-line {
+            width: 300px;
+            border-top: 1px solid #666;
+            margin: 0 auto 10px;
+            padding-top: 10px;
+        }
+
+        .signature-label {
+            font-size: 0.9rem;
+            color: #888;
+            margin-bottom: 5px;
+        }
+
+        .signature-disclaimer {
             font-size: 0.8rem;
             color: #666;
-            margin: 4px 0;
-        }
-
-        .footer-brand {
-            color: #d4a574;
-            font-weight: 600;
+            margin-top: 10px;
+            font-style: italic;
         }
 
         .action-bar {
@@ -312,20 +322,17 @@
             padding: 15px 20px;
             display: flex;
             justify-content: center;
-            gap: 12px;
-            box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
+            gap: 15px;
             border-top: 1px solid #333;
         }
 
         .action-btn {
-            padding: 12px 25px;
+            padding: 12px 30px;
             border: none;
             border-radius: 8px;
-            font-weight: 700;
-            font-size: 0.9rem;
+            font-weight: 600;
+            font-size: 1rem;
             cursor: pointer;
-            text-transform: uppercase;
-            letter-spacing: 1px;
             text-decoration: none;
             transition: all 0.3s ease;
         }
@@ -335,124 +342,62 @@
             color: #0a0a0a;
         }
 
-        .btn-download:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(212, 165, 116, 0.4);
-        }
-
-        .btn-whatsapp {
-            background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
-            color: white;
-        }
-
-        .btn-whatsapp:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(37, 211, 102, 0.4);
-        }
-
         .btn-back {
             background: #333;
             color: white;
-            border: 1px solid #444;
-        }
-
-        .btn-back:hover {
-            background: #444;
         }
 
         @media print {
             body {
-                background: white !important;
-                color: #333 !important;
+                background: white;
+                color: #333;
+                padding: 0;
             }
 
             .container {
-                background: white !important;
-                box-shadow: none !important;
+                background: white;
             }
 
             .header {
-                background: #f5f5f5 !important;
-                border-bottom-color: #d4a574 !important;
+                border-bottom-color: #d4a574;
             }
 
-            .company-info h1 {
-                color: #333 !important;
+            .company-name {
+                color: #333;
             }
 
-            .company-details {
-                color: #666 !important;
+            .section, .totals-section, .observations-section {
+                background: #f9f9f9;
+                border-color: #ddd;
             }
 
-            .doc-number {
-                color: #333 !important;
+            .section-title {
+                color: #b8860b;
             }
 
-            .info-item {
-                background: #f9f9f9 !important;
+            .info-value, .item-name {
+                color: #333;
             }
 
-            .info-value {
-                color: #333 !important;
+            .event-grid {
+                background: #eee;
             }
 
-            .items-table {
-                background: #f9f9f9 !important;
+            .event-value {
+                color: #b8860b;
             }
 
             .items-table th {
-                background: #eee !important;
+                background: #eee;
+                color: #666;
             }
 
             .items-table td {
-                color: #333 !important;
-                border-bottom-color: #ddd !important;
-            }
-
-            .totals-section {
-                background: #f5f0e8 !important;
-            }
-
-            .total-row {
-                color: #333 !important;
-            }
-
-            .footer {
-                background: #f5f5f5 !important;
+                border-color: #ddd;
             }
 
             .action-bar {
                 display: none !important;
-            }
-        }
-
-        @media (max-width: 600px) {
-            .header {
-                flex-direction: column;
-                gap: 20px;
-            }
-
-            .doc-info {
-                text-align: left;
-            }
-
-            .info-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .items-table th, .items-table td {
-                padding: 8px 10px;
-                font-size: 0.8rem;
-            }
-
-            .action-bar {
-                flex-wrap: wrap;
-            }
-
-            .action-btn {
-                flex: 1;
-                min-width: 100px;
-                text-align: center;
             }
         }
     </style>
@@ -460,125 +405,157 @@
 <body>
     <div class="container">
         <div class="header">
-            <div class="company-info">
+            <div class="logo-section">
                 {% if company.logo_url %}
-                <img src="{{ company.logo_url }}" alt="{{ company.name }}" class="company-logo">
+                <img src="{{ company.logo_url }}" alt="Logo" class="logo-img">
                 {% else %}
-                <div class="company-logo-placeholder">{{ company.name[0] if company.name else 'T' }}</div>
+                <div class="logo-placeholder">{{ company.name[0] if company.name else 'H' }}</div>
                 {% endif %}
-                <h1>{{ company.name }}</h1>
-                <div class="company-details">
-                    {% if company.cnpj %}<p><strong>CNPJ:</strong> {{ company.cnpj }}</p>{% endif %}
-                    {% if company.address %}<p><strong>Endereço:</strong> {{ company.address }}</p>{% endif %}
-                    {% if company.phone %}<p><strong>Telefone:</strong> {{ company.phone }}</p>{% endif %}
-                    {% if company.email %}<p><strong>E-mail:</strong> {{ company.email }}</p>{% endif %}
-                </div>
+                <div class="company-name">{{ company.name }}</div>
             </div>
-            <div class="doc-info">
-                <div class="doc-type">Orçamento</div>
-                <div class="doc-number">#{{ '%04d'|format(lista.id) }}</div>
-                <div class="doc-date">{{ lista.created_at.strftime('%d/%m/%Y') }}</div>
-                <div class="doc-status {% if lista.status == 'pending' %}status-pending{% elif lista.status == 'approved' %}status-approved{% else %}status-rejected{% endif %}">
-                    {% if lista.status == 'pending' %}Pendente
-                    {% elif lista.status == 'approved' %}Aprovado
-                    {% else %}Rejeitado{% endif %}
-                </div>
+            <div class="company-info">
+                {% if company.cnpj %}<p>CNPJ: {{ company.cnpj }}</p>{% endif %}
+                {% if company.full_address %}<p>{{ company.full_address }}</p>{% endif %}
+                {% if company.full_phone %}<p>{{ company.full_phone }}</p>{% endif %}
+                {% if company.email %}<p>Email: {{ company.email }}</p>{% endif %}
             </div>
         </div>
 
-        <div class="content">
-            <div class="info-section">
-                <div class="section-title">Informações do Orçamento</div>
-                <div class="info-grid">
-                    <div class="info-item">
-                        <div class="info-label">Nome do Orçamento</div>
-                        <div class="info-value">{{ lista.name }}</div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">Tipo</div>
-                        <div class="info-value">{{ 'Completo' if lista.list_type == 'complete' else 'Simples' }}</div>
-                    </div>
-                    {% if lista.tour %}
-                    <div class="info-item">
-                        <div class="info-label">Tour/Evento</div>
-                        <div class="info-value">{{ lista.tour.name }}</div>
-                    </div>
-                    {% endif %}
-                    <div class="info-item">
-                        <div class="info-label">Data de Criação</div>
-                        <div class="info-value">{{ lista.created_at.strftime('%d/%m/%Y às %H:%M') }}</div>
+        <div class="doc-title">
+            <h1>ORÇAMENTO Nº {{ lista.orcamento_number }}</h1>
+            <div class="doc-dates">
+                Emissão: {{ lista.created_at.strftime('%d/%m/%Y') }}
+                {% if lista.validity_date %} | Validade: {{ lista.validity_date.strftime('%d/%m/%Y') }}{% endif %}
+            </div>
+        </div>
+
+        {% if lista.client_name %}
+        <div class="section">
+            <div class="section-title">Dados do Cliente</div>
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">Cliente</span>
+                    <span class="info-value">{{ lista.client_name }}</span>
+                </div>
+                {% if lista.client_phone %}
+                <div class="info-item">
+                    <span class="info-label">Telefone</span>
+                    <span class="info-value">{{ lista.client_phone }}</span>
+                </div>
+                {% endif %}
+                {% if lista.client_email %}
+                <div class="info-item">
+                    <span class="info-label">Email</span>
+                    <span class="info-value">{{ lista.client_email }}</span>
+                </div>
+                {% endif %}
+                {% if lista.client_address %}
+                <div class="info-item" style="grid-column: span 2;">
+                    <span class="info-label">Endereço</span>
+                    <span class="info-value">{{ lista.client_address }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% if lista.event_name %}
+        <div class="section">
+            <div class="section-title">Informações do Evento</div>
+            <div class="event-grid">
+                <div class="event-item">
+                    <div class="event-label">Evento</div>
+                    <div class="event-value">{{ lista.event_name }}</div>
+                </div>
+                <div class="event-item">
+                    <div class="event-label">Data e Hora</div>
+                    <div class="event-value">
+                        {% if lista.event_date %}{{ lista.event_date.strftime('%d/%m/%Y') }}{% endif %}
+                        {% if lista.event_time %}<br>{{ lista.event_time }}{% endif %}
                     </div>
                 </div>
+                <div class="event-item">
+                    <div class="event-label">Local</div>
+                    <div class="event-value">{{ lista.event_location or '-' }}</div>
+                </div>
             </div>
+        </div>
+        {% endif %}
 
-            {% if lista.description %}
-            <div class="observations">
-                <div class="observations-title">Observações</div>
-                <div class="observations-text">{{ lista.description }}</div>
+        <div class="section">
+            <div class="section-title">Equipamentos e Serviços</div>
+            <table class="items-table">
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Qtd</th>
+                        <th>Descrição</th>
+                        {% if lista.list_type == 'complete' %}
+                        <th>Valor Unit.</th>
+                        <th>Subtotal</th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in lista.items|list %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>{{ item.quantity }}</td>
+                        <td>
+                            <div class="item-name">{{ item.item_name }}</div>
+                            {% if item.item_description %}<div class="item-desc">{{ item.item_description }}</div>{% endif %}
+                        </td>
+                        {% if lista.list_type == 'complete' %}
+                        <td>R$ {{ "%.2f"|format(item.unit_price or 0)|replace('.', ',') }}</td>
+                        <td>R$ {{ "%.2f"|format(item.total_price or 0)|replace('.', ',') }}</td>
+                        {% endif %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="totals-section">
+            {% if lista.list_type == 'complete' %}
+            <div class="total-row subtotal">
+                <span>Subtotal:</span>
+                <span>R$ {{ "%.2f"|format(lista.subtotal)|replace('.', ',') }}</span>
+            </div>
+            {% if lista.discount_amount > 0 %}
+            <div class="total-row discount">
+                <span>Desconto{% if lista.discount_percent and lista.discount_percent > 0 %} ({{ "%.0f"|format(lista.discount_percent) }}%){% endif %}:</span>
+                <span>- R$ {{ "%.2f"|format(lista.discount_amount)|replace('.', ',') }}</span>
             </div>
             {% endif %}
-
-            <div class="items-section">
-                <div class="section-title">Itens do Orçamento</div>
-                <table class="items-table">
-                    <thead>
-                        <tr>
-                            <th>Item</th>
-                            <th>Qtd</th>
-                            {% if lista.list_type == 'complete' %}
-                            <th>Valor Unit.</th>
-                            <th>Subtotal</th>
-                            {% endif %}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in lista.items %}
-                        <tr>
-                            <td>{{ item.item_name }}</td>
-                            <td><span class="qty-badge">{{ item.quantity }}x</span></td>
-                            {% if lista.list_type == 'complete' %}
-                            <td>R$ {{ "%.2f"|format(item.unit_price or 0)|replace('.', ',') }}</td>
-                            <td>R$ {{ "%.2f"|format(item.total_price or 0)|replace('.', ',') }}</td>
-                            {% endif %}
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+            <div class="total-row grand">
+                <span class="label">TOTAL:</span>
+                <span class="value">R$ {{ "%.2f"|format(lista.calculated_total)|replace('.', ',') }}</span>
             </div>
-
-            <div class="totals-section">
-                <div class="total-row">
-                    <span>Total de itens:</span>
-                    <span>{{ lista.items|list|length }}</span>
-                </div>
-                <div class="total-row">
-                    <span>Total de unidades:</span>
-                    <span>{{ total_units }}</span>
-                </div>
-                {% if lista.list_type == 'complete' %}
-                <div class="total-row grand">
-                    <span>VALOR TOTAL:</span>
-                    <span>R$ {{ "%.2f"|format(subtotal)|replace('.', ',') }}</span>
-                </div>
-                {% else %}
-                <div class="total-row grand">
-                    <span>VALOR TOTAL:</span>
-                    <span>R$ {{ "%.2f"|format(lista.total_value or 0)|replace('.', ',') }}</span>
-                </div>
-                {% endif %}
+            {% else %}
+            <div class="total-row grand">
+                <span class="label">VALOR TOTAL:</span>
+                <span class="value">R$ {{ "%.2f"|format(lista.total_value or 0)|replace('.', ',') }}</span>
             </div>
+            {% endif %}
         </div>
 
-        <div class="footer">
-            <p>Orçamento gerado em {{ now.strftime('%d/%m/%Y às %H:%M') }}</p>
-            <p class="footer-brand">{{ company.name }}{% if company.phone %} • {{ company.phone }}{% endif %}{% if company.email %} • {{ company.email }}{% endif %}</p>
+        {% if lista.observations %}
+        <div class="observations-section">
+            <h3>Observações</h3>
+            <p>{{ lista.observations }}</p>
+        </div>
+        {% endif %}
+
+        <div class="signature-section">
+            <div class="signature-line"></div>
+            <div class="signature-label">Assinatura do Cliente</div>
+            <div class="signature-disclaimer">Declaro estar de acordo com os valores e condições apresentadas neste orçamento.</div>
         </div>
     </div>
 
     <div class="action-bar" id="actionBar">
         <a href="{{ url_for('orcamento.detail', id=lista.id) }}" class="action-btn btn-back">Voltar</a>
         <button class="action-btn btn-download" onclick="downloadPDF()">Baixar PDF</button>
-        <a href="https://wa.me/?text=Orçamento%20{{ lista.name|urlencode }}%20-%20{{ company.name|urlencode }}%20-%20R$%20{{ '%.2f'|format(subtotal if lista.list_type == 'complete' else lista.total_value or 0) }}" target="_blank" class="action-btn btn-whatsapp">WhatsApp</a>
     </div>
 
     <script>

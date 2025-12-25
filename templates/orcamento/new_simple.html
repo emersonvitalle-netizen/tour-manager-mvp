@@ -290,6 +290,51 @@
 
     <form method="POST" action="{{ url_for('orcamento.new_simple') }}" id="listForm">
         <div class="form-section">
+            <div style="font-size: 1rem; font-weight: bold; color: #2ecc71; margin-bottom: var(--spacing-md); text-transform: uppercase;">Dados do Cliente</div>
+            <div class="form-group">
+                <label class="form-label">NOME DO CLIENTE *</label>
+                <input type="text" name="client_name" class="form-input" placeholder="Nome ou razão social" required>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-md);">
+                <div class="form-group">
+                    <label class="form-label">TELEFONE</label>
+                    <input type="text" name="client_phone" class="form-input" placeholder="(00) 00000-0000">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">EMAIL</label>
+                    <input type="email" name="client_email" class="form-input" placeholder="email@cliente.com">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">ENDEREÇO</label>
+                <input type="text" name="client_address" class="form-input" placeholder="Endereço completo do cliente">
+            </div>
+        </div>
+
+        <div class="form-section">
+            <div style="font-size: 1rem; font-weight: bold; color: #2ecc71; margin-bottom: var(--spacing-md); text-transform: uppercase;">Informações do Evento</div>
+            <div class="form-group">
+                <label class="form-label">NOME DO EVENTO *</label>
+                <input type="text" name="event_name" class="form-input" placeholder="Ex: Festival de Verão 2025" required>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-md);">
+                <div class="form-group">
+                    <label class="form-label">DATA DO EVENTO *</label>
+                    <input type="date" name="event_date" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">HORÁRIO</label>
+                    <input type="time" name="event_time" class="form-input">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">LOCAL DO EVENTO</label>
+                <input type="text" name="event_location" class="form-input" placeholder="Ex: Parque Unipraias - Balneário Camboriú/SC">
+            </div>
+        </div>
+
+        <div class="form-section">
+            <div style="font-size: 1rem; font-weight: bold; color: #2ecc71; margin-bottom: var(--spacing-md); text-transform: uppercase;">Dados do Orçamento</div>
             <div class="form-group">
                 <label class="form-label">TOUR (OPCIONAL)</label>
                 <select name="tour_id" class="form-select">
@@ -307,7 +352,7 @@
 
             <div class="form-group">
                 <label class="form-label">OBSERVAÇÕES</label>
-                <input type="text" name="description" class="form-input" placeholder="Observações opcionais">
+                <textarea name="observations" class="form-input" rows="4" placeholder="Condições de pagamento, inclusões, exclusões, etc."></textarea>
             </div>
         </div>
 

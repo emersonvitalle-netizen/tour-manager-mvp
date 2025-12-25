@@ -225,10 +225,28 @@
                 <span class="info-label">Tipo</span>
                 <span class="info-value">{{ 'Completo' if sep_list.list_type == 'complete' else 'Simples' }}</span>
             </div>
-            {% if sep_list.description %}
+            {% if sep_list.client_name %}
+            <div class="info-row">
+                <span class="info-label">Cliente</span>
+                <span class="info-value">{{ sep_list.client_name }}</span>
+            </div>
+            {% endif %}
+            {% if sep_list.event_name %}
+            <div class="info-row">
+                <span class="info-label">Evento</span>
+                <span class="info-value">{{ sep_list.event_name }}</span>
+            </div>
+            {% endif %}
+            {% if sep_list.event_date %}
+            <div class="info-row">
+                <span class="info-label">Data do Evento</span>
+                <span class="info-value">{{ sep_list.event_date.strftime('%d/%m/%Y') }}{% if sep_list.event_time %} às {{ sep_list.event_time }}{% endif %}</span>
+            </div>
+            {% endif %}
+            {% if sep_list.observations %}
             <div class="info-row">
                 <span class="info-label">Observações</span>
-                <span class="info-value">{{ sep_list.description }}</span>
+                <span class="info-value">{{ sep_list.observations }}</span>
             </div>
             {% endif %}
         </div>

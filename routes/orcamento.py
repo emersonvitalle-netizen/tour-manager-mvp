@@ -306,10 +306,42 @@ def create_list_complete():
 
     tour_id = request.form.get('tour_id')
     name = request.form.get('name', '').strip()
-    description = request.form.get('description', '').strip()
+    observations = request.form.get('observations', '').strip()
+    
+    # Dados do cliente
+    client_name = request.form.get('client_name', '').strip()
+    client_phone = request.form.get('client_phone', '').strip()
+    client_email = request.form.get('client_email', '').strip()
+    client_address = request.form.get('client_address', '').strip()
+    
+    # Dados do evento
+    event_name = request.form.get('event_name', '').strip()
+    event_date_str = request.form.get('event_date', '')
+    event_time = request.form.get('event_time', '').strip()
+    event_location = request.form.get('event_location', '').strip()
 
     if not name or len(name) < 3:
         flash('Nome do orçamento deve ter pelo menos 3 caracteres.', 'danger')
+        return redirect(url_for('orcamento.new_complete'))
+    
+    if not client_name:
+        flash('Nome do cliente é obrigatório.', 'danger')
+        return redirect(url_for('orcamento.new_complete'))
+    
+    if not event_name:
+        flash('Nome do evento é obrigatório.', 'danger')
+        return redirect(url_for('orcamento.new_complete'))
+    
+    if not event_date_str:
+        flash('Data do evento é obrigatória.', 'danger')
+        return redirect(url_for('orcamento.new_complete'))
+
+    # Converter data
+    try:
+        from datetime import datetime as dt
+        event_date = dt.strptime(event_date_str, '%Y-%m-%d').date()
+    except ValueError:
+        flash('Data do evento inválida.', 'danger')
         return redirect(url_for('orcamento.new_complete'))
 
     items_data = []
@@ -345,11 +377,21 @@ def create_list_complete():
         sep_list = SeparationList(
             tour_id=int(tour_id) if tour_id and tour_id.strip() else None,
             name=name,
-            description=description,
+            observations=observations,
             list_type='complete',
             status='pending',
             created_by=current_user.id,
-            company_id=current_user.company_id
+            company_id=current_user.company_id,
+            # Dados do cliente
+            client_name=client_name,
+            client_phone=client_phone or None,
+            client_email=client_email or None,
+            client_address=client_address or None,
+            # Dados do evento
+            event_name=event_name,
+            event_date=event_date,
+            event_time=event_time or None,
+            event_location=event_location or None
         )
         db.session.add(sep_list)
         db.session.flush()
@@ -380,10 +422,42 @@ def create_list_simple():
 
     tour_id = request.form.get('tour_id')
     name = request.form.get('name', '').strip()
-    description = request.form.get('description', '').strip()
+    observations = request.form.get('observations', '').strip()
+    
+    # Dados do cliente
+    client_name = request.form.get('client_name', '').strip()
+    client_phone = request.form.get('client_phone', '').strip()
+    client_email = request.form.get('client_email', '').strip()
+    client_address = request.form.get('client_address', '').strip()
+    
+    # Dados do evento
+    event_name = request.form.get('event_name', '').strip()
+    event_date_str = request.form.get('event_date', '')
+    event_time = request.form.get('event_time', '').strip()
+    event_location = request.form.get('event_location', '').strip()
 
     if not name or len(name) < 3:
         flash('Nome do orçamento deve ter pelo menos 3 caracteres.', 'danger')
+        return redirect(url_for('orcamento.new_simple'))
+    
+    if not client_name:
+        flash('Nome do cliente é obrigatório.', 'danger')
+        return redirect(url_for('orcamento.new_simple'))
+    
+    if not event_name:
+        flash('Nome do evento é obrigatório.', 'danger')
+        return redirect(url_for('orcamento.new_simple'))
+    
+    if not event_date_str:
+        flash('Data do evento é obrigatória.', 'danger')
+        return redirect(url_for('orcamento.new_simple'))
+
+    # Converter data
+    try:
+        from datetime import datetime as dt
+        event_date = dt.strptime(event_date_str, '%Y-%m-%d').date()
+    except ValueError:
+        flash('Data do evento inválida.', 'danger')
         return redirect(url_for('orcamento.new_simple'))
 
     try:
@@ -425,12 +499,22 @@ def create_list_simple():
         sep_list = SeparationList(
             tour_id=int(tour_id) if tour_id and tour_id.strip() else None,
             name=name,
-            description=description,
+            observations=observations,
             list_type='simple',
             total_value=float(total_value),
             status='pending',
             created_by=current_user.id,
-            company_id=current_user.company_id
+            company_id=current_user.company_id,
+            # Dados do cliente
+            client_name=client_name,
+            client_phone=client_phone or None,
+            client_email=client_email or None,
+            client_address=client_address or None,
+            # Dados do evento
+            event_name=event_name,
+            event_date=event_date,
+            event_time=event_time or None,
+            event_location=event_location or None
         )
         db.session.add(sep_list)
         db.session.flush()
