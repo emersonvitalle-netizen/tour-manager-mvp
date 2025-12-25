@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TOUR Manager - Documentação do Projeto</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        @page {
+            size: A4;
+            margin: 15mm;
+        }
+
+        body {
+            font-family: 'Segoe UI', -apple-system, sans-serif;
+            background: #0a0a0a;
+            color: #e0e0e0;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 30px;
+        }
+
+        .header {
+            text-align: center;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%);
+            border-radius: 16px;
+            border: 1px solid #d4a574;
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            color: #d4a574;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: #888;
+        }
+
+        .version {
+            display: inline-block;
+            background: rgba(212, 165, 116, 0.2);
+            color: #d4a574;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-top: 15px;
+        }
+
+        .section {
+            background: #1a1a1a;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border: 1px solid #333;
+        }
+
+        .section-title {
+            font-size: 1.4rem;
+            color: #d4a574;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title span {
+            font-size: 1.5rem;
+        }
+
+        h3 {
+            color: #fff;
+            font-size: 1.1rem;
+            margin: 20px 0 10px;
+        }
+
+        p {
+            color: #a0a0a0;
+            margin-bottom: 15px;
+        }
+
+        ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        li {
+            padding: 8px 0;
+            padding-left: 25px;
+            position: relative;
+            color: #ccc;
+        }
+
+        li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: #2ecc71;
+            font-weight: bold;
+        }
+
+        .pending li::before {
+            content: '○';
+            color: #f39c12;
+        }
+
+        .tech-stack {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .tech-item {
+            background: #252525;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 3px solid #d4a574;
+        }
+
+        .tech-name {
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 5px;
+        }
+
+        .tech-desc {
+            font-size: 0.85rem;
+            color: #888;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        @media (max-width: 600px) {
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .feature-card {
+            background: #252525;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #333;
+        }
+
+        .feature-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .feature-name {
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 8px;
+        }
+
+        .feature-desc {
+            font-size: 0.9rem;
+            color: #888;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-done {
+            background: rgba(46, 204, 113, 0.2);
+            color: #2ecc71;
+        }
+
+        .status-progress {
+            background: rgba(52, 152, 219, 0.2);
+            color: #3498db;
+        }
+
+        .status-pending {
+            background: rgba(243, 156, 18, 0.2);
+            color: #f39c12;
+        }
+
+        .progress-section {
+            margin-top: 20px;
+        }
+
+        .progress-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 15px;
+            background: #252525;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .progress-name {
+            font-weight: 500;
+            color: #fff;
+        }
+
+        .db-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .db-table th, .db-table td {
+            padding: 10px 15px;
+            text-align: left;
+            border-bottom: 1px solid #333;
+        }
+
+        .db-table th {
+            background: #252525;
+            color: #d4a574;
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+        }
+
+        .db-table td {
+            color: #ccc;
+            font-size: 0.9rem;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 30px;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .footer p {
+            color: #666;
+        }
+
+        .action-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #0a0a0a;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            border-top: 1px solid #333;
+        }
+
+        .action-btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .btn-download {
+            background: linear-gradient(135deg, #d4a574 0%, #b8860b 100%);
+            color: #0a0a0a;
+        }
+
+        .btn-back {
+            background: #333;
+            color: white;
+        }
+
+        @media print {
+            body {
+                background: white;
+                color: #333;
+            }
+
+            .container {
+                padding: 0;
+            }
+
+            .header {
+                background: #f5f5f5;
+                border-color: #d4a574;
+            }
+
+            h1, .section-title {
+                color: #333;
+            }
+
+            .section {
+                background: #f9f9f9;
+                border-color: #ddd;
+            }
+
+            .tech-item, .feature-card, .progress-item {
+                background: #eee;
+            }
+
+            p, li, .tech-desc, .feature-desc {
+                color: #555;
+            }
+
+            .action-bar {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">🎸</div>
+            <h1>TOUR Manager</h1>
+            <p class="subtitle">Sistema de Gestão de Equipamentos e Logística para Eventos</p>
+            <span class="version">MVP v1.0 - Dezembro 2025</span>
+        </div>
+
+        <div class="section">
+            <div class="section-title"><span>📋</span> Visão Geral</div>
+            <p>O TOUR Manager é um sistema completo para empresas de áudio, iluminação e eventos gerenciarem seu inventário de equipamentos, tours, manutenção e operações financeiras.</p>
+            <p>Desenvolvido com foco em usabilidade mobile-first e visual cinematográfico premium, o sistema oferece controle total sobre equipamentos desde a aquisição até a logística de shows.</p>
+            
+            <h3>Público-Alvo</h3>
+            <ul>
+                <li>Empresas de locação de equipamentos de som e luz</li>
+                <li>Produtoras de eventos e shows</li>
+                <li>Técnicos de áudio e iluminação</li>
+                <li>Gestores de logística de tours</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <div class="section-title"><span>🛠️</span> Stack Tecnológica</div>
+            <div class="tech-stack">
+                <div class="tech-item">
+                    <div class="tech-name">Flask (Python)</div>
+                    <div class="tech-desc">Framework web backend</div>
+                </div>
+                <div class="tech-item">
+                    <div class="tech-name">SQLAlchemy</div>
+                    <div class="tech-desc">ORM para banco de dados</div>
+                </div>
+                <div class="tech-item">
+                    <div class="tech-name">SQLite</div>
+                    <div class="tech-desc">Banco de dados (dev)</div>
+                </div>
+                <div class="tech-item">
+                    <div class="tech-name">Jinja2</div>
+                    <div class="tech-desc">Templates HTML</div>
+                </div>
+                <div class="tech-item">
+                    <div class="tech-name">Flask-Login</div>
+                    <div class="tech-desc">Autenticação de usuários</div>
+                </div>
+                <div class="tech-item">
+                    <div class="tech-name">QR Code</div>
+                    <div class="tech-desc">Geração e leitura de QR</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title"><span>🎯</span> Módulos Principais</div>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🎒</div>
+                    <div class="feature-name">HARDCASE</div>
+                    <div class="feature-desc">Gestão completa de equipamentos com categorias, tipos, QR codes, fotos e histórico de manutenção.</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📋</div>
+                    <div class="feature-name">ORÇAMENTO</div>
+                    <div class="feature-desc">Criação de orçamentos simples ou detalhados, aprovação, geração de PDF e compartilhamento via WhatsApp.</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🎸</div>
+                    <div class="feature-name">TOUR</div>
+                    <div class="feature-desc">Gestão de tours e shows, alocação de equipamentos, checkpoints e rastreamento.</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💰</div>
+                    <div class="feature-name">FINANCEIRO</div>
+                    <div class="feature-desc">Módulo financeiro brasileiro com contratos, faturas, pagamentos PIX/Boleto e NFSe.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title"><span>✅</span> Funcionalidades Implementadas</div>
+            <div class="progress-section">
+                <div class="progress-item">
+                    <span class="progress-name">Sistema Multi-Tenant (isolamento por empresa)</span>
+                    <span class="status-badge status-done">Concluído</span>
+                </div>
+                <div class="progress-item">
+                    <span class="progress-name">Autenticação e Controle de Acesso (3 níveis)</span>
+                    <span class="status-badge status-done">Concluído</span>
+                </div>
+                <div class="progress-item">
+                    <span class="progress-name">CRUD Completo de Equipamentos</span>
+                    <span class="status-badge status-done">Concluído</span>
+                </div>
+                <div class="progress-item">
+                    <span class="progress-name">Geração e Scanner de QR Codes</span>
+                    <span class="status-badge status-done">Concluído</span>
+                </div>
+                <div class="progress-item">
+                    <span class="progress-name">Sistema de Manutenção</span>
+                    <span class="status-badge status-done">Concluído</span>
+                </div>
+                <div class="progress-item">
+                    <span class="progress-name">Kits de Equipamentos</span>
+                    <span class="status-badge status-done">Concluído</span>
+                </div>
+                <div class="progress-item">
+                    <span class="progress-name">Tours e Shows</span>
+                    <span class="status-badge status-done">Concluído</span>
+                </div>
+                <div class="progress-item">
+                    <span class="progress-name">Orçamentos com PDF</span>
+                    <span class="status-badge status-done">Concluído</span>
+                </div>
+                <div class="progress-item">
+                    <span class="progress-name">Design Dark Cinematográfico</span>
+                    <span class="status-badge status-done">Concluído</span>
+                </div>
+                <div class="progress-item">
+                    <span class="progress-name">Layout Mobile-First</span>
+                    <span class="status-badge status-done">Concluído</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title"><span>🔜</span> Próximas Etapas</div>
+            <ul class="pending">
+                <li>Integração com provedores de pagamento (Asaas, PagSeguro)</li>
+                <li>Integração com emissão de NFSe (Focus NFe, Enotas)</li>
+                <li>Implementação de NFC para leitura de equipamentos via celular</li>
+                <li>Implementação de RFID UHF para leitura em massa (portais)</li>
+                <li>Dashboard de relatórios e analytics</li>
+                <li>Contratos com templates personalizáveis</li>
+                <li>Calendário de agenda de eventos</li>
+                <li>Sistema de checkpoints com geolocalização</li>
+                <li>App mobile nativo (React Native / Flutter)</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <div class="section-title"><span>🗄️</span> Estrutura do Banco de Dados</div>
+            <table class="db-table">
+                <thead>
+                    <tr>
+                        <th>Tabela</th>
+                        <th>Descrição</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Company</td>
+                        <td>Empresas (multi-tenant)</td>
+                    </tr>
+                    <tr>
+                        <td>User</td>
+                        <td>Usuários com roles (admin, técnico, tour)</td>
+                    </tr>
+                    <tr>
+                        <td>Category</td>
+                        <td>Categorias de equipamentos (Som, Luz, etc.)</td>
+                    </tr>
+                    <tr>
+                        <td>EquipmentType</td>
+                        <td>Tipos de equipamento por categoria</td>
+                    </tr>
+                    <tr>
+                        <td>Equipment</td>
+                        <td>Equipamentos individuais com QR code</td>
+                    </tr>
+                    <tr>
+                        <td>Maintenance</td>
+                        <td>Histórico de manutenções</td>
+                    </tr>
+                    <tr>
+                        <td>Kit / KitRequirement</td>
+                        <td>Conjuntos pré-definidos de equipamentos</td>
+                    </tr>
+                    <tr>
+                        <td>Tour / Show</td>
+                        <td>Tours e shows agendados</td>
+                    </tr>
+                    <tr>
+                        <td>SeparationList / SeparationItem</td>
+                        <td>Orçamentos e itens</td>
+                    </tr>
+                    <tr>
+                        <td>Quote / Contract / Invoice</td>
+                        <td>Módulo financeiro</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <div class="section-title"><span>👥</span> Níveis de Acesso</div>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">👑</div>
+                    <div class="feature-name">Admin</div>
+                    <div class="feature-desc">Acesso total: equipamentos, financeiro, usuários, configurações e preços.</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔧</div>
+                    <div class="feature-name">Técnico Responsável</div>
+                    <div class="feature-desc">Equipamentos, separação e manutenção. Sem acesso a preços e financeiro.</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🎫</div>
+                    <div class="feature-name">Técnico Tour</div>
+                    <div class="feature-desc">Acesso temporário via QR Code com expiração. Apenas para tours específicas.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>TOUR Manager - Sistema de Gestão de Equipamentos</p>
+            <p>Desenvolvido em Flask + SQLAlchemy</p>
+            <p style="color: #d4a574; margin-top: 10px;">Dezembro 2025</p>
+        </div>
+    </div>
+
+    <div class="action-bar" id="actionBar">
+        <a href="{{ url_for('dashboard') }}" class="action-btn btn-back">Voltar</a>
+        <button class="action-btn btn-download" onclick="downloadPDF()">Baixar PDF</button>
+    </div>
+
+    <script>
+        function downloadPDF() {
+            document.getElementById('actionBar').style.display = 'none';
+            window.print();
+            setTimeout(() => {
+                document.getElementById('actionBar').style.display = 'flex';
+            }, 500);
+        }
+    </script>
+</body>
+</html>
