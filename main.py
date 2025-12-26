@@ -5,18 +5,38 @@ from extensions import db, login_manager, bcrypt
 import os
 
 def create_models():
-    """Importa todos os models na ordem correta"""
+    """Importa todos os models na ordem correta - ORDEM BASEADA EM DEPENDÊNCIAS"""
+
+    # NÍVEL 1 - Base (sem dependências externas)
     from models.company import Company
-    from models.user import User, TourAccess
     from models.category import Category
+
+    # NÍVEL 2 - Dependem só de Nível 1
+    from models.user import User, TourAccess
     from models.equipment_type import EquipmentType
+    from models.material_stock import MaterialStock, MaterialMovement
+
+    # NÍVEL 3 - Dependem de Nível 1 e 2
+    from models.equipment_model import EquipmentModel
+
+    # NÍVEL 4 - Dependem de níveis anteriores
     from models.equipment import Equipment
+    from models.tour import Tour, Show, TourRequirement, TourEquipment, EquipmentCheckpoint, EquipmentTransfer, EquipmentReplacement
+    from models.commercial import Lead, LeadInteraction, LeadReactivation
+    from models.rh import Employee, Freelancer, FreelancerAssignment, FreelancerReview, PayrollEntry
+
+    # NÍVEL 5 - Dependem de Equipment/Tour
     from models.maintenance import Maintenance
     from models.kit import Kit, KitRequirement
-    from models.tour import Tour, Show, TourRequirement, TourEquipment, EquipmentCheckpoint, EquipmentTransfer, EquipmentReplacement
     from models.separation_list import SeparationList, SeparationListItem
     from models.work_list import WorkList, WorkListItem
     from models.financial import Quote, QuoteItem, Contract, Invoice, Payment
+
+    # NÍVEL 6 - Dependem de Quote/Invoice/Payment
+    from models.financial_expanded import FinancialProvision, PaymentStrategy, CashFlowProjection, TaxCalculation, FinancialAlert
+
+    # NÍVEL 7 - Fabricação
+    from models.fabrication import FabricationTemplate, FabricationRecord
 
 def migrate_database():
     """Adiciona colunas que podem estar faltando sem quebrar"""
@@ -28,7 +48,7 @@ def migrate_database():
         'ALTER TABLE company ADD COLUMN email VARCHAR(120)',
         'ALTER TABLE company ADD COLUMN phone VARCHAR(20)',
         'ALTER TABLE company ADD COLUMN address TEXT',
-        # Company - novos campos de endereço
+        # Company - novos campos de endereco
         'ALTER TABLE company ADD COLUMN cellphone VARCHAR(20)',
         'ALTER TABLE company ADD COLUMN website VARCHAR(200)',
         'ALTER TABLE company ADD COLUMN inscricao_estadual VARCHAR(20)',
@@ -87,20 +107,20 @@ def regenerate_all_qr_codes():
         if not equipments:
             return
 
-        print(f'🔄 Regenerando {len(equipments)} QR Codes...')
+        print(f'Regenerando {len(equipments)} QR Codes...')
 
         for eq in equipments:
             try:
                 eq.generate_qr_code()
             except Exception as e:
-                print(f'❌ Erro em {eq.code}: {e}')
+                print(f'Erro em {eq.code}: {e}')
 
         db.session.commit()
-        print('✅ QR Codes regenerados!')
+        print('QR Codes regenerados!')
 
     except Exception as e:
         db.session.rollback()
-        print(f'❌ Erro ao regenerar QR Codes: {e}')
+        print(f'Erro ao regenerar QR Codes: {e}')
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -110,7 +130,7 @@ login_manager.init_app(app)
 bcrypt.init_app(app)
 
 login_manager.login_view = 'auth.login'
-login_manager.login_message = 'Faça login para acessar.'
+login_manager.login_message = 'Faca login para acessar.'
 
 os.makedirs('static/uploads', exist_ok=True)
 os.makedirs('static/uploads/logos', exist_ok=True)
@@ -166,12 +186,14 @@ def project_docs():
         return redirect(url_for('auth.login'))
     return render_template('docs/project_overview.html')
 
+# COMENTADO TEMPORARIAMENTE PARA RODAR MIGRATION
+# DESCOMENTAR DEPOIS DE RODAR migrate_all.py
 with app.app_context():
     create_models()
     db.create_all()
     migrate_database()
     regenerate_all_qr_codes()
-    print("✓ Sistema pronto!")
+    print("Sistema pronto!")
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

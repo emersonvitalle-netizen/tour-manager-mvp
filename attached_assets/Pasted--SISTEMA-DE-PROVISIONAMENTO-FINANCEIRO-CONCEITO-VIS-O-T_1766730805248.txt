@@ -1,0 +1,1760 @@
+
+
+SISTEMA DE PROVISIONAMENTO FINANCEIRO
+CONCEITO: VISÃO TEMPORAL COMPLETA
+3 ESTADOS DE TRANSAÇÕES
+1. PROVISIONADO (futuro agendado)
+* Ainda não venceu
+* Já está na agenda
+* Aparece nos relatórios futuros
+2. A CONFIRMAR (vencido/pendente)
+* Já venceu mas não foi pago
+* Precisa confirmação manual
+* Alerta vermelho
+3. CONFIRMADO (pago/realizado)
+* Pagamento confirmado com comprovante
+* Entra no fluxo de caixa real
+* Base para comparações
+
+EXEMPLO PRÁTICO: CONTA DE LUZ
+HISTÓRICO:
+✅ Mai/2025: R$ 820 (pago 08/06)
+✅ Jun/2025: R$ 850 (pago 10/07)
+⏳ Jul/2025: R$ 870 (vence 10/08) ← PROVISIONADO
+📅 Ago/2025: R$ 870 (vence 10/09) ← PROVISIONADO
+📅 Set/2025: R$ 870 (vence 10/10) ← PROVISIONADO
+
+TELAS DETALHADAS
+TELA 1: CADASTRO DE CONTA FIXA
+Nome da conta: Energia Elétrica
+Fornecedor: CEMIG
+Categoria: Contas Fixas > Energia
+
+VALORES:
+( ) Valor fixo: R$ ______
+(•) Valor médio (últimos 3 meses): R$ 850
+
+VENCIMENTO:
+Dia do mês: [10]
+[ ] Dias úteis (se cair fim de semana, antecipar)
+
+RECORRÊNCIA:
+(•) Mensal
+( ) Bimestral
+( ) Trimestral
+( ) Anual
+
+PROVISIONAMENTO:
+Provisionar próximos: [6] meses
+Atualizar valor: [x] Sempre que pagar (usa último valor)
+                [ ] Manter valor fixo
+
+NOTIFICAÇÕES:
+[x] 7 dias antes
+[x] 3 dias antes
+[x] No dia do vencimento
+[x] Se atrasar
+
+FORMA DE PAGAMENTO PREFERENCIAL:
+(•) PIX
+( ) Boleto
+( ) Débito automático
+( ) Transferência
+
+[SALVAR E PROVISIONAR]
+
+TELA 2: VISÃO CONSOLIDADA (NOVA)
+FILTROS:
+Período: [Este mês ▾] [Próximos 3 meses ▾] [Últimos 6 meses ▾] [Custom]
+Tipo: [Todas ▾] [Receitas] [Despesas]
+Status: [Todas ▾] [Provisionado] [A confirmar] [Confirmado]
+TIMELINE VISUAL:
+════════════════════════════════════════════════════
+           JUN    |    JUL    |    AGO    |    SET
+════════════════════════════════════════════════════
+
+RECEITAS
+────────
+✅ 15/06  R$ 8.500   Fatura #012 (CONFIRMADO)
+✅ 20/06  R$ 12.300  Fatura #011 (CONFIRMADO)
+⏳ 05/07  R$ 15.000  Fatura #013 (PROVISIONADO)
+📅 12/08  R$ 9.200   Orçamento #045 (PROVISIONADO - 70% prob)
+📅 20/09  R$ 18.000  Tour ABC (PROVISIONADO)
+
+DESPESAS
+────────
+✅ 08/06  R$ 820    Luz maio (CONFIRMADO)
+✅ 10/06  R$ 299    Internet (CONFIRMADO)
+⚠️ 25/06  R$ 18.500 Folha CLT (A CONFIRMAR - venceu!)
+⏳ 10/07  R$ 850    Luz junho (PROVISIONADO)
+⏳ 25/07  R$ 18.500 Folha CLT (PROVISIONADO)
+📅 10/08  R$ 850    Luz julho (PROVISIONADO)
+📅 10/09  R$ 850    Luz agosto (PROVISIONADO)
+CARDS RESUMO POR PERÍODO:
+┌─────────────────────────────────────────┐
+│  JUNHO/2025 (FECHADO)                   │
+├─────────────────────────────────────────┤
+│  Receitas:  R$ 58.000 ✅               │
+│  Despesas:  R$ 37.000 ✅               │
+│  Lucro:     R$ 21.000 (36%)             │
+└─────────────────────────────────────────┘
+
+┌─────────────────────────────────────────┐
+│  JULHO/2025 (EM ANDAMENTO)              │
+├─────────────────────────────────────────┤
+│  Receitas:  R$ 42.000                   │
+│    ✅ Confirmado:    R$ 15.000          │
+│    ⏳ Provisionado:  R$ 27.000          │
+│                                         │
+│  Despesas:  R$ 38.500                   │
+│    ✅ Confirmado:    R$ 8.200           │
+│    ⏳ Provisionado:  R$ 30.300          │
+│                                         │
+│  Lucro previsto: R$ 3.500 (8%)          │
+│  ⚠️ Margem baixa - revisar despesas     │
+└─────────────────────────────────────────┘
+
+┌─────────────────────────────────────────┐
+│  AGOSTO/2025 (PROVISIONADO)             │
+├─────────────────────────────────────────┤
+│  Receitas:  R$ 61.000 (estimado)        │
+│  Despesas:  R$ 39.200 (provisionado)    │
+│  Lucro previsto: R$ 21.800 (36%)        │
+└─────────────────────────────────────────┘
+
+TELA 3: COMPARATIVO TEMPORAL
+GRÁFICO: MÊS A MÊS (Last 12 months)
+        Jan  Fev  Mar  Abr  Mai  Jun  Jul* Ago* Set*
+Receita  45k  52k  48k  61k  55k  58k  42k  61k  55k
+Despesa  32k  35k  33k  38k  36k  37k  38k  39k  37k
+Lucro    13k  17k  15k  23k  19k  21k   4k  22k  18k
+
+* = Contém valores provisionados
+COMPARATIVO: SAME PERIOD LAST YEAR
+JUNHO 2024 vs JUNHO 2025:
+
+Receitas:    R$ 48.000 → R$ 58.000  (+20.8% 📈)
+Despesas:    R$ 31.000 → R$ 37.000  (+19.4% 📈)
+Lucro:       R$ 17.000 → R$ 21.000  (+23.5% 📈)
+
+Margem:      35.4% → 36.2%          (+0.8pp ✅)
+
+DESTAQUE:
+✅ Receita cresceu mais que despesa
+⚠️ Energia aumentou 15% vs ano passado
+GRÁFICO: SEMANA A SEMANA (Last 8 weeks)
+Semana     Receita   Despesa   Saldo
+20/05-26/05  12.5k    8.2k     +4.3k ✅
+27/05-02/06  14.8k    9.1k     +5.7k ✅
+03/06-09/06  13.2k    8.8k     +4.4k ✅
+10/06-16/06  15.1k   10.5k     +4.6k ✅
+17/06-23/06  12.9k    9.2k     +3.7k ✅
+24/06-30/06  10.2k   19.8k     -9.6k ⚠️ (Folha CLT)
+01/07-07/07   8.5k    7.1k     +1.4k
+08/07-14/07  11.2k*   8.9k*    +2.3k* (provisionado)
+
+* = Estimado com base em histórico
+
+TELA 4: AÇÃO - PAGAR CONTA
+Cenário 1: Conta Provisionada (antes de vencer)
+💡 ENERGIA ELÉTRICA - CEMIG
+Referência: Junho/2025
+Vencimento: 10/07/2025 (em 3 dias)
+Valor provisionado: R$ 850,00
+
+📋 CONFIRMAR VALOR REAL:
+Conta chegou? [Sim] [Não, manter provisão]
+
+Valor na conta: R$ [870,00]
+Diferença: +R$ 20,00 (+2.3%)
+Atualizar provisão futura? [x] Sim
+
+FORMA DE PAGAMENTO:
+(•) PIX - Gerar QR Code agora
+( ) Boleto - Informar código de barras
+( ) Débito automático - Apenas confirmar
+
+[PAGAR AGORA] [AGENDAR PARA O DIA]
+Após pagamento:
+✅ PAGAMENTO CONFIRMADO
+
+Comprovante: [📎 Anexar]
+Data efetiva: 07/07/2025
+Método: PIX
+
+Atualizado:
+- Fluxo de caixa (saída R$ 870)
+- Provisão Jul/Ago/Set ajustada para R$ 870
+- Próximo vencimento: 10/08/2025
+
+Cenário 2: Pagamento Antecipado
+💡 ENERGIA - Agosto/2025
+Status: PROVISIONADO
+Vencimento: 10/08/2025 (33 dias)
+
+Deseja pagar antecipado?
+[x] Sim, tenho desconto ou quero provisionar
+( ) Não
+
+Valor: R$ 850,00
+Desconto: R$ [20,00] (se houver)
+Total a pagar: R$ 830,00
+
+[CONFIRMAR PAGAMENTO ANTECIPADO]
+
+✅ Vantagem: -R$ 20 + libera provisão
+
+RELATÓRIOS AUTOMÁTICOS
+EMAIL SEMANAL (Segunda 9h)
+📊 Resumo Semanal - 08/07/2025
+
+ESTA SEMANA (01-07/07):
+Receitas: R$ 15.000 ✅
+Despesas: R$ 9.200
+Saldo: +R$ 5.800
+
+PRÓXIMA SEMANA (08-14/07):
+⏳ A receber: R$ 12.000
+⚠️ A pagar: R$ 19.350
+  - Folha CLT (25/07): R$ 18.500 ← MAIOR DESPESA
+  
+Saldo previsto: -R$ 7.350
+
+💡 AÇÃO NECESSÁRIA:
+Garantir entrada de R$ 10k até dia 25
+DASHBOARD: OVERVIEW ANUAL
+2025 - ACUMULADO (Jan-Jun)
+
+REALIZADO:
+Receita total: R$ 319.000
+Despesa total: R$ 205.000
+Lucro: R$ 114.000 (35.7% margem)
+
+PROVISIONADO (Jul-Dez):
+Receita prevista: R$ 342.000
+Despesa prevista: R$ 228.000
+Lucro previsto: R$ 114.000 (33.3% margem)
+
+PROJEÇÃO ANO TODO:
+Receita: R$ 661.000
+Despesa: R$ 433.000
+Lucro: R$ 228.000 (34.5% margem)
+
+vs META 2025:
+Receita: R$ 720.000 (92% da meta) ⚠️
+Lucro: R$ 252.000 (90% da meta) ⚠️
+
+AUTOMAÇÕES INTELIGENTES
+1. AJUSTE AUTOMÁTICO DE PROVISÃO:
+# Quando paga conta de luz por R$ 870 (provisão era R$ 850):
+- Atualiza próximas 6 provisões para R$ 870
+- Notifica: "Provisão de energia ajustada +2.3%"
+2. DETECÇÃO DE ANOMALIA:
+# Conta de luz = R$ 1.200 (média = R$ 850):
+⚠️ ALERTA: Energia 41% acima da média
+Confirme o valor antes de pagar
+3. SUGESTÃO DE PAGAMENTO:
+# Saldo em conta = R$ 15.000
+# Contas a vencer próximos 7 dias = R$ 4.650
+
+💡 Você pode pagar 3 contas antecipadas
+e economizar R$ 45 em juros/multas
+[VER SUGESTÕES]
+
+
+
+CADASTRO DE CONTAS FIXAS - FUNCIONALIDADE
+1. CADASTRO INICIAL (tela nova)
+Categoria: [Água] [Luz] [Internet] [Aluguel] [Telefone] +Nova
+
+Nome: "Água - SABESP"
+Fornecedor: SABESP
+Valor médio: R$ 150,00
+Dia vencimento: 10
+Recorrência: Mensal
+Forma pagamento preferencial: [PIX] [Boleto] [Débito]
+Notificar: [ ] 3 dias antes [x] 1 dia antes
+2. AUTOMAÇÃO MENSAL
+# Todo dia 1º do mês:
+- Gera automaticamente as contas fixas do mês
+- Status: "A vencer"
+- Cria notificação
+3. TELA "PAGAR CONTA"
+Conta: Água - SABESP
+Vencimento: 10/07/2025
+Valor: R$ 150,00
+
+[Confirmar valor] ou [Alterar valor desta vez]
+
+Forma de pagamento:
+( ) PIX - gera QR Code
+( ) Boleto - upload do código de barras
+( ) Débito automático - apenas marcar como pago
+( ) Dinheiro
+
+[PAGAR AGORA] → Muda status para "Pago"
+                 Registra data pagamento
+                 Upload de comprovante (opcional)
+
+RELATÓRIOS DE CRESCIMENTO
+DASHBOARD FINANCEIRO EXPANDIDO
+Gráfico 1: EVOLUÇÃO RECEITAS vs DESPESAS (12 meses)
+Jan  Fev  Mar  Abr  Mai  Jun  Jul  Ago  Set  Out  Nov  Dez
+█    █    █    █    █    █
+Receitas: Linha verde
+Despesas: Linha vermelha
+Lucro: Área preenchida (verde ou vermelho)
+Gráfico 2: EVOLUÇÃO POR CATEGORIA
+Água:      [█████████░░] +5% vs ano anterior
+Luz:       [███████████] +12% 
+Internet:  [█████░░░░░░] -2%
+Aluguel:   [█████████░░] 0%
+Gráfico 3: COMPARATIVO ANO A ANO
+           2024    2025    Variação
+Água       R$1.800 R$1.890  +5%
+Luz        R$9.600 R$10.752 +12%
+Internet   R$3.588 R$3.516  -2%
+Alertas Inteligentes:
+⚠️ Conta de luz aumentou 12% este ano
+💡 Sugestão: Revisar contrato ou fornecedor
+
+✅ Internet diminuiu 2%
+📊 Economia acumulada: R$ 72 no ano
+
+FLUXO COMPLETO
+ENTRADA DE DINHEIRO (Receitas)
+1. Orçamento aprovado → gera Fatura
+2. Cliente paga → registra em Payment
+3. Emite NFSe
+4. Entra no fluxo de caixa
+SAÍDA DE DINHEIRO (Despesas)
+A) CONTAS FIXAS
+1. Sistema gera automaticamente dia 1º
+2. Notifica antes do vencimento
+3. Você paga pelo app (PIX/Boleto)
+4. Comprovante anexado
+5. Entra no fluxo de caixa
+B) FOLHA CLT
+1. Sistema gera folha dia 25
+2. Calcula impostos
+3. Você aprova
+4. Paga funcionários
+5. Entra no fluxo de caixa
+C) FREELANCERS
+1. Você lança pagamento
+2. Gera recibo
+3. Paga (PIX)
+4. Entra no fluxo de caixa
+D) MANUTENÇÃO
+1. Registra custo
+2. Upload nota fiscal
+3. Entra no fluxo de caixa
+
+CONSOLIDAÇÃO TOTAL
+RELATÓRIO: ENTRADAS vs SAÍDAS
+PERÍODO: Janeiro a Junho 2025
+
+ENTRADAS (R$ 348.000)
+├─ Locação de equipamentos: R$ 312.000 (90%)
+├─ Venda de serviços: R$ 28.000 (8%)
+└─ Outros: R$ 8.000 (2%)
+
+SAÍDAS (R$ 222.000)
+├─ Folha CLT: R$ 111.000 (50%)
+├─ Contas Fixas: R$ 55.200 (25%)
+│  ├─ Aluguel: R$ 21.000
+│  ├─ Energia: R$ 5.100
+│  ├─ Internet: R$ 1.800
+│  └─ Outras: R$ 27.300
+├─ Freelancers: R$ 33.300 (15%)
+├─ Manutenção: R$ 16.600 (7.5%)
+└─ Outras: R$ 5.900 (2.5%)
+
+LUCRO LÍQUIDO: R$ 126.000 (36% margem)
+
+PREVISÃO FUTURA (novo)
+Com base nos últimos 6 meses:
+
+PRÓXIMO MÊS (Julho/2025):
+Receita prevista: R$ 59.000 ± 8%
+Despesa prevista: R$ 38.000 ± 5%
+Lucro previsto: R$ 21.000
+
+ATENÇÃO:
+⚠️ Conta de luz vencendo em 5 dias (R$ 850)
+⚠️ Folha CLT a ser aprovada (R$ 18.500)
+
+ESPECTADOR
+EXCELENTE! Vou mapear TODO o sistema contábil/gerencial antes de programar.
+
+SISTEMA CONTÁBIL-GERENCIAL COMPLETO
+1. ESTRUTURA DE DADOS (MODELS)
+📊 FINANCEIRO - RECEITAS
+Invoice (Fatura) - já existe ✅
+* Orçamento aprovado → Invoice automática
+* PIX gerado automaticamente
+* NFSe emitida (integration)
+Payment (Recebimento) - já existe ✅
+* Registro de pagamentos
+* Método: PIX, Boleto, Cartão, Dinheiro
+* Comprovante (upload)
+NOVO: Lead (Funil de Vendas)
+class Lead:
+    - cliente_nome, telefone, email
+    - origem: 'site', 'indicacao', 'instagram', 'whatsapp'
+    - status: 'novo' → 'contato' → 'proposta' → 'negociacao' → 'ganho/perdido'
+    - temperatura: 'frio', 'morno', 'quente'
+    - valor_estimado
+    - responsavel_id (vendedor/admin)
+    - data_criacao, data_ultima_atualizacao
+    - motivo_perda (se perdido)
+    - orcamento_id (se converteu)
+
+💸 FINANCEIRO - DESPESAS
+NOVO: Employee (Funcionário)
+class Employee:
+    - tipo: 'clt' | 'freelancer'
+    - nome, cpf, rg
+    - cargo
+    - telefone, email
+    - data_nascimento
+    - data_admissao (CLT)
+    - data_demissao (opcional)
+    - salario_base (CLT)
+    - banco, agencia, conta, pix_key
+    - foto (opcional)
+    - is_active
+    - observacoes
+NOVO: Payroll (Folha CLT - mensal)
+class Payroll:
+    - employee_id
+    - mes, ano
+    - salario_bruto
+    - inss_percentual, inss_valor (auto-calc)
+    - fgts_valor (8% auto-calc)
+    - irrf_percentual, irrf_valor (auto-calc)
+    - vale_transporte, vale_refeicao
+    - descontos_outros
+    - salario_liquido (auto-calc)
+    - status: 'rascunho' → 'aprovado' → 'pago'
+    - data_pagamento
+    - comprovante_url
+NOVO: FreelancerPayment (Pagamento PJ/Autônomo)
+class FreelancerPayment:
+    - employee_id (tipo=freelancer)
+    - descricao_servico
+    - valor_bruto
+    - retencao_ir (opcional, %)
+    - valor_liquido
+    - data_servico
+    - data_pagamento
+    - forma_pagamento: 'pix', 'transferencia', 'dinheiro'
+    - recibo_gerado (True/False)
+    - recibo_url (PDF auto-gerado)
+    - status: 'pendente' → 'pago'
+NOVO: ExpenseCategory (Categorias)
+class ExpenseCategory:
+    - nome: 'Água', 'Luz', 'Internet', 'Aluguel', 'Manutenção', 'Combustível'
+    - tipo: 'fixa' | 'variavel'
+    - icone (emoji)
+    - cor (hex)
+NOVO: AccountPayable (Contas a Pagar)
+class AccountPayable:
+    - category_id
+    - descricao
+    - valor
+    - data_vencimento
+    - data_pagamento (quando pago)
+    - recorrente: True/False
+    - frequencia: 'mensal', 'bimestral', 'anual' (se recorrente)
+    - forma_pagamento
+    - comprovante_url
+    - status: 'pendente' → 'pago' → 'atrasado'
+    - observacoes
+
+🔧 MANUTENÇÃO (expansão)
+Maintenance - já existe, adicionar:
+# Adicionar campos:
+    - custo_pecas
+    - custo_mao_obra
+    - custo_total (auto-calc)
+    - tempo_parado_dias
+    - tecnico_responsavel_id
+    - prioridade: 'baixa', 'media', 'alta', 'urgente'
+    - recorrencia (True se problema repetido)
+NOVO: MaintenanceSchedule (Manutenção Preventiva)
+class MaintenanceSchedule:
+    - equipment_id
+    - tipo: 'preventiva' | 'calibracao'
+    - frequencia_dias (ex: 90, 180, 365)
+    - ultima_manutencao
+    - proxima_manutencao (auto-calc)
+    - status: 'agendado' → 'atrasado' → 'concluido'
+
+2. DASHBOARDS E GRÁFICOS
+📊 DASHBOARD FINANCEIRO (Principal)
+KPIs (Cards no topo):
+┌─────────────────┬─────────────────┬─────────────────┬─────────────────┐
+│ 💰 Faturamento  │ 📉 Despesas     │ 📊 Lucro Líq.   │ 🎯 Margem       │
+│    Mês Atual    │   Mês Atual     │   Mês Atual     │   (%)           │
+│   R$ 50.000     │   R$ 32.000     │   R$ 18.000     │   36%           │
+└─────────────────┴─────────────────┴─────────────────┴─────────────────┘
+Gráfico 1: FLUXO DE CAIXA (12 meses)
+* Linha Verde: Receitas
+* Linha Vermelha: Despesas
+* Área preenchida: Lucro/Prejuízo
+* Eixo X: Meses
+* Eixo Y: Valores R$
+Gráfico 2: RECEITAS POR TIPO (Pizza)
+* Fatia 1: Locação de equipamentos (%)
+* Fatia 2: Venda de serviços (%)
+* Fatia 3: Outros (%)
+Gráfico 3: DESPESAS POR CATEGORIA (Pizza)
+* Folha de pagamento (%)
+* Contas fixas (%)
+* Manutenção (%)
+* Freelancers (%)
+* Outros (%)
+Gráfico 4: ORÇAMENTOS - FUNIL (Barras horizontais)
+Enviados      ████████████████████ 100%
+Negociação    ████████████░░░░░░░░  60%
+Aprovados     ████████░░░░░░░░░░░░  40%
+Gráfico 5: CONTAS A VENCER (Timeline)
+* Próximos 7 dias (vermelho)
+* Próximos 15 dias (amarelo)
+* Próximos 30 dias (verde)
+
+👔 DASHBOARD RH/PESSOAS
+KPIs:
+┌─────────────────┬─────────────────┬─────────────────┐
+│ 👥 Funcionários │ 🎯 Freelancers  │ 💵 Folha Total  │
+│       12        │        8        │   R$ 45.000     │
+└─────────────────┴─────────────────┴─────────────────┘
+Gráfico 1: RANKING DE FUNCIONÁRIOS (Barras)
+* Métrica 1: Equipamentos gerenciados
+* Métrica 2: Tours participadas
+* Métrica 3: Tempo de casa
+* Métrica 4: Performance (baseado em checklists ok)
+Gráfico 2: DISTRIBUIÇÃO SALARIAL (Histograma)
+* Faixas: até 2k, 2-4k, 4-6k, 6-10k, 10k+
+Gráfico 3: CUSTO POR DEPARTAMENTO (Pizza)
+* Técnicos
+* Logística
+* Administrativo
+* Freelancers
+Tabela: TOP FREELANCERS (últimos 3 meses)
+Nome	Jobs	Total Pago	Média
+João	12	R$ 6.000	R$ 500
+🎯 DASHBOARD COMERCIAL/LEADS
+KPIs:
+┌─────────────────┬─────────────────┬─────────────────┬─────────────────┐
+│ 🔥 Leads Ativos │ 📈 Taxa Conv.   │ 💰 Ticket Médio │ ⏱️ Tempo Médio  │
+│       24        │      42%        │   R$ 8.500      │    5 dias       │
+└─────────────────┴─────────────────┴─────────────────┴─────────────────┘
+Gráfico 1: FUNIL DE VENDAS (Funil)
+Leads Novos          ████████████████████████████ 150
+Primeiro Contato     ████████████████████░░░░░░░░ 100
+Orçamento Enviado    ████████████████░░░░░░░░░░░░  80
+Em Negociação        ████████████░░░░░░░░░░░░░░░░  60
+Fechados             ████████░░░░░░░░░░░░░░░░░░░░  40
+Gráfico 2: LEADS POR ORIGEM (Pizza)
+* Instagram (%)
+* Indicação (%)
+* Site (%)
+* WhatsApp (%)
+Gráfico 3: MOTIVOS DE PERDA (Barras)
+* Preço alto
+* Prazo
+* Concorrência
+* Não respondeu
+* Outros
+Gráfico 4: RANKING DE VENDEDORES (Barras)
+* Número de leads convertidos
+* Valor total fechado
+* Taxa de conversão
+Gráfico 5: TEMPERATURA DOS LEADS (Gauge/Termômetro)
+* Frios: 🔵 (%)
+* Mornos: 🟡 (%)
+* Quentes: 🔴 (%)
+
+🔧 DASHBOARD MANUTENÇÃO
+KPIs:
+┌─────────────────┬─────────────────┬─────────────────┬─────────────────┐
+│ 🛠️ Em Manutenção│ ⚠️ Atrasadas    │ 💰 Custo Mês    │ ⏱️ Tempo Médio  │
+│       8         │        3        │   R$ 3.200      │    4 dias       │
+└─────────────────┴─────────────────┴─────────────────┴─────────────────┘
+Gráfico 1: EQUIPAMENTOS MAIS PROBLEMÁTICOS (Barras)
+* Ranking por número de manutenções
+* Ranking por custo total
+* Ranking por tempo parado
+Gráfico 2: TIPOS DE PROBLEMA (Pizza)
+* Mecânico (%)
+* Elétrico (%)
+* Desgaste natural (%)
+* Outros (%)
+Gráfico 3: CUSTO DE MANUTENÇÃO (Linha - 12 meses)
+* Manutenção preventiva
+* Manutenção corretiva
+* Total
+Gráfico 4: DISPONIBILIDADE DE EQUIPAMENTOS (%)
+Categoria Som:      ████████████████░░░░ 85%
+Categoria Luz:      ██████████████████░░ 92%
+Categoria Material: ████████████░░░░░░░░ 67%
+Gráfico 5: TEMPO MÉDIO DE REPARO (Barras)
+* Por categoria
+* Por tipo de problema
+Alerta: MANUTENÇÃO PREVENTIVA ATRASADA
+* Lista equipamentos com preventiva vencida
+
+📦 DASHBOARD OPERACIONAL/HARDCASE
+KPIs:
+┌─────────────────┬─────────────────┬─────────────────┬─────────────────┐
+│ 📦 Total Equip. │ ✅ Disponíveis  │ 🚚 Em Tour      │ 🔧 Manutenção   │
+│      342        │      289        │       45        │        8        │
+└─────────────────┴─────────────────┴─────────────────┴─────────────────┘
+Gráfico 1: TAXA DE UTILIZAÇÃO (Gauge)
+* % equipamentos em uso vs estoque
+Gráfico 2: EQUIPAMENTOS POR CATEGORIA (Pizza)
+Gráfico 3: HISTÓRICO DE LOCAÇÕES (Linha - 12 meses)
+* Quantidade de equipamentos locados/mês
+Gráfico 4: VALOR DO PATRIMÔNIO (Total)
+* Por categoria
+* Depreciação estimada
+
+3. RELATÓRIOS AUTOMATIZADOS
+RELATÓRIOS FINANCEIROS
+📄 DRE (Demonstração Resultado Exercício)
+* Receitas
+* (-) Despesas operacionais
+* (-) Impostos
+* (=) Lucro líquido
+* Período: mensal/trimestral/anual
+📄 Fluxo de Caixa Realizado
+* Entradas
+* Saídas
+* Saldo período
+📄 Contas a Pagar/Receber
+* Vencimentos próximos
+* Atrasados
+* Quitados
+
+RELATÓRIOS COMERCIAIS
+📄 Relatório de Vendas
+* Orçamentos enviados
+* Taxa de conversão
+* Ticket médio
+* Por período/vendedor
+📄 Análise de Leads
+* Origem
+* Taxa conversão por canal
+* Tempo médio de fechamento
+
+RELATÓRIOS OPERACIONAIS
+📄 Relatório de Manutenção
+* Equipamentos mais problemáticos
+* Custos
+* Tempo de parada
+📄 Relatório de Utilização
+* Taxa de ocupação
+* Equipamentos ociosos
+* ROI por equipamento
+
+4. AUTOMAÇÕES INTELIGENTES
+FINANCEIRO
+✅ Contas fixas criam-se automaticamente todo mês ✅ Alerta 3 dias antes vencimento ✅ Folha CLT auto-calcula impostos ✅ Orçamento aprovado → Invoice + PIX
+COMERCIAL
+✅ Lead sem ação há 3 dias → Alerta ✅ Lead quente há 7 dias → Notificação urgente ✅ Email automático pós-orçamento enviado
+MANUTENÇÃO
+✅ Manutenção preventiva vencida → Alerta ✅ Equipamento com 3+ manutenções/ano → Flag "crítico" ✅ Custo manutenção > 50% valor equipamento → Flag "substituir"
+RH
+✅ Aniversário funcionário → Notificação ✅ Vencimento contrato experiência → Alerta ✅ Folha não aprovada dia 20 → Alerta
+
+5. NOTIFICAÇÕES/ALERTAS
+🔴 CRÍTICOS (vermelho)
+* Conta vencida não paga
+* Equipamento parado há 15+ dias
+* Lead quente sem ação há 5+ dias
+🟡 ATENÇÃO (amarelo)
+* Vencimento em 3 dias
+* Manutenção preventiva atrasada
+* Lead sem followup há 3 dias
+🟢 INFO (verde)
+* Pagamento recebido
+* Orçamento aprovado
+* Manutenção concluída
+
+SISTEMA INTELIGENTE - ASSISTENTE FINANCEIRO/COMERCIAL
+MÓDULO 1: ASSISTENTE DE PAGAMENTOS
+TELA: ESTRATÉGIA DE PAGAMENTOS
+🤖 ASSISTENTE INTELIGENTE DE PAGAMENTOS
+
+Analisando seu fluxo de caixa...
+
+┌─────────────────────────────────────────┐
+│  SITUAÇÃO ATUAL                         │
+├─────────────────────────────────────────┤
+│  Saldo disponível: R$ 18.500           │
+│  Entradas próximos 7 dias: R$ 12.000   │
+│  Saídas próximos 7 dias: R$ 15.300     │
+│                                         │
+│  Projeção dia 14/07: R$ 15.200 ✅      │
+└─────────────────────────────────────────┘
+
+💡 RECOMENDAÇÕES INTELIGENTES:
+
+┌─────────────────────────────────────────┐
+│  🎯 ESTRATÉGIA ÓTIMA                    │
+├─────────────────────────────────────────┤
+│  1. PAGAR AGORA (economiza R$ 85):     │
+│     ✅ Energia (venc 10/07) - R$ 850   │
+│        Desconto 2% pgto antecipado      │
+│        Economia: R$ 17                  │
+│                                         │
+│     ✅ Internet (venc 12/07) - R$ 299  │
+│        Desconto R$ 15 se pagar hoje    │
+│        Economia: R$ 15                  │
+│                                         │
+│  2. AGENDAR (dia 24/07):               │
+│     ⏰ Folha CLT - R$ 18.500           │
+│        Aguardar entrada Fatura #013     │
+│        (prevista 20/07 - R$ 15.000)    │
+│                                         │
+│  3. NEGOCIAR PRAZO:                    │
+│     🔄 Aluguel galpão - R$ 3.500       │
+│        Vencimento: 05/07               │
+│        Sugestão: Pedir 10 dias prazo   │
+│        Motivo: Aguardar recebimento    │
+│              de R$ 25k dia 15/07       │
+│                                         │
+│  ECONOMIA TOTAL: R$ 85                 │
+│  RISCO: BAIXO ✅                       │
+└─────────────────────────────────────────┘
+
+┌─────────────────────────────────────────┐
+│  ⚠️ ESTRATÉGIA ARRISCADA (não recom.)  │
+├─────────────────────────────────────────┤
+│  Pagar todas agora: R$ 15.300          │
+│  Saldo restante: R$ 3.200              │
+│  Risco: ALTO se entrada atrasar        │
+└─────────────────────────────────────────┘
+
+[APLICAR ESTRATÉGIA ÓTIMA] [CUSTOMIZAR]
+
+TELA: FLUXO PREDITIVO (15 DIAS)
+📊 PREVISÃO DE FLUXO - Próximos 15 dias
+
+        Hoje  07  08  09  10  11  12  13  14  15  16  17  18  19  20  21
+Saldo   18.5k ────────────────────────────────────────────────────────▶
+                ↓        ↓   ↓       ↓                   ↑           ↑
+               -0.8    -0.3 -0.8   -3.5                +15k        +12k
+
+TIMELINE DETALHADA:
+
+07/07 (HOJ)  Saldo inicial: R$ 18.500
+08/07        -R$ 850  Energia (SUGESTÃO: pagar hoje)
+             Saldo: R$ 17.650 ✅
+
+10/07        -R$ 299  Internet
+             Saldo: R$ 17.351 ✅
+
+12/07        -R$ 850  Manutenção preventiva
+             Saldo: R$ 16.501 ✅
+
+15/07        -R$ 3.500  Aluguel (RISCO: saldo baixo!)
+             Saldo: R$ 13.001 ⚠️
+
+20/07        +R$ 15.000  Fatura #013 (CONFIRMADO 90%)
+             Saldo: R$ 28.001 ✅
+
+22/07        +R$ 12.300  Fatura #014 (PROVÁVEL 70%)
+             Saldo: R$ 40.301 ✅
+
+🤖 ANÁLISE:
+- Zona de risco: 15-19/07 (saldo < R$ 15k)
+- Solução: Negociar aluguel para dia 22/07
+- Ou: Acelerar recebimento Fatura #013
+
+MÓDULO 2: ASSISTENTE COMERCIAL
+TELA: ORÇAMENTOS INTELIGENTES
+🎯 ASSISTENTE DE FECHAMENTO DE VENDAS
+
+┌─────────────────────────────────────────┐
+│  ORÇAMENTOS PENDENTES (5)               │
+└─────────────────────────────────────────┘
+
+╔═════════════════════════════════════════╗
+║  🔥 ALTA PRIORIDADE - AÇÃO IMEDIATA     ║
+╚═════════════════════════════════════════╝
+
+📋 Orçamento #045 - Festival Rock 2025
+Cliente: Produtora ABC
+Valor: R$ 35.000
+Status: PENDENTE (enviado há 8 dias)
+Data evento: 15/08/2025 (39 dias)
+Última interação: 05/07 (WhatsApp visualizado)
+
+🤖 ANÁLISE INTELIGENTE:
+├─ Temperatura: 🟡 MORNA (estava quente)
+├─ Probabilidade fechamento: 65% → 45% ⚠️
+├─ Motivo provável: Preço alto
+└─ Ação sugerida: CONTATO URGENTE
+
+💡 ESTRATÉGIAS RECOMENDADAS:
+
+1. 💰 DESCONTO PROGRESSIVO
+   ┌──────────────────────────────┐
+   │ Valor original: R$ 35.000    │
+   │ Desconto 5%: R$ 33.250       │
+   │                              │
+   │ 📊 Análise de viabilidade:   │
+   │ Margem atual: 42%            │
+   │ Com desconto: 37% ✅         │
+   │ Ainda acima da meta (35%)    │
+   │                              │
+   │ 🎯 Pitch sugerido:           │
+   │ "Revisamos os custos e       │
+   │  conseguimos oferecer 5%     │
+   │  de desconto se fecharmos    │
+   │  esta semana"                │
+   └──────────────────────────────┘
+   [ENVIAR PROPOSTA]
+
+2. 🔄 EQUIPAMENTOS ALTERNATIVOS
+   ┌──────────────────────────────┐
+   │ Análise de substituição:     │
+   │                              │
+   │ ESTAVA NO ORÇAMENTO:         │
+   │ 4x Moving Head Martin (R$ 3.2k/dia) │
+   │ Status: LOCADOS (outro evento)│
+   │                              │
+   │ ALTERNATIVA DISPONÍVEL:      │
+   │ 4x Moving Head Showtec (R$ 2.4k/dia)│
+   │ Status: DISPONÍVEL ✅        │
+   │ Diferença: 80% da potência   │
+   │ Economia: R$ 800/dia         │
+   │                              │
+   │ 🎯 Pitch:                    │
+   │ "Temos equipamento similar   │
+   │  disponível por R$ 33.000"   │
+   └──────────────────────────────┘
+   [GERAR ORÇAMENTO REVISADO]
+
+3. 🤝 SUBLOCAÇÃO PARCIAL
+   ┌──────────────────────────────┐
+   │ Análise:                     │
+   │ - Seus equipamentos: R$ 28k  │
+   │ - Faltam: Mesa X32 + 8 PAR LED│
+   │                              │
+   │ Parceiro disponível:         │
+   │ SomLuz Locações              │
+   │ - Mesa X32: R$ 1.2k/dia      │
+   │ - 8x PAR LED: R$ 0.8k/dia    │
+   │ Total sublocação: R$ 2k      │
+   │                              │
+   │ Seu custo: R$ 30k            │
+   │ Margem: 40% ✅              │
+   │                              │
+   │ [ACEITAR COM SUBLOCAÇÃO]    │
+   └──────────────────────────────┘
+
+4. ⏰ URGÊNCIA TEMPORAL
+   ┌──────────────────────────────┐
+   │ 📅 Evento em 39 dias         │
+   │                              │
+   │ Regra do mercado:            │
+   │ Eventos < 45 dias = urgente  │
+   │                              │
+   │ 🎯 Script sugerido:          │
+   │ "O evento está próximo e     │
+   │  nossa agenda está se        │
+   │  fechando. Podemos garantir  │
+   │  os equipamentos se          │
+   │  fecharmos até sexta"        │
+   │                              │
+   │ [ENVIAR MENSAGEM URGÊNCIA]   │
+   └──────────────────────────────┘
+
+[EXECUTAR ESTRATÉGIA 1] [COMBINAR 1+4]
+
+TELA: ORÇAMENTO RECUSADO - REATIVAÇÃO
+❌ Orçamento #038 - Show Corporativo
+Status: RECUSADO (há 12 dias)
+Motivo: "Preço alto"
+Data evento: 25/08/2025 (49 dias)
+
+🤖 OPORTUNIDADE DE REATIVAÇÃO!
+
+┌─────────────────────────────────────────┐
+│  SINAIS POSITIVOS:                      │
+├─────────────────────────────────────────┤
+│  ✅ Evento ainda não aconteceu          │
+│  ✅ Cliente NÃO fechou com concorrente  │
+│     (checagem: Instagram sem posts)     │
+│  ✅ Data ainda tem 49 dias              │
+│  ✅ Seus equipamentos DISPONÍVEIS       │
+└─────────────────────────────────────────┘
+
+💡 ESTRATÉGIAS DE RECONQUISTA:
+
+1. 💰 PROPOSTA ECONÔMICA
+   ┌──────────────────────────────┐
+   │ Orçamento original: R$ 18.000│
+   │                              │
+   │ NOVA PROPOSTA:               │
+   │ Pacote essencial: R$ 14.500  │
+   │ (-19% equipamentos)          │
+   │                              │
+   │ Removido (não essencial):    │
+   │ - 4 Moving Heads             │
+   │ - 2 Caixas Sub graves        │
+   │                              │
+   │ Mantido (core):              │
+   │ - Mesa de som ✅            │
+   │ - PA system completo ✅     │
+   │ - Iluminação básica ✅      │
+   │                              │
+   │ Margem: 32% ✅              │
+   └──────────────────────────────┘
+   [ENVIAR PROPOSTA ECONÔMICA]
+
+2. 🎁 COMBO COM VALOR AGREGADO
+   ┌──────────────────────────────┐
+   │ Mesmo valor: R$ 18.000       │
+   │                              │
+   │ INCLUI GRÁTIS:               │
+   │ + Técnico durante evento     │
+   │   (valor: R$ 800)            │
+   │ + Seguro equipamentos        │
+   │   (valor: R$ 400)            │
+   │                              │
+   │ Valor percebido: R$ 19.200   │
+   │ Seu custo extra: R$ 200      │
+   │                              │
+   │ 🎯 Pitch:                    │
+   │ "Incluímos técnico e seguro  │
+   │  sem custo adicional"        │
+   └──────────────────────────────┘
+   [ENVIAR COMBO PREMIUM]
+
+3. 🔄 JANELA DE OPORTUNIDADE
+   ┌──────────────────────────────┐
+   │ ANÁLISE DE AGENDA:           │
+   │                              │
+   │ Fim de semana 23-25/08:      │
+   │ Você tem: ZERO eventos ⚠️   │
+   │                              │
+   │ Opções:                      │
+   │ A) Aceitar com margem menor  │
+   │    Margem 25% = R$ 15.750    │
+   │                              │
+   │ B) Manter equipamento parado │
+   │    Receita: R$ 0             │
+   │                              │
+   │ 💡 Recomendação:             │
+   │ Oferecer R$ 15.750           │
+   │ Melhor ter 25% que 0%        │
+   └──────────────────────────────┘
+   [ACEITAR COM MARGEM REDUZIDA]
+
+MÓDULO 3: DASHBOARD ESTRATÉGICO
+TELA: OVERVIEW INTELIGENTE
+🧠 VISÃO ESTRATÉGICA - Semana 08-14/07
+
+┌─────────────────────────────────────────┐
+│  🎯 METAS vs REALIZADO                  │
+├─────────────────────────────────────────┤
+│  Receita meta semana: R$ 15.000        │
+│  Receita confirmada: R$ 8.500 (57%)    │
+│  GAP: R$ 6.500 ⚠️                      │
+│                                         │
+│  🤖 AÇÃO URGENTE:                       │
+│  Fechar 1 dos 3 orçamentos quentes     │
+│  para bater meta da semana             │
+└─────────────────────────────────────────┘
+
+┌─────────────────────────────────────────┐
+│  💰 SAÚDE FINANCEIRA                    │
+├─────────────────────────────────────────┤
+│  Score: 8.2/10 ✅                       │
+│                                         │
+│  ✅ Fluxo de caixa positivo             │
+│  ✅ Margem acima da meta                │
+│  ⚠️ Contas a pagar próx. 7 dias: Alto  │
+│                                         │
+│  Tendência: ESTÁVEL ➡️                 │
+└─────────────────────────────────────────┘
+
+┌─────────────────────────────────────────┐
+│  🎪 UTILIZAÇÃO DE EQUIPAMENTOS          │
+├─────────────────────────────────────────┤
+│  Taxa esta semana: 45%                 │
+│  OPORTUNIDADE: 55% equipamentos parados│
+│                                         │
+│  💡 SUGESTÕES:                          │
+│  1. Oferecer desconto em pacotes       │
+│     para fim de semana disponível      │
+│                                         │
+│  2. Promoção relâmpago Instagram:      │
+│     "Locação com 15% OFF para          │
+│     eventos nos próximos 15 dias"      │
+│                                         │
+│  Potencial receita extra: R$ 8.500     │
+└─────────────────────────────────────────┘
+
+TELA: ANÁLISE PREDITIVA
+🔮 PREVISÃO INTELIGENTE - Próximos 30 dias
+
+┌─────────────────────────────────────────┐
+│  CENÁRIO BASE (Sem novas ações)         │
+├─────────────────────────────────────────┤
+│  Receita provável: R$ 112.000          │
+│  Despesas fixas: R$ 74.000             │
+│  Lucro: R$ 38.000 (34% margem)         │
+│                                         │
+│  Status: ABAIXO DA META (-8%) ⚠️       │
+└─────────────────────────────────────────┘
+
+┌─────────────────────────────────────────┐
+│  CENÁRIO OTIMISTA (Com ações sugeridas) │
+├─────────────────────────────────────────┤
+│  Se fechar 2 dos 5 orçamentos pendentes:│
+│  + R$ 53.000                            │
+│                                         │
+│  Se aplicar estratégias de pagamento:   │
+│  - R$ 285 (economia juros/descontos)    │
+│                                         │
+│  RESULTADO:                             │
+│  Receita: R$ 165.000                    │
+│  Despesas: R$ 73.715                    │
+│  Lucro: R$ 91.285 (55% margem) ✅      │
+│                                         │
+│  Status: ACIMA DA META (+12%) 🎉       │
+└─────────────────────────────────────────┘
+
+💡 AÇÕES PRIORITÁRIAS:
+1. [CONTATAR] Produtora ABC (Festival #045)
+2. [NEGOCIAR] Aluguel para dia 22/07
+3. [PAGAR ANTECIPADO] Energia + Internet
+
+[EXECUTAR PLANO DE AÇÃO]
+
+MÓDULO 4: GRÁFICOS INTELIGENTES
+GRÁFICO: FUNIL COM INTENÇÃO DE COMPRA
+FUNIL DE VENDAS - Com Score de Intenção
+
+Leads (150)                     100%  Temp média: 🔵
+  ↓                                   Score: 30/100
+Contato (100)                    67%  Temp média: 🟡
+  ↓                                   Score: 55/100
+Orçamento Enviado (80)           53%  Temp média: 🟡
+  ├─ Quentes (24) ────────── 🔴 Score: 85/100
+  ├─ Mornos (38) ────────── 🟡 Score: 60/100
+  └─ Frios (18) ─────────── 🔵 Score: 35/100
+  ↓
+Negociação (60)                  40%  Temp média: 🔴
+  ↓                                   Score: 75/100
+Fechados (40)                    27%  
+  └─ Ticket médio: R$ 12.500
+
+🤖 INSIGHTS:
+- 24 leads quentes = potencial R$ 300k
+- Priorize: leads quentes em "orçamento"
+- Taxa conversão quente→fechado: 85%
+
+GRÁFICO: PERFORMANCE POR ESTRATÉGIA
+ESTRATÉGIAS APLICADAS (Último mês)
+
+Desconto Progressivo
+├─ Usada: 8 vezes
+├─ Conversão: 75% (6 fechamentos)
+└─ Margem média: 36% ✅
+
+Equipamento Alternativo
+├─ Usada: 5 vezes
+├─ Conversão: 60% (3 fechamentos)
+└─ Margem média: 38% ✅
+
+Sublocação
+├─ Usada: 3 vezes
+├─ Conversão: 100% (3 fechamentos) 🏆
+└─ Margem média: 32% ⚠️
+
+Urgência Temporal
+├─ Usada: 12 vezes
+├─ Conversão: 42% (5 fechamentos)
+└─ Margem média: 40% ✅
+
+💡 RECOMENDAÇÃO:
+Use mais "Sublocação" - maior conversão!
+
+NOTIFICAÇÕES INTELIGENTES
+🔔 HOJE - 08/07/2025, 9:00
+
+🎯 Orçamento #045 esfriando!
+   Sem resposta há 8 dias
+   [VER ESTRATÉGIAS]
+
+💰 Você pode economizar R$ 32
+   pagando 2 contas hoje
+   [VER QUAIS]
+
+📊 Meta da semana: 57% atingida
+   Faltam R$ 6.500
+   [ACELERAR FECHAMENTOS]
+
+⚠️ Aluguel vence em 2 dias
+   Saldo insuficiente previsto
+   [NEGOCIAR PRAZO]
+
+
+E
+
+AUTOMAÇÕES DOCUMENTADAS
+1. ORÇAMENTO APROVADO (Página ~115 do PDF)
+@staticmethod
+def orcamento_aprovado(orcamento_id):
+    """Dispara automaticamente quando orçamento é aprovado"""
+    
+    # 1. Cria Invoice (Financeiro)
+    # 2. Aloca Equipamentos (reserved)
+    # 3. Cria Tour/Evento
+    # 4. Gera PIX automático
+    # 5. Atualiza Lead status='ganho'
+Trigger: Quando admin clica "Aprovar Orçamento"
+
+2. ORÇAMENTO RECUSADO (Páginas 64-70 do PDF)
+# Lead vai para status='perdido'
+# IA analisa oportunidade de reativação
+# Gera estratégias específicas:
+- Desconto progressivo
+- Equipamentos alternativos  
+- Sublocação
+- Urgência temporal
+Trigger: Quando cliente recusa ou fica muito tempo sem resposta
+
+3. CRONJOBS AUTOMÁTICOS (Página 111 do PDF)
+# Dia 1º mês 00:01 → Provisiona contas fixas
+# Dia 25 mês 08:00 → Gera folhas CLT
+# Todo dia 09:00 → Envia alertas (leads esfriando, contas vencendo)
+# Todo dia 10:00 → Atualiza scores de leads
+# Segunda 09:00 → Relatório semanal
+
+4. PAGAMENTO DE CONTA (Página 31 do PDF)
+def pagar_conta(conta_id, valor_pago):
+    # 1. Marca como 'pago'
+    # 2. ATUALIZA PROVISÕES FUTURAS automaticamente
+    # 3. Registra no fluxo de caixa
+Exemplo: Paga luz por R$ 870 (provisão era R$ 850) → Sistema atualiza próximos 6 meses para R$ 870
+
+FLUXO COMPLETO
+ORÇAMENTO RÁPIDO
+├─ Cliente: "Quero alugar"
+├─ Sistema: Gera orçamento
+└─ Envia PDF/WhatsApp
+
+AGUARDA RESPOSTA
+├─ Cliente APROVA? 
+│   ├─ SIM → AUTOMAÇÃO #1
+│   │   ├─ Cria Invoice
+│   │   ├─ Aloca equipamentos
+│   │   ├─ Cria Tour
+│   │   ├─ Gera PIX
+│   │   └─ Lead = 'ganho'
+│   │
+│   └─ NÃO → AUTOMAÇÃO #2  
+│       ├─ Lead = 'perdido'
+│       ├─ IA analisa reativação
+│       └─ Gera estratégias
+│
+└─ SEM RESPOSTA 5+ dias?
+    └─ AUTOMAÇÃO #3
+        ├─ Alerta admin
+        ├─ Score cai
+        └─ Sugestão: "Recontatar urgente"
+
+FALTOU ALGO?
+Conferindo...
+✅ Aprovado → Financeiro ✅ Aprovado → Agenda (Tour) ✅ Aprovado → Aloca equipamentos ✅ Recusado → Estratégias reativação ✅ Sem resposta → Alertas ✅ Contas pagas → Atualiza provisão ✅ Dia 1º → Cria contas mês ✅ Dia 25 → Gera folhas
+
+
+Vou analisar o Tour atual e propor refatoração.# ANÁLISE CRÍTICA - TOUR ATUAL
+PROBLEMAS IDENTIFICADOS:
+1. MENU COM MUITAS OPÇÕES VAZIAS
+✅ Kits (funciona)
+✅ Orçamento (funciona)
+✅ Tours Ativas (funciona)
+❌ Agenda (não implementada - link vazio)
+❌ Checkpoints (não implementada - link vazio)
+❌ Logística (não implementada - link vazio)
+Resultado: 50% dos menus são inúteis!
+
+2. FLUXO CONFUSO
+Menu TOUR
+├─ Kits (por que está aqui? É equipamento!)
+├─ Orçamento (por que está aqui? É comercial!)
+├─ Tours Ativas (OK, faz sentido)
+├─ Agenda (vazio)
+├─ Checkpoints (vazio)
+└─ Logística (vazio)
+Tour deveria ser APENAS sobre eventos, não misturar com comercial/equipamento.
+
+3. PROCESSO MANUAL DEMAIS
+HOJE:
+1. Criar Tour manualmente
+2. Alocar equipamentos um por um
+3. Criar checklist
+4. Scan individual
+5. Criar checkpoint manualmente
+6. Controlar devolução manual
+Muitos cliques, muita chance de erro!
+
+PROPOSTA: REFATORAÇÃO TOUR
+CONCEITO: TOUR = APENAS EVENTO
+TOUR (simplificado):
+├─ Criação AUTOMÁTICA (via orçamento aprovado)
+├─ Timeline visual do evento
+├─ Status automático (planejado → ativo → concluído)
+└─ Equipamentos LINKADOS (não duplicados)
+
+NOVO FLUXO AUTOMATIZADO
+ANTES (manual):
+1. Orçamento aprovado
+2. Admin vai em "Tour" → "Nova Tour"
+3. Preenche formulário
+4. Escolhe equipamentos
+5. Cria checklist separação
+6. Scan cada item
+7. Marca como entregue
+8. Scan devolução
+9. Marca como devolvido
+= 9 PASSOS MANUAIS!
+
+DEPOIS (automático):
+1. Orçamento aprovado
+   └─ Sistema cria TUDO automaticamente:
+       ├─ Evento (com data, cliente, local)
+       ├─ Equipamentos já alocados
+       ├─ Checklist pré-montado
+       └─ Status: "Aguardando separação"
+
+2. Técnico: Scan QR do evento
+   └─ Abre checklist
+   └─ Scan cada equipamento
+   └─ Auto-completa quando todos OK
+
+3. No dia do evento:
+   └─ Status automático: "Em andamento"
+
+4. Após evento:
+   └─ Técnico: Scan devolução
+   └─ Sistema marca devolvido
+   └─ Status: "Concluído"
+= 3 AÇÕES (resto é automático!)
+
+ESTRUTURA REFATORADA
+ANTES: 380 linhas, 15 rotas
+# tour.py (380 linhas)
+@tour_bp.route('/') # Menu
+@tour_bp.route('/new') # Form manual
+@tour_bp.route('/edit/<id>') # Editar
+@tour_bp.route('/checklist-selection') # Escolher checklist
+@tour_bp.route('/<id>/checklist') # Checklist
+@tour_bp.route('/<id>/allocate') # Alocar equipamentos
+@tour_bp.route('/<id>/checkpoint') # Checkpoint
+# ... mais 8 rotas
+
+DEPOIS: ~150 linhas, 6 rotas
+# tour.py (refatorado)
+
+@tour_bp.route('/')
+def dashboard():
+    """Dashboard de eventos (timeline)"""
+    # Mostra: Próximos, Em andamento, Concluídos
+    pass
+
+@tour_bp.route('/<int:id>')
+def view(id):
+    """Detalhes do evento"""
+    # Timeline vertical
+    # Equipamentos
+    # Checklist
+    # Tudo em UMA tela
+    pass
+
+@tour_bp.route('/<int:id>/scan')
+def scan_mode(id):
+    """Modo scanner para técnico"""
+    # Scan equipamentos rápido
+    # Auto-completa checklist
+    pass
+
+@tour_bp.route('/<int:id>/devolver')
+def scan_devolucao(id):
+    """Scan devolução"""
+    pass
+
+@tour_bp.route('/<int:id>/cancelar')
+def cancelar(id):
+    """Cancela evento, libera equipamentos"""
+    pass
+
+# REMOVIDO: new, edit, allocate, checkpoint, etc
+# (tudo automático via orçamento)
+
+TELA UNIFICADA - EVENTO
+ANTES: 4 telas separadas
+* Tour detail
+* Checklist
+* Allocate equipment
+* Checkpoint
+DEPOIS: 1 tela só
+╔══════════════════════════════════════════╗
+║  🎤 SHOW ROCK IN RIO - 15/08/2025       ║
+║  Cliente: Produtora ABC                  ║
+║  Local: Parque Olímpico                  ║
+╚══════════════════════════════════════════╝
+
+┌──────────────────────────────────────────┐
+│  TIMELINE                                │
+├──────────────────────────────────────────┤
+│  ✅ Orçamento aprovado  (05/07)          │
+│  ✅ Equipamentos alocados (05/07)        │
+│  🔄 Separação (aguardando scan)          │
+│  ⏳ Entrega (14/08 - 1 dia antes)        │
+│  ⏳ Evento (15/08)                        │
+│  ⏳ Devolução (16/08)                     │
+└──────────────────────────────────────────┘
+
+┌──────────────────────────────────────────┐
+│  EQUIPAMENTOS (24 itens)                 │
+├──────────────────────────────────────────┤
+│  🎤 Som (8 itens)                        │
+│    ✅ Mesa X32 #001                      │
+│    ✅ SM58 #023                          │
+│    ⏳ Subwoofer #005 (aguardando scan)   │
+│                                          │
+│  💡 Luz (12 itens)                       │
+│    ⏳ Moving Head #003                   │
+│    ⏳ PAR LED #012                       │
+│                                          │
+│  Progress: 2/24 (8%)                     │
+│  [SCAN EQUIPAMENTOS]                     │
+└──────────────────────────────────────────┘
+
+┌──────────────────────────────────────────┐
+│  AÇÕES RÁPIDAS                           │
+├──────────────────────────────────────────┤
+│  📱 Scan Separação                       │
+│  📋 Ver Checklist Completo               │
+│  📞 Contatar Cliente                     │
+│  ❌ Cancelar Evento                      │
+└──────────────────────────────────────────┘
+TUDO em 1 lugar!
+
+INTEGRAÇÃO COM NOVO SISTEMA
+ORÇAMENTO APROVADO
+├─ Cria Invoice (Financeiro) ✅
+├─ Cria Lead.status='ganho' (Comercial) ✅
+├─ Cria EVENTO automaticamente (Tour) ✅ NOVO!
+│   ├─ Dados do orçamento
+│   ├─ Data do evento
+│   ├─ Cliente
+│   ├─ Equipamentos JÁ alocados
+│   └─ Status: "Aguardando separação"
+└─ Notifica técnico: "Novo evento, separar equipamentos"
+
+MENU TOUR REFATORADO
+ANTES:
+Menu TOUR (6 opções)
+├─ Kits
+├─ Orçamento  
+├─ Tours Ativas
+├─ Agenda (vazio)
+├─ Checkpoints (vazio)
+└─ Logística (vazio)
+DEPOIS:
+Menu EVENTOS (3 opções)
+├─ 📅 Próximos Eventos
+├─ 🎤 Em Andamento
+└─ ✅ Concluídos
+
+(Kits → vai para EQUIPAMENTOS)
+(Orçamento → vai para COMERCIAL)
+(Agenda → integra em "Próximos")
+(Checkpoints → automático)
+(Logística → automático)
+50% menos opções, 100% funcionais!
+
+BENEFÍCIOS
+✅ Menos cliques (9 passos → 3) ✅ Menos erros (automático) ✅ Mais rápido (técnico só scanneia) ✅ Mais organizado (tudo em 1 tela) ✅ Integrado (orçamento → evento automático)
+
+
+
+
+ESTRUTURA CORRETA:
+DASHBOARD PRINCIPAL
+├─ 💰 FINANCEIRO
+│   ├─ Receitas/Despesas
+│   ├─ Contas a pagar
+│   └─ Folha/Freelancers
+│
+├─ 📋 ORÇAMENTO ← AQUI! (já existe)
+│   └─ TRIGGER de TUDO
+│       ├─ Aprovado → Cria Evento
+│       ├─ Aprovado → Cria Invoice
+│       ├─ Aprovado → Aloca Equipamentos
+│       ├─ Aprovado → Cria Lead ganho
+│       └─ Recusado → Estratégias reativação
+│
+├─ 🎯 COMERCIAL (CRM)
+│   ├─ Leads (funil)
+│   └─ Reativação
+│
+├─ 👥 RH
+│   ├─ Funcionários
+│   └─ Ranking
+│
+├─ 📦 EQUIPAMENTOS
+│   ├─ Categorias
+│   ├─ Individual
+│   └─ Kits ← SAIR DO TOUR, VIR PRA CÁ
+│
+└─ 🎤 EVENTOS ← TOUR REFATORADO
+    ├─ Próximos
+    ├─ Em andamento
+    └─ Concluídos
+    (NÃO TEM ORÇAMENTO AQUI!)
+
+MENU TOUR REFATORADO FINAL:
+REMOVER do Tour:
+* ❌ Orçamento (já está no dashboard)
+* ❌ Kits (vai para Equipamentos)
+MANTER:
+* ✅ Eventos (simplificado)
+* ✅ Timeline
+* ✅ Scan
+
+NOVO MENU TOUR (limpo):
+<!-- menu.html REFATORADO -->
+
+<div class="page-header">
+    <h1>🎤 EVENTOS</h1>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+    <div class="tab active">Próximos (5)</div>
+    <div class="tab">Em Andamento (2)</div>
+    <div class="tab">Concluídos (18)</div>
+</div>
+
+<!-- LISTA EVENTOS -->
+<div class="eventos-list">
+    <!-- Card Evento -->
+    <div class="evento-card status-aguardando">
+        <div class="evento-header">
+            <h3>🎸 Show Rock Nacional</h3>
+            <span class="badge badge-yellow">Aguardando Separação</span>
+        </div>
+        <div class="evento-info">
+            <div>📅 15/08/2025 - 20h</div>
+            <div>👤 Produtora XYZ</div>
+            <div>📍 Teatro Municipal</div>
+            <div>📦 24 equipamentos</div>
+        </div>
+        <div class="evento-progress">
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 0%"></div>
+            </div>
+            <div class="progress-text">0/24 separados</div>
+        </div>
+        <div class="evento-actions">
+            <button class="btn-primary">📱 Scan Separação</button>
+            <button class="btn-secondary">👁️ Ver Detalhes</button>
+        </div>
+    </div>
+    
+    <!-- Mais eventos... -->
+</div>
+
+<!-- FILTROS (opcional) -->
+<div class="filtros-rapidos">
+    <button>Hoje</button>
+    <button>Esta Semana</button>
+    <button>Este Mês</button>
+</div>
+SÓ ISSO! Clean, direto, funcional.
+
+FLUXO COMPLETO CORRETO:
+1. DASHBOARD → ORÇAMENTO
+   └─ Usuário cria/aprova orçamento
+   
+2. ORÇAMENTO APROVADO
+   └─ AUTOMAÇÃO dispara:
+       ├─ Cria Invoice (Financeiro)
+       ├─ Cria Evento (Tour) ← AUTOMÁTICO
+       ├─ Aloca equipamentos
+       ├─ Lead = ganho
+       └─ Gera PIX
+       
+3. EVENTOS → Técnico vê novo evento
+   └─ Clica "Scan Separação"
+   └─ Scanneia equipamentos
+   └─ Auto-completa
+   
+4. DIA DO EVENTO
+   └─ Status automático: "Em andamento"
+   
+5. APÓS EVENTO
+   └─ Scan devolução
+   └─ Status: "Concluído"
+
+ARQUITETURA LIMPA:
+DASHBOARD (HUB CENTRAL)
+├─ Orçamento (TRIGGER)
+├─ Financeiro (CONSEQUÊNCIA)
+├─ Comercial (ORIGEM)
+├─ RH (SUPORTE)
+├─ Equipamentos (RECURSO)
+└─ Eventos (EXECUÇÃO)
+
+Cada módulo INDEPENDENTE
+Comunicam via AUTOMAÇÕES
+Nenhum duplicado
+
+AGORA SIM, QUER QUE EU:
+A) Escreva o código da refatoração Tour? B) Primeiro faça todo o sistema novo (Financeiro/Comercial/RH)? C) Crie apenas os mockups do Tour refatorado?
+Minha sugestão:
+1. Fazer sistema novo primeiro (mantém Tour atual funcionando)
+2. Depois refatora Tour (com base no que aprendemos)
+Você concorda?
+
+
+
+Vou documentar MÓDULO MANUTENÇÃO COMPLETO com:
+✅ Push automático segunda-feira ✅ Gestão de estoque (conectores/cabos/peças) ✅ Fabricação de cabos/réguas ✅ Hardcase de Materiais ✅ Relatórios detalhados por equipamento ✅ Análise de falhas recorrentes
+Vou adicionar ao PDF:✅ PERFEITO!# 🎉 SISTEMA COMPLETO DOCUMENTADO!
+📚 3 PDFs PRONTOS:
+1️⃣ ESPECIFICAÇÃO TÉCNICA (138 páginas)
+* Código Python completo
+* Models detalhados
+* Rotas e lógica
+* Plano de implementação 22 dias
+2️⃣ MOCKUPS E FLUXOS (50+ páginas)
+* Dashboard Principal
+* Orçamento (trigger)
+* Financeiro (provisionamento + IA)
+* Comercial (leads + CRM)
+* RH (folha CLT + freelancers)
+* Eventos (Tour refatorado)
+* Gráficos e comparativos
+3️⃣ MÓDULO MANUTENÇÃO (25 páginas) ✨ NOVO!
+* 🔔 Automação segunda-feira (push tarefas)
+* 📦 Gestão estoque (conectores/cabos)
+* 🔨 Fabricação de cabos/réguas
+* 📊 Relatórios detalhados
+* ⚠️ Equipamentos críticos
+* 💰 ROI e substituição
+
+✅ TUDO IMPLEMENTADO:
+FINANCEIRO:
+* Provisionamento automático (dia 1º)
+* IA recomenda pagamentos
+* Folha CLT (dia 25)
+* Freelancers simplificado
+* DRE e comparativos YoY
+COMERCIAL:
+* Funil kanban visual
+* Score 0-100 automático
+* IA estratégias fechamento
+* Reativação leads perdidos
+RH:
+* Ranking performance
+* Cálculo impostos automático
+* Pagamento rápido freelancer
+EVENTOS:
+* Criação automática (via orçamento)
+* Tela unificada
+* 9 passos → 2 ações
+MANUTENÇÃO: ✨
+* Push segunda 07:00
+* Estoque XLR/P10/Powercon
+* Fabricar cabos no app
+* Relatório por equipamento
+* Custo vs valor (ROI)
+
+
+
+
+PROBLEMA ATUAL:
+50x SM58 com foto individual:
+📸 sm58_001.jpg (2MB)
+📸 sm58_002.jpg (2MB)
+📸 sm58_003.jpg (2MB)
+...
+📸 sm58_050.jpg (2MB)
+
+Total: 100MB só de fotos REPETIDAS!
+
+SOLUÇÃO: FOTO POR MODELO
+Estrutura Otimizada:
+# MODELS
+
+class EquipmentModel(db.Model):
+    """Modelo genérico (ex: SM58, X32, Moving Head)"""
+    id = db.Column(db.Integer, primary_key=True)
+    company_id = db.Column(db.Integer, db.ForeignKey('company.id'))
+    
+    # Info modelo
+    brand = db.Column(db.String(100))  # Shure
+    model = db.Column(db.String(100))  # SM58
+    type_id = db.Column(db.Integer, db.ForeignKey('equipment_type.id'))
+    
+    # FOTO COMPARTILHADA (única)
+    foto_url = db.Column(db.String(500))  # /static/models/shure_sm58.jpg
+    
+    # Especificações
+    specs = db.Column(db.Text)  # JSON com especificações
+    valor_referencia = db.Column(db.Numeric(10, 2))
+    
+    # Relacionamento
+    equipments = db.relationship('Equipment', backref='model', lazy='dynamic')
+
+
+class Equipment(db.Model):
+    """Unidade individual"""
+    id = db.Column(db.Integer, primary_key=True)
+    company_id = db.Column(db.Integer, db.ForeignKey('company.id'))
+    
+    code = db.Column(db.String(50), unique=True)  # SM58-001
+    
+    # REFERÊNCIA AO MODELO (sem foto própria!)
+    model_id = db.Column(db.Integer, db.ForeignKey('equipment_model.id'))
+    
+    # Dados individuais
+    serial_number = db.Column(db.String(100))
+    data_compra = db.Column(db.Date)
+    valor_compra = db.Column(db.Numeric(10, 2))
+    status = db.Column(db.String(20))  # available, allocated, maintenance
+    
+    # QR/NFC/RFID (individual)
+    qr_code = db.Column(db.String(200))
+    nfc_tag = db.Column(db.String(100))
+    rfid_tag = db.Column(db.String(100))
+    
+    # SEM FOTO AQUI! Usa model.foto_url
+
+COMO FUNCIONA:
+1. Cadastro de Modelo (uma vez só):
+Admin cadastra:
+Brand: Shure
+Model: SM58
+Type: Microfone
+Foto: [upload] → salva em /static/models/shure_sm58.jpg
+Valor ref: R$ 800
+1 foto, 1 vez!
+
+2. Cadastro de Unidades (50x):
+Técnico cadastra 50 microfones:
+
+SM58-001:
+  - Model: Shure SM58 (seleciona da lista)
+  - Serial: ABC123
+  - Valor compra: R$ 750
+  - QR: gera automático
+  - FOTO: pega do model.foto_url ✓
+
+SM58-002:
+  - Model: Shure SM58 (mesmo)
+  - Serial: ABC124
+  - Valor compra: R$ 750
+  - QR: gera automático
+  - FOTO: pega do model.foto_url ✓
+
+... 50 vezes
+50 equipamentos, 1 foto compartilhada!
+
+3. Exibição:
+<!-- Lista equipamentos -->
+{% for equipment in equipments %}
+<div class="card">
+    <!-- Foto vem do MODEL -->
+    <img src="{{ equipment.model.foto_url }}" alt="{{ equipment.model.brand }} {{ equipment.model.model }}">
+    
+    <h3>{{ equipment.code }}</h3>
+    <p>{{ equipment.model.brand }} {{ equipment.model.model }}</p>
+    <p>Serial: {{ equipment.serial_number }}</p>
+</div>
+{% endfor %}
+
+ECONOMIA:
+Antes (foto individual):
+300 equipamentos × 2MB = 600MB
+Depois (foto por modelo):
+20 modelos × 2MB = 40MB
+Economia: 93%! 🎉
+
+FLUXO CADASTRO:
+PASSO 1: Criar Modelos (Admin)
+Menu: Equipamentos → Modelos
+
+[+ Novo Modelo]
+
+Marca: Shure
+Modelo: SM58
+Tipo: Microfone Dinâmico
+Foto: [Upload] shure_sm58.jpg
+Valor Referência: R$ 800
+Especificações:
+  - Impedância: 150Ω
+  - Padrão polar: Cardioide
+  - Resposta: 50-15kHz
+
+[Salvar]
+
+PASSO 2: Cadastrar Equipamentos (Técnico)
+Menu: Equipamentos → Novo
+
+Modelo: [Dropdown]
+  ▼ Shure SM58 (foto aparece ao selecionar)
+  
+Quantidade: 50
+
+Numeração automática:
+  SM58-001 até SM58-050
+  
+Serial inicial: ABC001 (incrementa automático)
+
+Valor unitário: R$ 750
+
+[Gerar QR Codes]
+[Salvar 50 Unidades]
+Sistema cria 50 equipamentos, TODOS apontando para o mesmo model.foto_url!
+
+BANCO DE DADOS:
+-- Tabela equipment_model (20 registros)
+id | brand | model | foto_url                      | valor_ref
+1  | Shure | SM58  | /static/models/shure_sm58.jpg | 800.00
+2  | Behringer | X32 | /static/models/behringer_x32.jpg | 15000.00
+...
+
+-- Tabela equipment (300 registros)
+id  | code      | model_id | serial  | valor_compra
+1   | SM58-001  | 1        | ABC123  | 750.00
+2   | SM58-002  | 1        | ABC124  | 750.00
+3   | SM58-003  | 1        | ABC125  | 750.00
+...
+50  | SM58-050  | 1        | ABC172  | 750.00
+51  | X32-001   | 2        | XYZ001  | 14500.00
+300 equipamentos, 20 fotos!
+
+VANTAGENS:
+✅ 93% menos armazenamento ✅ Upload 1x só por modelo ✅ Atualizar foto = atualiza todos ✅ Cadastro mais rápido ✅ Backup menor ✅ Carregamento mais rápido
+
+IMPLEMENTAÇÃO:
+Preciso:
+1. Criar tabela equipment_model
+2. Adicionar model_id em equipment
+3. Migrar fotos existentes (se tiver)
+4. Atualizar formulários (cadastro em 2 etapas)
+5. Atualizar templates (usar equipment.model.foto_url)
