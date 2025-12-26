@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}TOUR - Menu{% endblock %}
+{% block title %}EVENTOS{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -43,283 +43,415 @@
         color: var(--text-primary);
     }
 
-    .new-tour-button {
-        margin: var(--spacing-md);
+    .tabs-container {
+        display: flex;
+        gap: var(--spacing-xs);
         padding: var(--spacing-md);
-        background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
-        color: white;
+        background: var(--bg-primary);
+        border-bottom: 1px solid var(--border-subtle);
+        overflow-x: auto;
+    }
+
+    .tab {
+        flex: 1;
+        min-width: 100px;
+        padding: var(--spacing-sm) var(--spacing-md);
+        background: var(--bg-secondary);
         border: none;
         border-radius: var(--radius-md);
-        font-size: 1rem;
-        font-weight: var(--font-weight-semibold);
-        text-decoration: none;
-        text-align: center;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: var(--spacing-xs);
-        box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
-        transition: all 0.3s ease;
-    }
-
-    .new-tour-button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 16px rgba(46, 204, 113, 0.4);
-    }
-
-    .stats-grid {
-        padding: var(--spacing-md);
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: var(--spacing-sm);
-        margin-bottom: var(--spacing-md);
-    }
-
-    @media (max-width: 480px) {
-        .stats-grid {
-            grid-template-columns: 1fr;
-        }
-        
-        .stat-card {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            text-align: left;
-        }
-        
-        .stat-number {
-            font-size: 1.5rem;
-        }
-    }
-
-    @media (min-width: 481px) and (max-width: 768px) {
-        .stats-grid {
-            grid-template-columns: repeat(2, 1fr);
-        }
-    }
-
-    @media (min-width: 1024px) {
-        .stats-grid {
-            grid-template-columns: repeat(4, 1fr);
-        }
-    }
-
-    .stat-card {
-        background-color: var(--bg-secondary);
-        padding: var(--spacing-md);
-        border-radius: var(--radius-md);
-        text-align: center;
-        box-shadow: var(--shadow-sm);
-    }
-
-    .stat-number {
-        font-size: 2rem;
-        font-weight: var(--font-weight-bold);
-        color: var(--accent-gold);
-        margin-bottom: 4px;
-    }
-
-    .stat-label {
-        font-size: 0.8rem;
         color: var(--text-secondary);
-        font-weight: var(--font-weight-light);
+        font-size: 0.9rem;
+        font-weight: var(--font-weight-medium);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-align: center;
+        white-space: nowrap;
     }
 
-    .menu-list {
+    .tab:hover {
+        background: var(--bg-tertiary);
+    }
+
+    .tab.active {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+    }
+
+    .tab .count {
+        display: inline-block;
+        background: rgba(255,255,255,0.2);
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 0.75rem;
+        margin-left: 4px;
+    }
+
+    .tab.active .count {
+        background: rgba(255,255,255,0.3);
+    }
+
+    .filtros-rapidos {
+        display: flex;
+        gap: var(--spacing-xs);
+        padding: var(--spacing-sm) var(--spacing-md);
+        overflow-x: auto;
+    }
+
+    .filtro-btn {
+        padding: 6px 12px;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-sm);
+        color: var(--text-secondary);
+        font-size: 0.75rem;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: all 0.2s ease;
+    }
+
+    .filtro-btn:hover,
+    .filtro-btn.active {
+        background: var(--accent-gold);
+        color: var(--bg-primary);
+        border-color: var(--accent-gold);
+    }
+
+    .eventos-list {
         padding: var(--spacing-md);
         display: flex;
         flex-direction: column;
         gap: var(--spacing-md);
     }
 
-    .menu-item {
-        background-color: var(--bg-secondary);
+    .evento-card {
+        background: var(--bg-secondary);
         border-radius: var(--radius-lg);
         padding: var(--spacing-md);
-        text-decoration: none;
-        color: inherit;
-        display: flex;
-        align-items: center;
-        gap: var(--spacing-md);
+        border-left: 4px solid #f39c12;
         box-shadow: var(--shadow-sm);
         transition: all 0.3s ease;
-        position: relative;
     }
 
-    .menu-item:hover {
+    .evento-card:hover {
         transform: translateY(-2px);
         box-shadow: var(--shadow-md);
     }
 
-    .menu-icon {
-        width: 70px;
-        height: 70px;
-        border-radius: var(--radius-md);
+    .evento-card.status-aguardando {
+        border-left-color: #f39c12;
+    }
+
+    .evento-card.status-em-andamento {
+        border-left-color: #3498db;
+    }
+
+    .evento-card.status-concluido {
+        border-left-color: #2ecc71;
+    }
+
+    .evento-header {
         display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 2.5rem;
-        flex-shrink: 0;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: var(--spacing-sm);
+        gap: var(--spacing-sm);
     }
 
-    .icon-purple {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    }
-
-    .icon-pink {
-        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-    }
-
-    .icon-blue {
-        background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
-    }
-
-    .icon-green {
-        background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
-    }
-
-    .icon-orange {
-        background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
-    }
-
-    .menu-content {
-        flex: 1;
-    }
-
-    .menu-title {
-        font-size: 1.2rem;
+    .evento-header h3 {
+        font-size: 1.1rem;
         font-weight: var(--font-weight-semibold);
         color: var(--text-primary);
+        margin: 0;
+    }
+
+    .badge {
+        padding: 4px 10px;
+        border-radius: var(--radius-sm);
+        font-size: 0.7rem;
+        font-weight: var(--font-weight-semibold);
+        white-space: nowrap;
+    }
+
+    .badge-yellow {
+        background: rgba(243, 156, 18, 0.2);
+        color: #f39c12;
+    }
+
+    .badge-blue {
+        background: rgba(52, 152, 219, 0.2);
+        color: #3498db;
+    }
+
+    .badge-green {
+        background: rgba(46, 204, 113, 0.2);
+        color: #2ecc71;
+    }
+
+    .evento-info {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--spacing-xs);
+        margin-bottom: var(--spacing-md);
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+    }
+
+    .evento-info div {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .evento-progress {
+        margin-bottom: var(--spacing-md);
+    }
+
+    .progress-bar {
+        height: 6px;
+        background: var(--bg-tertiary);
+        border-radius: 3px;
+        overflow: hidden;
         margin-bottom: 4px;
     }
 
-    .menu-description {
-        font-size: 0.85rem;
-        color: var(--text-secondary);
-        font-weight: var(--font-weight-light);
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #2ecc71, #27ae60);
+        border-radius: 3px;
+        transition: width 0.3s ease;
     }
 
-    .menu-badge {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        background-color: #e74c3c;
-        color: white;
-        border-radius: 50%;
-        width: 30px;
-        height: 30px;
+    .progress-text {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+    }
+
+    .evento-actions {
         display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 0.9rem;
-        font-weight: var(--font-weight-bold);
+        gap: var(--spacing-sm);
+    }
+
+    .btn-primary {
+        flex: 1;
+        padding: var(--spacing-sm) var(--spacing-md);
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+        border: none;
+        border-radius: var(--radius-md);
+        font-size: 0.85rem;
+        font-weight: var(--font-weight-semibold);
+        cursor: pointer;
+        text-decoration: none;
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(240, 147, 251, 0.3);
+    }
+
+    .btn-secondary {
+        flex: 1;
+        padding: var(--spacing-sm) var(--spacing-md);
+        background: var(--bg-tertiary);
+        color: var(--text-primary);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-md);
+        font-size: 0.85rem;
+        font-weight: var(--font-weight-medium);
+        cursor: pointer;
+        text-decoration: none;
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+
+    .btn-secondary:hover {
+        background: var(--bg-secondary);
+        border-color: var(--accent-gold);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: var(--spacing-xl);
+        color: var(--text-secondary);
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: var(--spacing-md);
+        opacity: 0.5;
+    }
+
+    .empty-state h3 {
+        margin-bottom: var(--spacing-sm);
+        color: var(--text-primary);
+    }
+
+    .tab-content {
+        display: none;
+    }
+
+    .tab-content.active {
+        display: block;
     }
 
     @media (min-width: 768px) {
-        .menu-list {
-            padding: var(--spacing-xl);
+        .eventos-list {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
         }
+    }
 
-        .stats-grid {
-            padding: var(--spacing-xl) var(--spacing-xl) var(--spacing-md);
-        }
-
-        .new-tour-button {
-            margin: var(--spacing-md) var(--spacing-xl);
+    @media (min-width: 1024px) {
+        .eventos-list {
+            grid-template-columns: repeat(3, 1fr);
         }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="page-container" id="tourPage">
+<div class="page-container" id="eventosPage">
     <div class="page-header">
         <div class="header-content">
             <a href="{{ url_for('dashboard') }}" class="back-button">←</a>
-            <h1 class="header-title">🎸 TOUR</h1>
+            <h1 class="header-title">🎤 EVENTOS</h1>
         </div>
     </div>
 
-    <a href="{{ url_for('tour.new_tour') }}" class="new-tour-button">
-        + Nova Tour
-    </a>
+    <div class="tabs-container">
+        <button class="tab active" onclick="showTab('proximos')">
+            📅 Proximos <span class="count">{{ proximos|length if proximos else 0 }}</span>
+        </button>
+        <button class="tab" onclick="showTab('andamento')">
+            🎤 Em Andamento <span class="count">{{ em_andamento|length if em_andamento else 0 }}</span>
+        </button>
+        <button class="tab" onclick="showTab('concluidos')">
+            ✅ Concluidos <span class="count">{{ concluidos|length if concluidos else 0 }}</span>
+        </button>
+    </div>
 
-    <div class="stats-grid">
-        <div class="stat-card">
-            <div class="stat-number">{{ active_tours }}</div>
-            <div class="stat-label">Tours Ativas</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-number">{{ kits_count }}</div>
-            <div class="stat-label">Kits</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-number">{{ allocated_equipment }}</div>
-            <div class="stat-label">Itens Alocados</div>
+    <div class="filtros-rapidos">
+        <button class="filtro-btn active">Todos</button>
+        <button class="filtro-btn">Hoje</button>
+        <button class="filtro-btn">Esta Semana</button>
+        <button class="filtro-btn">Este Mes</button>
+    </div>
+
+    <div id="tab-proximos" class="tab-content active">
+        <div class="eventos-list">
+            {% if proximos %}
+                {% for evento in proximos %}
+                <div class="evento-card status-aguardando">
+                    <div class="evento-header">
+                        <h3>🎸 {{ evento.name }}</h3>
+                        <span class="badge badge-yellow">Aguardando Separacao</span>
+                    </div>
+                    <div class="evento-info">
+                        <div>📅 {{ evento.start_date.strftime('%d/%m/%Y') if evento.start_date else 'A definir' }}</div>
+                        <div>👤 {{ evento.artist or 'Cliente' }}</div>
+                        <div>📍 {{ evento.shows[0].venue if evento.shows else 'Local a definir' }}</div>
+                        <div>📦 {{ evento.allocated_equipment|length }} equipamentos</div>
+                    </div>
+                    <div class="evento-progress">
+                        {% set total = evento.requirements|length if evento.requirements else 1 %}
+                        {% set alocados = evento.allocated_equipment|length %}
+                        {% set percent = (alocados / total * 100) if total > 0 else 0 %}
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: {{ percent }}%"></div>
+                        </div>
+                        <div class="progress-text">{{ alocados }}/{{ total }} separados</div>
+                    </div>
+                    <div class="evento-actions">
+                        <a href="{{ url_for('tour.scan_equipment', tour_id=evento.id) }}" class="btn-primary">📱 Scan Separacao</a>
+                        <a href="{{ url_for('tour.tour_detail', id=evento.id) }}" class="btn-secondary">👁️ Detalhes</a>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-calendar-plus"></i>
+                    <h3>Nenhum evento proximo</h3>
+                    <p>Novos eventos aparecerao aqui quando orcamentos forem aprovados</p>
+                </div>
+            {% endif %}
         </div>
     </div>
 
-    <div class="menu-list">
-        <a href="{{ url_for('kit.list_kits') }}" class="menu-item">
-            <div class="menu-icon icon-purple">🎒</div>
-            <div class="menu-content">
-                <div class="menu-title">Kits</div>
-                <div class="menu-description">Conjuntos pré-definidos de equipamentos</div>
-            </div>
-        </a>
-
-        <a href="{{ url_for('orcamento.index') }}" class="menu-item">
-            <div class="menu-icon icon-orange">📋</div>
-            <div class="menu-content">
-                <div class="menu-title">Orçamento</div>
-                <div class="menu-description">Criar e aprovar orçamentos</div>
-            </div>
-            {% if pending_separations > 0 %}
-            <div class="menu-badge">{{ pending_separations }}</div>
+    <div id="tab-andamento" class="tab-content">
+        <div class="eventos-list">
+            {% if em_andamento %}
+                {% for evento in em_andamento %}
+                <div class="evento-card status-em-andamento">
+                    <div class="evento-header">
+                        <h3>🎤 {{ evento.name }}</h3>
+                        <span class="badge badge-blue">Em Andamento</span>
+                    </div>
+                    <div class="evento-info">
+                        <div>📅 {{ evento.start_date.strftime('%d/%m/%Y') if evento.start_date else 'Hoje' }}</div>
+                        <div>👤 {{ evento.artist or 'Cliente' }}</div>
+                        <div>📍 {{ evento.shows[0].venue if evento.shows else 'Local' }}</div>
+                        <div>📦 {{ evento.allocated_equipment|length }} equipamentos</div>
+                    </div>
+                    <div class="evento-actions">
+                        <a href="{{ url_for('tour.checkpoint', tour_id=evento.id, checkpoint_type='chegada_show') }}" class="btn-primary">📱 Checkpoint</a>
+                        <a href="{{ url_for('tour.tour_detail', id=evento.id) }}" class="btn-secondary">👁️ Detalhes</a>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-microphone"></i>
+                    <h3>Nenhum evento em andamento</h3>
+                    <p>Eventos ativos aparecerao aqui</p>
+                </div>
             {% endif %}
-        </a>
+        </div>
+    </div>
 
-        <a href="{{ url_for('tour.list_tours') }}" class="menu-item">
-            <div class="menu-icon icon-pink">🎤</div>
-            <div class="menu-content">
-                <div class="menu-title">Tours Ativas</div>
-                <div class="menu-description">Gerenciar tours e shows</div>
-            </div>
-            {% if active_tours > 0 %}
-            <div class="menu-badge">{{ active_tours }}</div>
+    <div id="tab-concluidos" class="tab-content">
+        <div class="eventos-list">
+            {% if concluidos %}
+                {% for evento in concluidos %}
+                <div class="evento-card status-concluido">
+                    <div class="evento-header">
+                        <h3>✅ {{ evento.name }}</h3>
+                        <span class="badge badge-green">Concluido</span>
+                    </div>
+                    <div class="evento-info">
+                        <div>📅 {{ evento.end_date.strftime('%d/%m/%Y') if evento.end_date else evento.start_date.strftime('%d/%m/%Y') if evento.start_date else '-' }}</div>
+                        <div>👤 {{ evento.artist or 'Cliente' }}</div>
+                        <div>📍 {{ evento.shows[0].venue if evento.shows else 'Local' }}</div>
+                        <div>📦 {{ evento.allocated_equipment|length }} equipamentos</div>
+                    </div>
+                    <div class="evento-actions">
+                        <a href="{{ url_for('tour.tour_detail', id=evento.id) }}" class="btn-secondary" style="flex: 1;">👁️ Ver Detalhes</a>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-check-circle"></i>
+                    <h3>Nenhum evento concluido</h3>
+                    <p>Historico de eventos aparecerao aqui</p>
+                </div>
             {% endif %}
-        </a>
-
-        <a href="#" class="menu-item">
-            <div class="menu-icon icon-blue">📅</div>
-            <div class="menu-content">
-                <div class="menu-title">Agenda</div>
-                <div class="menu-description">Calendário de shows e eventos</div>
-            </div>
-        </a>
-
-        <a href="#" class="menu-item">
-            <div class="menu-icon icon-green">✓</div>
-            <div class="menu-content">
-                <div class="menu-title">Checkpoints</div>
-                <div class="menu-description">Rastreamento de equipamentos</div>
-            </div>
-        </a>
-
-        <a href="#" class="menu-item">
-            <div class="menu-icon icon-orange">🚚</div>
-            <div class="menu-content">
-                <div class="menu-title">Logística</div>
-                <div class="menu-description">Transporte e alocação</div>
-            </div>
-        </a>
+        </div>
     </div>
 </div>
 
 <script>
-// Garantir que a página inicie no topo
+function showTab(tabName) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    
+    event.target.classList.add('active');
+    document.getElementById('tab-' + tabName).classList.add('active');
+}
+
 window.addEventListener('load', function() {
-    document.getElementById('tourPage').scrollTop = 0;
+    document.getElementById('eventosPage').scrollTop = 0;
     window.scrollTo(0, 0);
 });
 </script>
