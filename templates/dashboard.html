@@ -316,13 +316,13 @@
             <p>Receitas e Despesas</p>
         </a>
 
-        <a href="{{ url_for('leads.index') if 'leads.index' in url_map else '#' }}" class="module-card card-comercial">
+        <a href="{{ url_for('leads.index') }}" class="module-card card-comercial">
             <div class="card-icon"><i class="fas fa-handshake"></i></div>
             <h3>COMERCIAL</h3>
             <p>Leads e CRM</p>
         </a>
 
-        <a href="{{ url_for('rh.index') if 'rh.index' in url_map else '#' }}" class="module-card card-rh">
+        <a href="{{ url_for('rh.index') }}" class="module-card card-rh">
             <div class="card-icon"><i class="fas fa-users"></i></div>
             <h3>RH</h3>
             <p>Funcionarios</p>
