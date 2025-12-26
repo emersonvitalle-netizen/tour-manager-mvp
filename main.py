@@ -23,7 +23,9 @@ def create_models():
     from models.equipment import Equipment
     from models.tour import Tour, Show, TourRequirement, TourEquipment, EquipmentCheckpoint, EquipmentTransfer, EquipmentReplacement
     from models.commercial import Lead, LeadInteraction, LeadReactivation
-    from models.rh import Employee, Freelancer, FreelancerAssignment, FreelancerReview, PayrollEntry
+    from models.rh import (Employee, Freelancer, FreelancerAssignment, FreelancerReview, PayrollEntry,
+                           AccountPayable, FreelancerPayment, BankAccount, CostCenter, AccountReceivable,
+                           Supplier, Client, Vehicle, Consumable, ContractTemplate, CashRegister, CashEntry)
 
     # NÍVEL 5 - Dependem de Equipment/Tour
     from models.maintenance import Maintenance

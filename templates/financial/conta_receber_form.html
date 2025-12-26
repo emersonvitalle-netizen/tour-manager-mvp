@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}{{ 'Editar' if conta else 'Nova' }} Conta a Pagar{% endblock %}
+{% block title %}{{ 'Editar' if conta else 'Nova' }} Conta a Receber{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -12,7 +12,7 @@
     }
 
     .page-header {
-        background: linear-gradient(135deg, rgba(245,158,11,0.3) 0%, rgba(26,26,26,0.95) 100%);
+        background: linear-gradient(135deg, rgba(16,185,129,0.3) 0%, rgba(26,26,26,0.95) 100%);
         padding: 20px 16px;
         display: flex;
         align-items: center;
@@ -28,7 +28,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        color: #d4a574;
+        color: #10b981;
         text-decoration: none;
     }
 
@@ -67,7 +67,7 @@
 
     .form-control:focus {
         outline: none;
-        border-color: #d4a574;
+        border-color: #10b981;
     }
 
     .form-select {
@@ -90,43 +90,11 @@
         gap: 16px;
     }
 
-    .checkbox-group {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 16px;
-        background: #1a1a1a;
-        border-radius: 10px;
-    }
-
-    .checkbox-group input[type="checkbox"] {
-        width: 20px;
-        height: 20px;
-        accent-color: #d4a574;
-    }
-
-    .checkbox-group label {
-        color: #f5f5f5;
-        font-size: 0.95rem;
-    }
-
-    .recurrence-options {
-        margin-top: 12px;
-        padding: 16px;
-        background: rgba(139,92,246,0.1);
-        border-radius: 10px;
-        display: none;
-    }
-
-    .recurrence-options.show {
-        display: block;
-    }
-
     .btn-submit {
         width: 100%;
         padding: 16px;
-        background: linear-gradient(135deg, #d4a574 0%, #c9956a 100%);
-        color: #0a0a0a;
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: #fff;
         font-size: 1.1rem;
         font-weight: 700;
         border: none;
@@ -143,34 +111,84 @@
         min-height: 100px;
         resize: vertical;
     }
+
+    .client-toggle {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+
+    .client-toggle button {
+        flex: 1;
+        padding: 12px;
+        background: #1a1a1a;
+        border: 1px solid #2a2a2a;
+        border-radius: 8px;
+        color: #888;
+        font-size: 0.85rem;
+        cursor: pointer;
+    }
+
+    .client-toggle button.active {
+        background: rgba(16,185,129,0.2);
+        border-color: #10b981;
+        color: #10b981;
+    }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="page-container">
     <div class="page-header">
-        <a href="{{ url_for('financial.contas_pagar') }}" class="back-btn">
+        <a href="{{ url_for('financial.contas_receber') }}" class="back-btn">
             <i class="fas fa-arrow-left"></i>
         </a>
         <div class="page-title">
-            <h1>{{ 'Editar' if conta else 'Nova' }} Conta a Pagar</h1>
+            <h1>{{ 'Editar' if conta else 'Nova' }} Conta a Receber</h1>
         </div>
     </div>
 
     <div class="form-container">
         <form method="POST">
             <div class="form-group">
+                <label class="form-label">Cliente</label>
+                <div class="client-toggle">
+                    <button type="button" id="btn-existing" class="active" onclick="toggleClientMode('existing')">
+                        <i class="fas fa-users"></i> Cadastrado
+                    </button>
+                    <button type="button" id="btn-new" onclick="toggleClientMode('new')">
+                        <i class="fas fa-user-plus"></i> Novo
+                    </button>
+                </div>
+                <div id="existing-client">
+                    <select name="client_id" class="form-select">
+                        <option value="">Selecione um cliente...</option>
+                        {% for cliente in clientes %}
+                        <option value="{{ cliente.id }}" {{ 'selected' if conta and conta.client_id == cliente.id else '' }}>
+                            {{ cliente.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div id="new-client" style="display: none;">
+                    <input type="text" name="client_name" class="form-control" 
+                           value="{{ conta.client_name if conta else '' }}" 
+                           placeholder="Nome do cliente">
+                </div>
+            </div>
+
+            <div class="form-group">
                 <label class="form-label">Descricao *</label>
                 <input type="text" name="description" class="form-control" 
                        value="{{ conta.description if conta else '' }}" 
-                       placeholder="Ex: Conta de luz, Aluguel do galpao..."
+                       placeholder="Ex: Locacao de equipamentos, Show corporativo..."
                        required>
             </div>
 
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label">Categoria</label>
-                    <select name="category" class="form-select" id="category-select" onchange="toggleCustomCategory()">
+                    <select name="category" class="form-select">
                         {% for cat in categorias %}
                         <option value="{{ cat }}" {{ 'selected' if conta and conta.category == cat else '' }}>
                             {{ cat|capitalize }}
@@ -186,13 +204,6 @@
                            placeholder="0,00"
                            required>
                 </div>
-            </div>
-
-            <div class="form-group" id="custom-category-group" style="display: {{ 'block' if conta and conta.category == 'outros' else 'none' }}">
-                <label class="form-label">Especificar categoria</label>
-                <input type="text" name="custom_category" class="form-control" 
-                       value="{{ conta.custom_category if conta else '' }}" 
-                       placeholder="Ex: Prestacao do caminhao, Parcela equipamento...">
             </div>
 
             <div class="form-row">
@@ -224,34 +235,10 @@
             </div>
 
             <div class="form-group">
-                <label class="form-label">Fornecedor</label>
-                <input type="text" name="supplier" class="form-control" 
-                       value="{{ conta.supplier if conta else '' }}" 
-                       placeholder="Nome do fornecedor ou empresa">
-            </div>
-
-            <div class="form-group">
                 <label class="form-label">Data de Vencimento *</label>
                 <input type="date" name="due_date" class="form-control" 
                        value="{{ conta.due_date.strftime('%Y-%m-%d') if conta else '' }}" 
                        required>
-            </div>
-
-            <div class="form-group">
-                <div class="checkbox-group">
-                    <input type="checkbox" name="is_recurring" id="is_recurring"
-                           {{ 'checked' if conta and conta.is_recurring else '' }}>
-                    <label for="is_recurring">Conta recorrente (mensal, semanal, etc)</label>
-                </div>
-
-                <div class="recurrence-options {{ 'show' if conta and conta.is_recurring else '' }}" id="recurrence-options">
-                    <label class="form-label">Tipo de Recorrencia</label>
-                    <select name="recurrence_type" class="form-select">
-                        <option value="monthly" {{ 'selected' if conta and conta.recurrence_type == 'monthly' else '' }}>Mensal</option>
-                        <option value="weekly" {{ 'selected' if conta and conta.recurrence_type == 'weekly' else '' }}>Semanal</option>
-                        <option value="yearly" {{ 'selected' if conta and conta.recurrence_type == 'yearly' else '' }}>Anual</option>
-                    </select>
-                </div>
             </div>
 
             <div class="form-group">
@@ -261,24 +248,29 @@
             </div>
 
             <button type="submit" class="btn-submit">
-                <i class="fas fa-save"></i> {{ 'Atualizar' if conta else 'Cadastrar' }} Conta
+                <i class="fas fa-save"></i> {{ 'Atualizar' if conta else 'Cadastrar' }}
             </button>
         </form>
     </div>
 </div>
 
 <script>
-document.getElementById('is_recurring').addEventListener('change', function() {
-    document.getElementById('recurrence-options').classList.toggle('show', this.checked);
-});
-
-function toggleCustomCategory() {
-    var select = document.getElementById('category-select');
-    var customGroup = document.getElementById('custom-category-group');
-    if (select.value === 'outros') {
-        customGroup.style.display = 'block';
+function toggleClientMode(mode) {
+    var existingDiv = document.getElementById('existing-client');
+    var newDiv = document.getElementById('new-client');
+    var btnExisting = document.getElementById('btn-existing');
+    var btnNew = document.getElementById('btn-new');
+    
+    if (mode === 'existing') {
+        existingDiv.style.display = 'block';
+        newDiv.style.display = 'none';
+        btnExisting.classList.add('active');
+        btnNew.classList.remove('active');
     } else {
-        customGroup.style.display = 'none';
+        existingDiv.style.display = 'none';
+        newDiv.style.display = 'block';
+        btnExisting.classList.remove('active');
+        btnNew.classList.add('active');
     }
 }
 </script>
