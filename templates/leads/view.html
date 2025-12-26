@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+
+{% block title %}Lead - {{ lead.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .lead-container {
+        padding: 16px;
+        padding-bottom: 100px;
+        background: #0a0a0a;
+        min-height: 100vh;
+    }
+
+    .lead-header {
+        background: #1a1a1a;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 16px;
+    }
+
+    .lead-name {
+        color: #f5f5f5;
+        font-size: 1.4rem;
+        font-weight: 600;
+        margin-bottom: 8px;
+    }
+
+    .lead-stage {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        background: #1565c0;
+        color: white;
+    }
+
+    .lead-score-bar {
+        margin-top: 16px;
+        background: #333;
+        border-radius: 8px;
+        height: 8px;
+        overflow: hidden;
+    }
+
+    .lead-score-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #e53935, #fb8c00, #43a047);
+        transition: width 0.3s;
+    }
+
+    .lead-score-label {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 8px;
+        font-size: 0.75rem;
+        color: #888;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    .info-card {
+        background: #1a1a1a;
+        border-radius: 12px;
+        padding: 16px;
+    }
+
+    .info-label {
+        color: #888;
+        font-size: 0.75rem;
+        margin-bottom: 4px;
+    }
+
+    .info-value {
+        color: #f5f5f5;
+        font-size: 1rem;
+        font-weight: 600;
+    }
+
+    .section-title {
+        color: #f5f5f5;
+        font-size: 1rem;
+        font-weight: 600;
+        margin: 24px 0 12px;
+    }
+
+    .strategy-card {
+        background: #1a1a1a;
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 12px;
+        border-left: 3px solid #d4a574;
+    }
+
+    .strategy-title {
+        color: #d4a574;
+        font-weight: 600;
+        font-size: 0.9rem;
+        margin-bottom: 4px;
+    }
+
+    .strategy-pitch {
+        color: #888;
+        font-size: 0.85rem;
+        font-style: italic;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 12px;
+        margin-top: 24px;
+    }
+
+    .btn-action {
+        flex: 1;
+        padding: 14px;
+        border-radius: 8px;
+        font-weight: 600;
+        text-align: center;
+        text-decoration: none;
+        font-size: 0.9rem;
+    }
+
+    .btn-edit {
+        background: #1565c0;
+        color: white;
+    }
+
+    .btn-quote {
+        background: linear-gradient(135deg, #d4a574 0%, #b8860b 100%);
+        color: #000;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="lead-container">
+    <div class="lead-header">
+        <div class="lead-name">{{ lead.name }}</div>
+        <span class="lead-stage">{{ lead.stage|upper }}</span>
+        
+        <div class="lead-score-bar">
+            <div class="lead-score-fill" style="width: {{ lead.ai_score }}%"></div>
+        </div>
+        <div class="lead-score-label">
+            <span>Score de Intencao</span>
+            <span>{{ lead.ai_score }}%</span>
+        </div>
+    </div>
+
+    <div class="info-grid">
+        <div class="info-card">
+            <div class="info-label">Email</div>
+            <div class="info-value">{{ lead.email or '-' }}</div>
+        </div>
+        <div class="info-card">
+            <div class="info-label">Telefone</div>
+            <div class="info-value">{{ lead.phone or '-' }}</div>
+        </div>
+        <div class="info-card">
+            <div class="info-label">Tipo Evento</div>
+            <div class="info-value">{{ lead.event_type or '-' }}</div>
+        </div>
+        <div class="info-card">
+            <div class="info-label">Data Evento</div>
+            <div class="info-value">{{ lead.event_date.strftime('%d/%m/%Y') if lead.event_date else '-' }}</div>
+        </div>
+        <div class="info-card">
+            <div class="info-label">Valor Estimado</div>
+            <div class="info-value" style="color: #2e7d32;">
+                {% if lead.estimated_value %}R$ {{ '{:,.2f}'.format(lead.estimated_value).replace(',', 'X').replace('.', ',').replace('X', '.') }}{% else %}-{% endif %}
+            </div>
+        </div>
+        <div class="info-card">
+            <div class="info-label">Ultimo Contato</div>
+            <div class="info-value">{{ lead.last_contact_at.strftime('%d/%m/%Y') if lead.last_contact_at else 'Nunca' }}</div>
+        </div>
+    </div>
+
+    {% if strategies %}
+    <h3 class="section-title"><i class="fas fa-lightbulb"></i> Estrategias de Fechamento</h3>
+    {% for strategy in strategies %}
+    <div class="strategy-card">
+        <div class="strategy-title">{{ strategy.titulo }}</div>
+        <div class="strategy-pitch">"{{ strategy.pitch }}"</div>
+    </div>
+    {% endfor %}
+    {% endif %}
+
+    <div class="action-buttons">
+        <a href="{{ url_for('leads.edit', id=lead.id) }}" class="btn-action btn-edit">
+            <i class="fas fa-edit"></i> Editar
+        </a>
+        <a href="{{ url_for('orcamento.new_complete') }}" class="btn-action btn-quote">
+            <i class="fas fa-file-invoice-dollar"></i> Criar Orcamento
+        </a>
+    </div>
+</div>
+{% endblock %}

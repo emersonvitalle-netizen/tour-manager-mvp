@@ -240,7 +240,24 @@ def approve(id):
             db.session.add(work_item)
 
         db.session.commit()
-        flash(f'Orcamento aprovado! Lista de trabalho #{work_list.id} criada para tecnicos.', 'success')
+        
+        from services.quote_automation import QuoteAutomation
+        signal_amount = request.form.get('signal_amount', type=float)
+        automation_result = QuoteAutomation.on_quote_approved(
+            separation_list_id=id,
+            signal_amount=signal_amount,
+            user_id=current_user.id
+        )
+        
+        msg = f'Orcamento aprovado! Lista de trabalho #{work_list.id} criada.'
+        if automation_result.get('invoice_created'):
+            msg += f' Fatura {automation_result.get("invoice_code", "")} gerada.'
+        if automation_result.get('event_created'):
+            msg += f' Evento criado.'
+        if automation_result.get('equipment_allocated', 0) > 0:
+            msg += f' {automation_result["equipment_allocated"]} equipamentos alocados.'
+        
+        flash(msg, 'success')
         return redirect(url_for('orcamento.detail', id=id))
 
     except Exception as e:
@@ -273,6 +290,14 @@ def reject(id):
         sep_list.rejection_reason = reason
 
         db.session.commit()
+        
+        from services.quote_automation import QuoteAutomation
+        QuoteAutomation.on_quote_rejected(
+            separation_list_id=id,
+            reason=reason,
+            user_id=current_user.id
+        )
+        
         flash('Orcamento rejeitado.', 'warning')
         return redirect(url_for('orcamento.detail', id=id))
 

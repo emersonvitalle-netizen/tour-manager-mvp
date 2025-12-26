@@ -1,0 +1,239 @@
+{% extends "base.html" %}
+
+{% block title %}RH - Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    .rh-container {
+        padding: 16px;
+        padding-bottom: 100px;
+        background: #0a0a0a;
+        min-height: 100vh;
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+    }
+
+    .page-title {
+        color: #f5f5f5;
+        font-size: 1.5rem;
+        font-weight: 600;
+    }
+
+    .kpis {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        margin-bottom: 24px;
+    }
+
+    .kpi-card {
+        background: #1a1a1a;
+        border-radius: 12px;
+        padding: 16px;
+        text-align: center;
+    }
+
+    .kpi-value {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #f5f5f5;
+    }
+
+    .kpi-value.purple { color: #7b1fa2; }
+    .kpi-value.green { color: #2e7d32; }
+
+    .kpi-label {
+        font-size: 0.75rem;
+        color: #888;
+        margin-top: 4px;
+    }
+
+    .section-title {
+        color: #f5f5f5;
+        font-size: 1rem;
+        font-weight: 600;
+        margin: 24px 0 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .section-title a {
+        color: #7b1fa2;
+        font-size: 0.85rem;
+        text-decoration: none;
+    }
+
+    .quick-actions {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        margin-bottom: 24px;
+    }
+
+    .action-card {
+        background: #1a1a1a;
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+        text-decoration: none;
+        color: #f5f5f5;
+        transition: transform 0.2s;
+    }
+
+    .action-card:hover {
+        transform: translateY(-2px);
+    }
+
+    .action-card i {
+        font-size: 2rem;
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .action-card.employees i { color: #7b1fa2; }
+    .action-card.freelancers i { color: #1565c0; }
+    .action-card.payroll i { color: #2e7d32; }
+
+    .action-card span {
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    .ranking-list {
+        background: #1a1a1a;
+        border-radius: 12px;
+        padding: 16px;
+    }
+
+    .ranking-item {
+        display: flex;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px solid #2a2a2a;
+    }
+
+    .ranking-item:last-child {
+        border-bottom: none;
+    }
+
+    .ranking-position {
+        width: 30px;
+        height: 30px;
+        background: #333;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        color: #888;
+        margin-right: 12px;
+        font-size: 0.85rem;
+    }
+
+    .ranking-position.gold { background: #d4a574; color: #000; }
+    .ranking-position.silver { background: #9e9e9e; color: #000; }
+    .ranking-position.bronze { background: #cd7f32; color: #000; }
+
+    .ranking-info {
+        flex: 1;
+    }
+
+    .ranking-name {
+        color: #f5f5f5;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .ranking-role {
+        color: #888;
+        font-size: 0.75rem;
+    }
+
+    .ranking-score {
+        color: #7b1fa2;
+        font-weight: 700;
+        font-size: 1rem;
+    }
+
+    .empty-state {
+        text-align: center;
+        color: #666;
+        padding: 40px 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="rh-container">
+    <div class="page-header">
+        <h1 class="page-title"><i class="fas fa-users"></i> RH</h1>
+    </div>
+
+    <div class="kpis">
+        <div class="kpi-card">
+            <div class="kpi-value purple">{{ employees|length }}</div>
+            <div class="kpi-label">Funcionarios CLT</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-value">{{ freelancers|length }}</div>
+            <div class="kpi-label">Freelancers</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-value green">R$ {{ '{:,.0f}'.format(payroll_total).replace(',', '.') }}</div>
+            <div class="kpi-label">Folha {{ current_month }}/{{ current_year }}</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-value" style="color: #fb8c00;">{{ pending_payrolls }}</div>
+            <div class="kpi-label">Folhas Pendentes</div>
+        </div>
+    </div>
+
+    <div class="quick-actions">
+        <a href="{{ url_for('rh.employees') }}" class="action-card employees">
+            <i class="fas fa-id-card"></i>
+            <span>Funcionarios</span>
+        </a>
+        <a href="{{ url_for('rh.freelancers') }}" class="action-card freelancers">
+            <i class="fas fa-user-clock"></i>
+            <span>Freelancers</span>
+        </a>
+        <a href="{{ url_for('rh.payroll') }}" class="action-card payroll">
+            <i class="fas fa-money-check-alt"></i>
+            <span>Folha de Pagamento</span>
+        </a>
+        <a href="{{ url_for('rh.new_employee') }}" class="action-card">
+            <i class="fas fa-user-plus"></i>
+            <span>Novo Funcionario</span>
+        </a>
+    </div>
+
+    <h3 class="section-title">
+        <span><i class="fas fa-trophy"></i> Ranking de Performance</span>
+    </h3>
+
+    <div class="ranking-list">
+        {% if ranking %}
+            {% for item in ranking %}
+            <div class="ranking-item">
+                <div class="ranking-position {% if loop.index == 1 %}gold{% elif loop.index == 2 %}silver{% elif loop.index == 3 %}bronze{% endif %}">
+                    {{ loop.index }}
+                </div>
+                <div class="ranking-info">
+                    <div class="ranking-name">{{ item.employee.name }}</div>
+                    <div class="ranking-role">{{ item.employee.position or 'Sem cargo' }}</div>
+                </div>
+                <div class="ranking-score">{{ item.score }}%</div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">Nenhum funcionario cadastrado</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
