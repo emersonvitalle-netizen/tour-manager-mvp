@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+
+{% block title %}Gerar PIX - Financeiro{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-container {
+        padding: 0;
+        min-height: 100vh;
+        padding-bottom: 90px;
+        background-color: #0a0a0a;
+    }
+
+    .page-header {
+        background: linear-gradient(135deg, rgba(20,184,166,0.3) 0%, rgba(26,26,26,0.95) 100%);
+        padding: 20px 16px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        border-bottom: 1px solid #2a2a2a;
+    }
+
+    .back-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #d4a574;
+        text-decoration: none;
+    }
+
+    .page-title h1 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #f5f5f5;
+        margin-bottom: 4px;
+    }
+
+    .form-card {
+        margin: 16px;
+        background: #1a1a1a;
+        border-radius: 12px;
+        padding: 20px;
+        border: 1px solid #2a2a2a;
+    }
+
+    .form-group {
+        margin-bottom: 16px;
+    }
+
+    .form-control {
+        width: 100%;
+        background: #252525;
+        border: 1px solid #333;
+        border-radius: 8px;
+        padding: 12px;
+        color: #fff;
+        font-size: 0.95rem;
+    }
+
+    .form-control.valor-grande {
+        font-size: 1.5rem;
+        font-weight: 700;
+        text-align: center;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #14b8a6;
+    }
+
+    .btn-gerar {
+        width: 100%;
+        background: #10b981;
+        color: #fff;
+        padding: 16px;
+        border-radius: 8px;
+        border: none;
+        font-weight: 700;
+        font-size: 1rem;
+        cursor: pointer;
+        margin-top: 8px;
+    }
+
+    .qr-section {
+        margin-top: 24px;
+        background: #fff;
+        border-radius: 12px;
+        padding: 32px;
+        text-align: center;
+    }
+
+    .qr-placeholder {
+        width: 200px;
+        height: 200px;
+        background: #e5e5e5;
+        border-radius: 12px;
+        margin: 0 auto 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #666;
+    }
+
+    .pix-code {
+        background: #f3f4f6;
+        padding: 12px;
+        border-radius: 8px;
+        font-family: monospace;
+        font-size: 0.75rem;
+        color: #374151;
+        word-break: break-all;
+        margin-bottom: 16px;
+    }
+
+    .btn-copiar {
+        background: #3b82f6;
+        color: #fff;
+        padding: 10px 24px;
+        border-radius: 8px;
+        border: none;
+        font-weight: 600;
+        cursor: pointer;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <a href="{{ url_for('financial.index') }}" class="back-btn">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <div class="page-title">
+            <h1><i class="fas fa-qrcode"></i> Gerar PIX</h1>
+        </div>
+    </div>
+
+    <div class="form-card">
+        <form method="POST">
+            <div class="form-group">
+                <input type="text" class="form-control" name="descricao" placeholder="Descricao">
+            </div>
+            <div class="form-group">
+                <input type="number" class="form-control valor-grande" name="valor" placeholder="R$ 0,00" step="0.01">
+            </div>
+            <div class="form-group">
+                <select class="form-control" name="fatura_id">
+                    <option value="">Vincular a fatura...</option>
+                    {% for fatura in faturas %}
+                    <option value="{{ fatura.id }}">{{ fatura.code }} - R$ {{ "%.2f"|format(fatura.total|float) }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn-gerar">Gerar QR Code</button>
+        </form>
+
+        <div class="qr-section">
+            <div class="qr-placeholder">
+                <span>QR Code</span>
+            </div>
+            <div class="pix-code">
+                00020126360014BR.GOV.BCB.PIX...
+            </div>
+            <button class="btn-copiar" onclick="navigator.clipboard.writeText('00020126360014BR.GOV.BCB.PIX...')">
+                Copiar Codigo
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}

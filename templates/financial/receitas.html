@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+
+{% block title %}Receitas - Financeiro{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-container {
+        padding: 0;
+        min-height: 100vh;
+        padding-bottom: 90px;
+        background-color: #0a0a0a;
+    }
+
+    .page-header {
+        background: linear-gradient(135deg, rgba(16,185,129,0.3) 0%, rgba(26,26,26,0.95) 100%);
+        padding: 20px 16px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        border-bottom: 1px solid #2a2a2a;
+    }
+
+    .back-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #d4a574;
+        text-decoration: none;
+    }
+
+    .page-title h1 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #f5f5f5;
+        margin-bottom: 4px;
+    }
+
+    .page-title p {
+        font-size: 0.8rem;
+        color: #a0a0a0;
+    }
+
+    .add-btn {
+        background: #10b981;
+        color: #fff;
+        padding: 10px 16px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .filter-tabs {
+        padding: 16px;
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+    }
+
+    .filter-tab {
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-decoration: none;
+        white-space: nowrap;
+    }
+
+    .filter-tab.active {
+        background: #d4a574;
+        color: #000;
+    }
+
+    .filter-tab:not(.active) {
+        background: #252525;
+        color: #888;
+    }
+
+    .list-section {
+        padding: 0 16px 16px;
+    }
+
+    .fatura-card {
+        background: #1a1a1a;
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 12px;
+        border-left: 4px solid;
+        text-decoration: none;
+        display: block;
+    }
+
+    .fatura-card.status-pago { border-left-color: #10b981; }
+    .fatura-card.status-pendente { border-left-color: #f59e0b; }
+    .fatura-card.status-atrasado { border-left-color: #ef4444; }
+
+    .fatura-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+    }
+
+    .fatura-code {
+        color: #f5f5f5;
+        font-weight: 700;
+        font-size: 0.95rem;
+    }
+
+    .fatura-cliente {
+        color: #888;
+        font-size: 0.8rem;
+    }
+
+    .fatura-valor {
+        color: #f5f5f5;
+        font-weight: 700;
+        font-size: 1.1rem;
+        text-align: right;
+    }
+
+    .fatura-status {
+        font-size: 0.65rem;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .fatura-status.pago { background: rgba(16,185,129,0.2); color: #10b981; }
+    .fatura-status.pendente { background: rgba(245,158,11,0.2); color: #f59e0b; }
+    .fatura-status.atrasado { background: rgba(239,68,68,0.2); color: #ef4444; }
+
+    .fatura-footer {
+        display: flex;
+        justify-content: space-between;
+        color: #666;
+        font-size: 0.75rem;
+        margin-top: 8px;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: #666;
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 16px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <a href="{{ url_for('financial.index') }}" class="back-btn">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <div class="page-title" style="flex: 1;">
+            <h1><i class="fas fa-arrow-up"></i> Receitas</h1>
+            <p>Faturas e recebimentos</p>
+        </div>
+        <a href="{{ url_for('financial.new_invoice') }}" class="add-btn">+ Nova</a>
+    </div>
+
+    <div class="filter-tabs">
+        <a href="{{ url_for('financial.receitas') }}" class="filter-tab {{ 'active' if status == 'all' else '' }}">Todas</a>
+        <a href="{{ url_for('financial.receitas', status='pago') }}" class="filter-tab {{ 'active' if status == 'pago' else '' }}">Pagas</a>
+        <a href="{{ url_for('financial.receitas', status='pendente') }}" class="filter-tab {{ 'active' if status == 'pendente' else '' }}">Pendentes</a>
+        <a href="{{ url_for('financial.receitas', status='atrasado') }}" class="filter-tab {{ 'active' if status == 'atrasado' else '' }}">Atrasadas</a>
+    </div>
+
+    <div class="list-section">
+        {% if faturas %}
+            {% for fatura in faturas %}
+            <a href="{{ url_for('financial.view_invoice', id=fatura.id) }}" class="fatura-card status-{{ 'pago' if fatura.status == 'paid' else 'atrasado' if fatura.due_date < today else 'pendente' }}">
+                <div class="fatura-header">
+                    <div>
+                        <div class="fatura-code">{{ fatura.code }}</div>
+                        <div class="fatura-cliente">{{ fatura.client_name }}</div>
+                    </div>
+                    <div>
+                        <div class="fatura-valor">R$ {{ "%.2f"|format(fatura.total|float) }}</div>
+                        <span class="fatura-status {{ 'pago' if fatura.status == 'paid' else 'atrasado' if fatura.due_date < today else 'pendente' }}">
+                            {{ 'PAGO' if fatura.status == 'paid' else 'ATRASADO' if fatura.due_date < today else 'PENDENTE' }}
+                        </span>
+                    </div>
+                </div>
+                <div class="fatura-footer">
+                    <span>Venc: {{ fatura.due_date.strftime('%d/%m') if fatura.due_date else '-' }}</span>
+                    <span>NFSe: {{ 'Sim' if fatura.nfse_number else 'Nao' }}</span>
+                </div>
+            </a>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-file-invoice"></i>
+                <p>Nenhuma fatura encontrada</p>
+                <a href="{{ url_for('financial.new_invoice') }}" class="add-btn" style="display: inline-block; margin-top: 16px;">Criar Fatura</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
