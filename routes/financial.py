@@ -501,31 +501,209 @@ def freelancers():
 @login_required
 @admin_required
 def contas_pagar():
-    """Contas a pagar"""
+    """Contas a pagar - lista com filtros"""
     from models.rh import AccountPayable
+    from sqlalchemy import func
     
-    vencidas = AccountPayable.query.filter(
+    status_filter = request.args.get('status', 'pending')
+    categoria_filter = request.args.get('categoria', '')
+    
+    query = AccountPayable.query.filter_by(company_id=current_user.company_id)
+    
+    if status_filter == 'pending':
+        query = query.filter_by(status='pending')
+    elif status_filter == 'paid':
+        query = query.filter_by(status='paid')
+    elif status_filter == 'overdue':
+        query = query.filter(
+            AccountPayable.status == 'pending',
+            AccountPayable.due_date < date.today()
+        )
+    
+    if categoria_filter:
+        query = query.filter_by(category=categoria_filter)
+    
+    contas = query.order_by(AccountPayable.due_date).all()
+    
+    total_vencidas = db.session.query(func.sum(AccountPayable.amount)).filter(
         AccountPayable.company_id == current_user.company_id,
         AccountPayable.status == 'pending',
         AccountPayable.due_date < date.today()
-    ).all()
+    ).scalar() or 0
     
-    proximos_7_dias = AccountPayable.query.filter(
+    total_7_dias = db.session.query(func.sum(AccountPayable.amount)).filter(
         AccountPayable.company_id == current_user.company_id,
         AccountPayable.status == 'pending',
         AccountPayable.due_date >= date.today(),
         AccountPayable.due_date <= date.today() + timedelta(days=7)
-    ).all()
+    ).scalar() or 0
     
-    todas = AccountPayable.query.filter_by(
-        company_id=current_user.company_id,
-        status='pending'
-    ).order_by(AccountPayable.due_date).all()
+    total_mes = db.session.query(func.sum(AccountPayable.amount)).filter(
+        AccountPayable.company_id == current_user.company_id,
+        AccountPayable.status == 'pending',
+        func.extract('month', AccountPayable.due_date) == date.today().month,
+        func.extract('year', AccountPayable.due_date) == date.today().year
+    ).scalar() or 0
+    
+    categorias = ['aluguel', 'energia', 'agua', 'telefone', 'internet', 'combustivel', 'manutencao', 'outros']
     
     return render_template('financial/contas_pagar.html',
-                          vencidas=vencidas,
-                          proximos_7_dias=proximos_7_dias,
-                          contas=todas)
+                          contas=contas,
+                          total_vencidas=total_vencidas,
+                          total_7_dias=total_7_dias,
+                          total_mes=total_mes,
+                          categorias=categorias,
+                          status_filter=status_filter,
+                          categoria_filter=categoria_filter)
+
+
+@financial_bp.route('/contas-pagar/nova', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def nova_conta_pagar():
+    """Criar nova conta a pagar"""
+    from models.rh import AccountPayable
+    
+    if request.method == 'POST':
+        try:
+            conta = AccountPayable(
+                company_id=current_user.company_id,
+                description=request.form.get('description', '').strip(),
+                category=request.form.get('category', 'outros'),
+                supplier=request.form.get('supplier', '').strip(),
+                amount=Decimal(request.form.get('amount', '0').replace(',', '.')),
+                due_date=datetime.strptime(request.form.get('due_date'), '%Y-%m-%d').date(),
+                is_recurring=request.form.get('is_recurring') == 'on',
+                recurrence_type=request.form.get('recurrence_type') if request.form.get('is_recurring') == 'on' else None,
+                notes=request.form.get('notes', '').strip(),
+                status='pending',
+                created_by=current_user.id
+            )
+            
+            db.session.add(conta)
+            db.session.commit()
+            
+            flash('Conta cadastrada com sucesso!', 'success')
+            return redirect(url_for('financial.contas_pagar'))
+            
+        except ValueError as e:
+            flash(f'Erro nos dados: verifique valor e data.', 'danger')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Erro ao salvar: {str(e)}', 'danger')
+    
+    categorias = ['aluguel', 'energia', 'agua', 'telefone', 'internet', 'combustivel', 'manutencao', 'outros']
+    return render_template('financial/conta_pagar_form.html', conta=None, categorias=categorias)
+
+
+@financial_bp.route('/contas-pagar/<int:id>/editar', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def editar_conta_pagar(id):
+    """Editar conta a pagar"""
+    from models.rh import AccountPayable
+    
+    conta = AccountPayable.query.filter_by(
+        id=id,
+        company_id=current_user.company_id
+    ).first_or_404()
+    
+    if request.method == 'POST':
+        try:
+            conta.description = request.form.get('description', conta.description).strip()
+            conta.category = request.form.get('category', conta.category)
+            conta.supplier = request.form.get('supplier', '').strip()
+            conta.amount = Decimal(request.form.get('amount', '0').replace(',', '.'))
+            conta.due_date = datetime.strptime(request.form.get('due_date'), '%Y-%m-%d').date()
+            conta.is_recurring = request.form.get('is_recurring') == 'on'
+            conta.recurrence_type = request.form.get('recurrence_type') if conta.is_recurring else None
+            conta.notes = request.form.get('notes', '').strip()
+            
+            db.session.commit()
+            
+            flash('Conta atualizada!', 'success')
+            return redirect(url_for('financial.contas_pagar'))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Erro ao salvar: {str(e)}', 'danger')
+    
+    categorias = ['aluguel', 'energia', 'agua', 'telefone', 'internet', 'combustivel', 'manutencao', 'outros']
+    return render_template('financial/conta_pagar_form.html', conta=conta, categorias=categorias)
+
+
+@financial_bp.route('/contas-pagar/<int:id>/pagar', methods=['POST'])
+@login_required
+@admin_required
+def pagar_conta(id):
+    """Marcar conta como paga"""
+    from models.rh import AccountPayable
+    
+    conta = AccountPayable.query.filter_by(
+        id=id,
+        company_id=current_user.company_id
+    ).first_or_404()
+    
+    valor_pago = request.form.get('paid_amount', '')
+    if valor_pago:
+        conta.paid_amount = Decimal(valor_pago.replace(',', '.'))
+    else:
+        conta.paid_amount = conta.amount
+    
+    conta.status = 'paid'
+    conta.paid_at = datetime.utcnow()
+    
+    db.session.commit()
+    
+    if conta.is_recurring:
+        proxima = AccountPayable(
+            company_id=conta.company_id,
+            description=conta.description,
+            category=conta.category,
+            supplier=conta.supplier,
+            amount=conta.amount,
+            is_recurring=True,
+            recurrence_type=conta.recurrence_type,
+            notes=conta.notes,
+            status='pending',
+            created_by=current_user.id
+        )
+        
+        if conta.recurrence_type == 'monthly':
+            proxima.due_date = conta.due_date + timedelta(days=30)
+        elif conta.recurrence_type == 'weekly':
+            proxima.due_date = conta.due_date + timedelta(days=7)
+        elif conta.recurrence_type == 'yearly':
+            proxima.due_date = conta.due_date + timedelta(days=365)
+        else:
+            proxima.due_date = conta.due_date + timedelta(days=30)
+        
+        db.session.add(proxima)
+        db.session.commit()
+        flash(f'Conta paga! Proxima parcela criada para {proxima.due_date.strftime("%d/%m/%Y")}.', 'success')
+    else:
+        flash('Conta marcada como paga!', 'success')
+    
+    return redirect(url_for('financial.contas_pagar'))
+
+
+@financial_bp.route('/contas-pagar/<int:id>/excluir', methods=['POST'])
+@login_required
+@admin_required
+def excluir_conta_pagar(id):
+    """Excluir conta a pagar"""
+    from models.rh import AccountPayable
+    
+    conta = AccountPayable.query.filter_by(
+        id=id,
+        company_id=current_user.company_id
+    ).first_or_404()
+    
+    conta.status = 'cancelled'
+    db.session.commit()
+    
+    flash('Conta cancelada.', 'warning')
+    return redirect(url_for('financial.contas_pagar'))
 
 
 @financial_bp.route('/emitir-nfse', methods=['GET', 'POST'])
