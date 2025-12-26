@@ -90,6 +90,18 @@ def migrate_database():
         'ALTER TABLE equipment ADD COLUMN tag_associated_by INTEGER',
         # Company - API Key
         'ALTER TABLE company ADD COLUMN api_key VARCHAR(64)',
+        # Quote - client_id
+        'ALTER TABLE quote ADD COLUMN client_id INTEGER',
+        # AccountPayable - novos campos
+        'ALTER TABLE account_payable ADD COLUMN custom_category VARCHAR(100)',
+        'ALTER TABLE account_payable ADD COLUMN payment_method VARCHAR(50)',
+        'ALTER TABLE account_payable ADD COLUMN installment_number INTEGER',
+        'ALTER TABLE account_payable ADD COLUMN total_installments INTEGER',
+        'ALTER TABLE account_payable ADD COLUMN bank_account_id INTEGER',
+        'ALTER TABLE account_payable ADD COLUMN cost_center_id INTEGER',
+        'ALTER TABLE account_payable ADD COLUMN receipt_url VARCHAR(500)',
+        'ALTER TABLE account_payable ADD COLUMN origin_type VARCHAR(50)',
+        'ALTER TABLE account_payable ADD COLUMN origin_id INTEGER',
     ]
 
     for migration in migrations:
