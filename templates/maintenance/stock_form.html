@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+
+{% block title %}{% if material %}Editar{% else %}Novo{% endif %} Material{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        padding: 16px;
+        padding-bottom: 100px;
+        background: #0a0a0a;
+        min-height: 100vh;
+    }
+
+    .page-header {
+        margin-bottom: 24px;
+    }
+
+    .page-title {
+        color: #f5f5f5;
+        font-size: 1.3rem;
+        font-weight: 600;
+    }
+
+    .form-card {
+        background: #1a1a1a;
+        border-radius: 12px;
+        padding: 20px;
+    }
+
+    .form-group {
+        margin-bottom: 16px;
+    }
+
+    .form-label {
+        display: block;
+        color: #888;
+        font-size: 0.85rem;
+        margin-bottom: 6px;
+    }
+
+    .form-control {
+        width: 100%;
+        background: #252525;
+        border: 1px solid #333;
+        border-radius: 8px;
+        padding: 12px;
+        color: #f5f5f5;
+        font-size: 1rem;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #455a64;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+
+    .btn-submit {
+        width: 100%;
+        background: linear-gradient(135deg, #455a64 0%, #263238 100%);
+        color: white;
+        border: none;
+        padding: 14px;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        margin-top: 16px;
+    }
+
+    .btn-cancel {
+        width: 100%;
+        background: #333;
+        color: #888;
+        border: none;
+        padding: 14px;
+        border-radius: 8px;
+        font-size: 1rem;
+        margin-top: 8px;
+        text-decoration: none;
+        display: block;
+        text-align: center;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="page-header">
+        <h1 class="page-title">
+            <i class="fas fa-box"></i> 
+            {% if material %}Editar Material{% else %}Novo Material{% endif %}
+        </h1>
+    </div>
+
+    <form method="POST" class="form-card">
+        <div class="form-group">
+            <label class="form-label">Nome *</label>
+            <input type="text" name="name" class="form-control" value="{{ material.name if material else '' }}" required>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Categoria *</label>
+                <select name="category" class="form-control" required>
+                    <option value="connector" {% if material and material.category == 'connector' %}selected{% endif %}>Conector</option>
+                    <option value="cable" {% if material and material.category == 'cable' %}selected{% endif %}>Cabo/Metro</option>
+                    <option value="hardware" {% if material and material.category == 'hardware' %}selected{% endif %}>Hardware</option>
+                    <option value="consumable" {% if material and material.category == 'consumable' %}selected{% endif %}>Consumivel</option>
+                    <option value="other" {% if material and material.category == 'other' %}selected{% endif %}>Outro</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Subcategoria</label>
+                <input type="text" name="sub_category" class="form-control" value="{{ material.sub_category if material else '' }}">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Quantidade *</label>
+                <input type="number" name="quantity" class="form-control" step="0.01" value="{{ material.quantity if material else '0' }}" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Unidade *</label>
+                <select name="unit" class="form-control" required>
+                    <option value="unit" {% if material and material.unit == 'unit' %}selected{% endif %}>Unidade</option>
+                    <option value="m" {% if material and material.unit == 'm' %}selected{% endif %}>Metro</option>
+                    <option value="kg" {% if material and material.unit == 'kg' %}selected{% endif %}>Kg</option>
+                    <option value="l" {% if material and material.unit == 'l' %}selected{% endif %}>Litro</option>
+                    <option value="box" {% if material and material.unit == 'box' %}selected{% endif %}>Caixa</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Quantidade Minima</label>
+            <input type="number" name="minimum_quantity" class="form-control" step="0.01" value="{{ material.minimum_quantity if material else '0' }}">
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Marca</label>
+                <input type="text" name="brand" class="form-control" value="{{ material.brand if material else '' }}">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Modelo</label>
+                <input type="text" name="model" class="form-control" value="{{ material.model if material else '' }}">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Valor Referencia (R$)</label>
+                <input type="number" name="reference_value" class="form-control" step="0.01" value="{{ material.reference_value if material else '' }}">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Fornecedor</label>
+                <input type="text" name="supplier" class="form-control" value="{{ material.supplier if material else '' }}">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Observacoes</label>
+            <textarea name="notes" class="form-control" rows="3">{{ material.notes if material else '' }}</textarea>
+        </div>
+
+        <button type="submit" class="btn-submit">
+            <i class="fas fa-save"></i> Salvar
+        </button>
+        
+        <a href="{{ url_for('maintenance.stock') }}" class="btn-cancel">Cancelar</a>
+    </form>
+</div>
+{% endblock %}

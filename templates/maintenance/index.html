@@ -1,0 +1,305 @@
+{% extends "base.html" %}
+
+{% block title %}Manutencao - Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    .maintenance-container {
+        padding: 16px;
+        padding-bottom: 100px;
+        background: #0a0a0a;
+        min-height: 100vh;
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+    }
+
+    .page-title {
+        color: #f5f5f5;
+        font-size: 1.5rem;
+        font-weight: 600;
+    }
+
+    .kpis {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        margin-bottom: 24px;
+    }
+
+    .kpi-card {
+        background: #1a1a1a;
+        border-radius: 12px;
+        padding: 16px;
+        text-align: center;
+    }
+
+    .kpi-value {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #f5f5f5;
+    }
+
+    .kpi-value.orange { color: #e65100; }
+    .kpi-value.blue { color: #1565c0; }
+    .kpi-value.red { color: #c62828; }
+    .kpi-value.green { color: #2e7d32; }
+
+    .kpi-label {
+        font-size: 0.75rem;
+        color: #888;
+        margin-top: 4px;
+    }
+
+    .quick-actions {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        margin-bottom: 24px;
+    }
+
+    .action-card {
+        background: #1a1a1a;
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+        text-decoration: none;
+        color: #f5f5f5;
+        transition: transform 0.2s;
+    }
+
+    .action-card:hover {
+        transform: translateY(-2px);
+    }
+
+    .action-card i {
+        font-size: 2rem;
+        margin-bottom: 8px;
+        display: block;
+        color: #455a64;
+    }
+
+    .action-card span {
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    .section-title {
+        color: #f5f5f5;
+        font-size: 1rem;
+        font-weight: 600;
+        margin: 24px 0 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .section-title a {
+        color: #455a64;
+        font-size: 0.85rem;
+        text-decoration: none;
+    }
+
+    .maintenance-list {
+        background: #1a1a1a;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .maintenance-item {
+        display: flex;
+        align-items: center;
+        padding: 16px;
+        border-bottom: 1px solid #2a2a2a;
+    }
+
+    .maintenance-item:last-child {
+        border-bottom: none;
+    }
+
+    .maintenance-priority {
+        width: 4px;
+        height: 40px;
+        border-radius: 2px;
+        margin-right: 12px;
+    }
+
+    .priority-urgent { background: #c62828; }
+    .priority-high { background: #e65100; }
+    .priority-medium { background: #fbc02d; }
+    .priority-low { background: #2e7d32; }
+
+    .maintenance-info {
+        flex: 1;
+    }
+
+    .maintenance-code {
+        color: #f5f5f5;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .maintenance-problem {
+        color: #888;
+        font-size: 0.8rem;
+        margin-top: 2px;
+    }
+
+    .maintenance-status {
+        padding: 4px 10px;
+        border-radius: 10px;
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+
+    .status-pending { background: #e65100; color: white; }
+    .status-in_progress { background: #1565c0; color: white; }
+
+    .low-stock-list {
+        background: #1a1a1a;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .stock-item {
+        display: flex;
+        align-items: center;
+        padding: 12px 16px;
+        border-bottom: 1px solid #2a2a2a;
+    }
+
+    .stock-item:last-child {
+        border-bottom: none;
+    }
+
+    .stock-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        background: #c62828;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        margin-right: 12px;
+        font-size: 0.8rem;
+    }
+
+    .stock-info {
+        flex: 1;
+    }
+
+    .stock-name {
+        color: #f5f5f5;
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+
+    .stock-qty {
+        color: #c62828;
+        font-size: 0.75rem;
+    }
+
+    .empty-state {
+        text-align: center;
+        color: #666;
+        padding: 40px 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="maintenance-container">
+    <div class="page-header">
+        <h1 class="page-title"><i class="fas fa-tools"></i> Manutencao</h1>
+    </div>
+
+    <div class="kpis">
+        <div class="kpi-card">
+            <div class="kpi-value orange">{{ pending_maintenance|length }}</div>
+            <div class="kpi-label">Pendentes</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-value blue">{{ in_progress|length }}</div>
+            <div class="kpi-label">Em Andamento</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-value red">{{ low_stock|length }}</div>
+            <div class="kpi-label">Estoque Baixo</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-value green">R$ {{ '{:,.0f}'.format(month_cost).replace(',', '.') }}</div>
+            <div class="kpi-label">Custo do Mes</div>
+        </div>
+    </div>
+
+    <div class="quick-actions">
+        <a href="{{ url_for('maintenance.stock') }}" class="action-card">
+            <i class="fas fa-boxes"></i>
+            <span>Estoque</span>
+        </a>
+        <a href="{{ url_for('maintenance.fabrication') }}" class="action-card">
+            <i class="fas fa-hammer"></i>
+            <span>Fabricacao</span>
+        </a>
+        <a href="{{ url_for('maintenance.reports') }}" class="action-card">
+            <i class="fas fa-chart-bar"></i>
+            <span>Relatorios</span>
+        </a>
+        <a href="{{ url_for('equipment.maintenance_list') }}" class="action-card">
+            <i class="fas fa-wrench"></i>
+            <span>Todas Manutencoes</span>
+        </a>
+    </div>
+
+    {% if pending_maintenance %}
+    <h3 class="section-title">
+        <span><i class="fas fa-exclamation-triangle"></i> Manutencoes Pendentes</span>
+    </h3>
+
+    <div class="maintenance-list">
+        {% for m in pending_maintenance[:5] %}
+        <div class="maintenance-item">
+            <div class="maintenance-priority priority-{{ m.priority or 'medium' }}"></div>
+            <div class="maintenance-info">
+                <div class="maintenance-code">{{ m.equipment.code if m.equipment else 'Equipamento' }}</div>
+                <div class="maintenance-problem">{{ m.problem_description[:50] if m.problem_description else 'Sem descricao' }}...</div>
+            </div>
+            <span class="maintenance-status status-{{ m.status }}">{{ m.status|upper }}</span>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if low_stock %}
+    <h3 class="section-title">
+        <span><i class="fas fa-exclamation-circle"></i> Estoque Baixo</span>
+        <a href="{{ url_for('maintenance.stock') }}">Ver Tudo</a>
+    </h3>
+
+    <div class="low-stock-list">
+        {% for item in low_stock[:5] %}
+        <div class="stock-item">
+            <div class="stock-icon"><i class="fas fa-box"></i></div>
+            <div class="stock-info">
+                <div class="stock-name">{{ item.name }}</div>
+                <div class="stock-qty">{{ item.quantity }} {{ item.unit }} (min: {{ item.minimum_quantity }})</div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if not pending_maintenance and not low_stock %}
+    <div class="empty-state">
+        <i class="fas fa-check-circle fa-3x" style="color: #2e7d32; margin-bottom: 16px;"></i>
+        <p>Tudo em ordem!</p>
+        <p style="font-size: 0.85rem; color: #888;">Nenhuma manutencao pendente ou estoque baixo.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

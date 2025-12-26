@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block title %}{% if lead %}Editar{% else %}Novo{% endif %} Lead{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        padding: 16px;
+        padding-bottom: 100px;
+        background: #0a0a0a;
+        min-height: 100vh;
+    }
+
+    .page-header {
+        margin-bottom: 24px;
+    }
+
+    .page-title {
+        color: #f5f5f5;
+        font-size: 1.3rem;
+        font-weight: 600;
+    }
+
+    .form-card {
+        background: #1a1a1a;
+        border-radius: 12px;
+        padding: 20px;
+    }
+
+    .form-group {
+        margin-bottom: 16px;
+    }
+
+    .form-label {
+        display: block;
+        color: #888;
+        font-size: 0.85rem;
+        margin-bottom: 6px;
+    }
+
+    .form-control {
+        width: 100%;
+        background: #252525;
+        border: 1px solid #333;
+        border-radius: 8px;
+        padding: 12px;
+        color: #f5f5f5;
+        font-size: 1rem;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #1565c0;
+    }
+
+    .btn-submit {
+        width: 100%;
+        background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%);
+        color: white;
+        border: none;
+        padding: 14px;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        margin-top: 16px;
+    }
+
+    .btn-cancel {
+        width: 100%;
+        background: #333;
+        color: #888;
+        border: none;
+        padding: 14px;
+        border-radius: 8px;
+        font-size: 1rem;
+        margin-top: 8px;
+        text-decoration: none;
+        display: block;
+        text-align: center;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="page-header">
+        <h1 class="page-title">
+            <i class="fas fa-user-plus"></i> 
+            {% if lead %}Editar Lead{% else %}Novo Lead{% endif %}
+        </h1>
+    </div>
+
+    <form method="POST" class="form-card">
+        <div class="form-group">
+            <label class="form-label">Nome *</label>
+            <input type="text" name="name" class="form-control" value="{{ lead.name if lead else '' }}" required>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Email</label>
+            <input type="email" name="email" class="form-control" value="{{ lead.email if lead else '' }}">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Telefone</label>
+            <input type="tel" name="phone" class="form-control" value="{{ lead.phone if lead else '' }}">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Empresa</label>
+            <input type="text" name="company_name" class="form-control" value="{{ lead.company_name if lead else '' }}">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Origem</label>
+            <select name="source" class="form-control">
+                <option value="website" {% if lead and lead.source == 'website' %}selected{% endif %}>Website</option>
+                <option value="referral" {% if lead and lead.source == 'referral' %}selected{% endif %}>Indicacao</option>
+                <option value="instagram" {% if lead and lead.source == 'instagram' %}selected{% endif %}>Instagram</option>
+                <option value="facebook" {% if lead and lead.source == 'facebook' %}selected{% endif %}>Facebook</option>
+                <option value="google" {% if lead and lead.source == 'google' %}selected{% endif %}>Google</option>
+                <option value="other" {% if lead and lead.source == 'other' %}selected{% endif %}>Outro</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Tipo de Evento</label>
+            <input type="text" name="event_type" class="form-control" placeholder="Casamento, Formatura, Corporativo..." value="{{ lead.event_type if lead else '' }}">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Data do Evento</label>
+            <input type="date" name="event_date" class="form-control" value="{{ lead.event_date.strftime('%Y-%m-%d') if lead and lead.event_date else '' }}">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Local do Evento</label>
+            <input type="text" name="event_location" class="form-control" value="{{ lead.event_location if lead else '' }}">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Valor Estimado (R$)</label>
+            <input type="number" name="estimated_value" class="form-control" step="0.01" value="{{ lead.estimated_value if lead else '' }}">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Observacoes</label>
+            <textarea name="notes" class="form-control" rows="3">{{ lead.notes if lead else '' }}</textarea>
+        </div>
+
+        <button type="submit" class="btn-submit">
+            <i class="fas fa-save"></i> Salvar
+        </button>
+        
+        <a href="{{ url_for('leads.index') }}" class="btn-cancel">Cancelar</a>
+    </form>
+</div>
+{% endblock %}

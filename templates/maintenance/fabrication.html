@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+
+{% block title %}Manutencao - Fabricacao{% endblock %}
+
+{% block extra_css %}
+<style>
+    .fabrication-container {
+        padding: 16px;
+        padding-bottom: 100px;
+        background: #0a0a0a;
+        min-height: 100vh;
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+    }
+
+    .page-title {
+        color: #f5f5f5;
+        font-size: 1.3rem;
+        font-weight: 600;
+    }
+
+    .btn-new {
+        background: linear-gradient(135deg, #455a64 0%, #263238 100%);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+    .cable-types {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        margin-bottom: 24px;
+    }
+
+    .cable-card {
+        background: #1a1a1a;
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+        text-decoration: none;
+        color: #f5f5f5;
+        transition: transform 0.2s;
+        border: 2px solid transparent;
+    }
+
+    .cable-card:hover {
+        transform: translateY(-2px);
+        border-color: #455a64;
+    }
+
+    .cable-card i {
+        font-size: 2.5rem;
+        color: #455a64;
+        margin-bottom: 12px;
+        display: block;
+    }
+
+    .cable-card h4 {
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-bottom: 4px;
+    }
+
+    .cable-card p {
+        font-size: 0.75rem;
+        color: #888;
+    }
+
+    .section-title {
+        color: #f5f5f5;
+        font-size: 1rem;
+        font-weight: 600;
+        margin: 24px 0 12px;
+    }
+
+    .fabrication-list {
+        background: #1a1a1a;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .fabrication-item {
+        display: flex;
+        align-items: center;
+        padding: 16px;
+        border-bottom: 1px solid #2a2a2a;
+    }
+
+    .fabrication-item:last-child {
+        border-bottom: none;
+    }
+
+    .fab-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        background: #455a64;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        margin-right: 12px;
+    }
+
+    .fab-info {
+        flex: 1;
+    }
+
+    .fab-name {
+        color: #f5f5f5;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .fab-date {
+        color: #888;
+        font-size: 0.75rem;
+    }
+
+    .fab-qty {
+        color: #2e7d32;
+        font-weight: 700;
+        font-size: 1rem;
+    }
+
+    .empty-state {
+        text-align: center;
+        color: #666;
+        padding: 40px 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="fabrication-container">
+    <div class="page-header">
+        <h1 class="page-title"><i class="fas fa-hammer"></i> Fabricacao</h1>
+        <a href="{{ url_for('maintenance.new_fabrication') }}" class="btn-new">
+            <i class="fas fa-plus"></i> Fabricar
+        </a>
+    </div>
+
+    <div class="cable-types">
+        {% for cable in cable_types %}
+        <a href="{{ url_for('maintenance.new_fabrication') }}?type={{ cable.id }}" class="cable-card">
+            <i class="fas fa-plug"></i>
+            <h4>{{ cable.name }}</h4>
+            <p>{{ cable.connectors|join(' + ') }}</p>
+        </a>
+        {% endfor %}
+    </div>
+
+    <h3 class="section-title"><i class="fas fa-history"></i> Historico</h3>
+
+    {% if fabrications %}
+    <div class="fabrication-list">
+        {% for fab in fabrications %}
+        <div class="fabrication-item">
+            <div class="fab-icon"><i class="fas fa-check"></i></div>
+            <div class="fab-info">
+                <div class="fab-name">{{ fab.template.name if fab.template else 'Fabricacao' }}</div>
+                <div class="fab-date">{{ fab.fabricated_at.strftime('%d/%m/%Y %H:%M') if fab.fabricated_at else '-' }}</div>
+            </div>
+            <div class="fab-qty">x{{ fab.quantity }}</div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="fabrication-list">
+        <div class="empty-state">
+            <i class="fas fa-tools fa-2x" style="margin-bottom: 12px; color: #444;"></i>
+            <p>Nenhuma fabricacao registrada</p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

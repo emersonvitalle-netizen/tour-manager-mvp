@@ -154,6 +154,9 @@ from routes.financial import financial_bp
 from routes.orcamento import orcamento_bp
 from routes.scanner import scanner_bp
 from routes.api_rfid import api_rfid_bp
+from routes.leads import leads_bp
+from routes.rh import rh_bp
+from routes.maintenance import maintenance_bp
 
 app.register_blueprint(auth_bp)
 app.register_blueprint(equipment_bp)
@@ -167,6 +170,9 @@ app.register_blueprint(financial_bp)
 app.register_blueprint(orcamento_bp)
 app.register_blueprint(scanner_bp)
 app.register_blueprint(api_rfid_bp)
+app.register_blueprint(leads_bp)
+app.register_blueprint(rh_bp)
+app.register_blueprint(maintenance_bp)
 
 @app.route('/')
 def index():
@@ -178,7 +184,22 @@ def index():
 def dashboard():
     if not current_user.is_authenticated:
         return redirect(url_for('auth.login'))
-    return render_template('dashboard.html')
+    
+    alert_count = 0
+    try:
+        from models.financial_expanded import FinancialAlert
+        alert_count = FinancialAlert.query.filter_by(
+            company_id=current_user.company_id,
+            status='active'
+        ).count()
+    except:
+        pass
+    
+    url_map = {rule.endpoint for rule in app.url_map.iter_rules()}
+    
+    return render_template('dashboard.html', 
+                          alert_count=alert_count,
+                          url_map=url_map)
 
 @app.route('/docs/project')
 def project_docs():
