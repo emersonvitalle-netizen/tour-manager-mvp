@@ -4,7 +4,7 @@ from flask_login import login_required, current_user
 from extensions import db
 from models.financial import Quote, QuoteItem, Contract, Invoice, Payment
 from models.tour import Tour
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from decimal import Decimal
 
 financial_bp = Blueprint('financial', __name__, url_prefix='/financial')
@@ -419,3 +419,148 @@ def recalculate_quote_totals(quote):
     quote.subtotal = subtotal
     quote.discount_value = subtotal * (quote.discount_percent or 0) / 100
     quote.total = subtotal - quote.discount_value
+
+
+@financial_bp.route('/receitas')
+@login_required
+@admin_required
+def receitas():
+    """Lista de receitas (faturas)"""
+    status = request.args.get('status', 'all')
+    
+    query = Invoice.query.filter_by(
+        company_id=current_user.company_id,
+        is_active=True
+    )
+    
+    if status == 'pago':
+        query = query.filter_by(status='paid')
+    elif status == 'pendente':
+        query = query.filter_by(status='pending')
+    elif status == 'atrasado':
+        query = query.filter(Invoice.status == 'pending', Invoice.due_date < date.today())
+    
+    faturas = query.order_by(Invoice.created_at.desc()).all()
+    
+    return render_template('financial/receitas.html', faturas=faturas, status=status)
+
+
+@financial_bp.route('/despesas')
+@login_required
+@admin_required
+def despesas():
+    """Visao geral de despesas"""
+    return render_template('financial/despesas.html')
+
+
+@financial_bp.route('/folha-clt')
+@login_required
+@admin_required
+def folha_clt():
+    """Folha de pagamento CLT"""
+    from models.rh import Employee, PayrollEntry
+    
+    funcionarios = Employee.query.filter_by(
+        company_id=current_user.company_id,
+        employment_type='clt',
+        is_active=True
+    ).all()
+    
+    mes_atual = datetime.now().month
+    ano_atual = datetime.now().year
+    
+    return render_template('financial/folha_clt.html', 
+                          funcionarios=funcionarios,
+                          mes=mes_atual,
+                          ano=ano_atual)
+
+
+@financial_bp.route('/freelancers')
+@login_required
+@admin_required
+def freelancers():
+    """Pagamentos a freelancers"""
+    from models.rh import Employee, FreelancerPayment
+    
+    freelancers_list = Employee.query.filter_by(
+        company_id=current_user.company_id,
+        employment_type='freelancer',
+        is_active=True
+    ).all()
+    
+    pagamentos_recentes = FreelancerPayment.query.filter_by(
+        company_id=current_user.company_id
+    ).order_by(FreelancerPayment.created_at.desc()).limit(10).all()
+    
+    return render_template('financial/freelancers.html',
+                          freelancers=freelancers_list,
+                          pagamentos=pagamentos_recentes)
+
+
+@financial_bp.route('/contas-pagar')
+@login_required
+@admin_required
+def contas_pagar():
+    """Contas a pagar"""
+    from models.rh import AccountPayable
+    
+    vencidas = AccountPayable.query.filter(
+        AccountPayable.company_id == current_user.company_id,
+        AccountPayable.status == 'pending',
+        AccountPayable.due_date < date.today()
+    ).all()
+    
+    proximos_7_dias = AccountPayable.query.filter(
+        AccountPayable.company_id == current_user.company_id,
+        AccountPayable.status == 'pending',
+        AccountPayable.due_date >= date.today(),
+        AccountPayable.due_date <= date.today() + timedelta(days=7)
+    ).all()
+    
+    todas = AccountPayable.query.filter_by(
+        company_id=current_user.company_id,
+        status='pending'
+    ).order_by(AccountPayable.due_date).all()
+    
+    return render_template('financial/contas_pagar.html',
+                          vencidas=vencidas,
+                          proximos_7_dias=proximos_7_dias,
+                          contas=todas)
+
+
+@financial_bp.route('/emitir-nfse', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def emitir_nfse():
+    """Emitir NFSe"""
+    if request.method == 'POST':
+        flash('NFSe seria emitida aqui (integracao pendente)', 'info')
+        return redirect(url_for('financial.emitir_nfse'))
+    
+    return render_template('financial/emitir_nfse.html')
+
+
+@financial_bp.route('/gerar-pix', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def gerar_pix():
+    """Gerar QR Code PIX"""
+    faturas = Invoice.query.filter_by(
+        company_id=current_user.company_id,
+        status='pending',
+        is_active=True
+    ).all()
+    
+    if request.method == 'POST':
+        flash('QR Code PIX seria gerado aqui (integracao pendente)', 'info')
+        return redirect(url_for('financial.gerar_pix'))
+    
+    return render_template('financial/gerar_pix.html', faturas=faturas)
+
+
+@financial_bp.route('/dre')
+@login_required
+@admin_required
+def dre():
+    """Demonstrativo de Resultado do Exercicio"""
+    return render_template('financial/dre.html')

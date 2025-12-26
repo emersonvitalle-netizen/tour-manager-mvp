@@ -1,0 +1,294 @@
+{% extends "base.html" %}
+
+{% block title %}Folha CLT - Financeiro{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-container {
+        padding: 0;
+        min-height: 100vh;
+        padding-bottom: 90px;
+        background-color: #0a0a0a;
+    }
+
+    .page-header {
+        background: linear-gradient(135deg, rgba(59,130,246,0.3) 0%, rgba(26,26,26,0.95) 100%);
+        padding: 20px 16px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        border-bottom: 1px solid #2a2a2a;
+    }
+
+    .back-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #d4a574;
+        text-decoration: none;
+    }
+
+    .page-title h1 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #f5f5f5;
+        margin-bottom: 4px;
+    }
+
+    .summary-card {
+        margin: 16px;
+        background: linear-gradient(135deg, #1e3a5f 0%, #0d47a1 100%);
+        border-radius: 16px;
+        padding: 24px;
+    }
+
+    .summary-label {
+        color: rgba(147,197,253,0.8);
+        font-size: 0.8rem;
+        margin-bottom: 4px;
+    }
+
+    .summary-value {
+        color: #fff;
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 16px;
+    }
+
+    .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        text-align: center;
+    }
+
+    .summary-item .label {
+        color: rgba(147,197,253,0.7);
+        font-size: 0.65rem;
+        text-transform: uppercase;
+    }
+
+    .summary-item .value {
+        color: #fff;
+        font-weight: 700;
+        font-size: 0.95rem;
+    }
+
+    .list-section {
+        padding: 0 16px 16px;
+    }
+
+    .funcionario-card {
+        background: #1a1a1a;
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 12px;
+        border: 1px solid #2a2a2a;
+    }
+
+    .funcionario-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 12px;
+    }
+
+    .funcionario-name {
+        color: #f5f5f5;
+        font-weight: 700;
+        font-size: 1rem;
+    }
+
+    .funcionario-cargo {
+        color: #888;
+        font-size: 0.8rem;
+    }
+
+    .funcionario-liquido {
+        text-align: right;
+    }
+
+    .funcionario-liquido .value {
+        color: #f5f5f5;
+        font-weight: 700;
+        font-size: 1.1rem;
+    }
+
+    .funcionario-liquido .label {
+        color: #666;
+        font-size: 0.7rem;
+    }
+
+    .deducoes-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+
+    .deducao-item {
+        background: #252525;
+        padding: 8px;
+        border-radius: 8px;
+        text-align: center;
+    }
+
+    .deducao-item .label {
+        color: #888;
+        font-size: 0.65rem;
+    }
+
+    .deducao-item .value {
+        color: #fff;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    .btn-holerite {
+        width: 100%;
+        background: #3b82f6;
+        color: #fff;
+        padding: 10px;
+        border-radius: 8px;
+        border: none;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: #666;
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 16px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <a href="{{ url_for('financial.index') }}" class="back-btn">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <div class="page-title">
+            <h1><i class="fas fa-user-tie"></i> Folha de Pagamento CLT</h1>
+        </div>
+    </div>
+
+    <div class="summary-card">
+        <div class="summary-label">Folha de {{ ['Janeiro', 'Fevereiro', 'Marco', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'][mes-1] }}/{{ ano }}</div>
+        <div class="summary-value">R$ 18.500</div>
+        <div class="summary-grid">
+            <div class="summary-item">
+                <div class="label">INSS</div>
+                <div class="value">R$ 1.850</div>
+            </div>
+            <div class="summary-item">
+                <div class="label">FGTS</div>
+                <div class="value">R$ 1.480</div>
+            </div>
+            <div class="summary-item">
+                <div class="label">IRRF</div>
+                <div class="value">R$ 920</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="list-section">
+        {% if funcionarios %}
+            {% for func in funcionarios %}
+            <div class="funcionario-card">
+                <div class="funcionario-header">
+                    <div>
+                        <div class="funcionario-name">{{ func.name }}</div>
+                        <div class="funcionario-cargo">{{ func.position or 'Tecnico' }}</div>
+                    </div>
+                    <div class="funcionario-liquido">
+                        <div class="value">R$ {{ "%.2f"|format((func.base_salary or 0) * 0.85) }}</div>
+                        <div class="label">Liquido</div>
+                    </div>
+                </div>
+                <div class="deducoes-grid">
+                    <div class="deducao-item">
+                        <div class="label">Bruto</div>
+                        <div class="value">{{ "%.0f"|format(func.base_salary or 0) }}</div>
+                    </div>
+                    <div class="deducao-item">
+                        <div class="label">INSS</div>
+                        <div class="value">{{ "%.0f"|format((func.base_salary or 0) * 0.11) }}</div>
+                    </div>
+                    <div class="deducao-item">
+                        <div class="label">IRRF</div>
+                        <div class="value">{{ "%.0f"|format((func.base_salary or 0) * 0.075) }}</div>
+                    </div>
+                </div>
+                <button class="btn-holerite">Ver Holerite</button>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="funcionario-card">
+                <div class="funcionario-header">
+                    <div>
+                        <div class="funcionario-name">Joao Silva</div>
+                        <div class="funcionario-cargo">Tecnico Audio</div>
+                    </div>
+                    <div class="funcionario-liquido">
+                        <div class="value">R$ 3.825</div>
+                        <div class="label">Liquido</div>
+                    </div>
+                </div>
+                <div class="deducoes-grid">
+                    <div class="deducao-item">
+                        <div class="label">Bruto</div>
+                        <div class="value">4.500</div>
+                    </div>
+                    <div class="deducao-item">
+                        <div class="label">INSS</div>
+                        <div class="value">495</div>
+                    </div>
+                    <div class="deducao-item">
+                        <div class="label">IRRF</div>
+                        <div class="value">337</div>
+                    </div>
+                </div>
+                <button class="btn-holerite">Ver Holerite</button>
+            </div>
+
+            <div class="funcionario-card">
+                <div class="funcionario-header">
+                    <div>
+                        <div class="funcionario-name">Maria Santos</div>
+                        <div class="funcionario-cargo">Tecnica Luz</div>
+                    </div>
+                    <div class="funcionario-liquido">
+                        <div class="value">R$ 3.590</div>
+                        <div class="label">Liquido</div>
+                    </div>
+                </div>
+                <div class="deducoes-grid">
+                    <div class="deducao-item">
+                        <div class="label">Bruto</div>
+                        <div class="value">4.200</div>
+                    </div>
+                    <div class="deducao-item">
+                        <div class="label">INSS</div>
+                        <div class="value">462</div>
+                    </div>
+                    <div class="deducao-item">
+                        <div class="label">IRRF</div>
+                        <div class="value">315</div>
+                    </div>
+                </div>
+                <button class="btn-holerite">Ver Holerite</button>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

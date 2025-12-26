@@ -1,0 +1,256 @@
+{% extends "base.html" %}
+
+{% block title %}Despesas - Financeiro{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-container {
+        padding: 0;
+        min-height: 100vh;
+        padding-bottom: 90px;
+        background-color: #0a0a0a;
+    }
+
+    .page-header {
+        background: linear-gradient(135deg, rgba(239,68,68,0.3) 0%, rgba(26,26,26,0.95) 100%);
+        padding: 20px 16px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        border-bottom: 1px solid #2a2a2a;
+    }
+
+    .back-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #d4a574;
+        text-decoration: none;
+    }
+
+    .page-title h1 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #f5f5f5;
+        margin-bottom: 4px;
+    }
+
+    .page-title p {
+        font-size: 0.8rem;
+        color: #a0a0a0;
+    }
+
+    .kpi-grid {
+        padding: 16px;
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+
+    .kpi-card {
+        padding: 16px;
+        border-radius: 12px;
+        text-align: left;
+    }
+
+    .kpi-card.red { background: linear-gradient(135deg, #b71c1c 0%, #c62828 100%); }
+    .kpi-card.orange { background: linear-gradient(135deg, #e65100 0%, #f57c00 100%); }
+    .kpi-card.yellow { background: linear-gradient(135deg, #f9a825 0%, #fbc02d 100%); }
+    .kpi-card.purple { background: linear-gradient(135deg, #6a1b9a 0%, #8e24aa 100%); }
+
+    .kpi-card .kpi-label {
+        font-size: 0.75rem;
+        color: rgba(255,255,255,0.7);
+        margin-bottom: 4px;
+    }
+
+    .kpi-card .kpi-value {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #fff;
+    }
+
+    .action-grid {
+        padding: 0 16px 16px;
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+
+    .action-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 20px 16px;
+        border-radius: 12px;
+        text-decoration: none;
+        color: #fff;
+        min-height: 100px;
+        font-weight: 600;
+    }
+
+    .action-btn i { font-size: 1.8rem; margin-bottom: 8px; }
+    .action-btn.blue { background: linear-gradient(135deg, #1565c0 0%, #1976d2 100%); }
+    .action-btn.green { background: linear-gradient(135deg, #2e7d32 0%, #388e3c 100%); }
+    .action-btn.orange { background: linear-gradient(135deg, #e65100 0%, #f57c00 100%); }
+    .action-btn.purple { background: linear-gradient(135deg, #6a1b9a 0%, #8e24aa 100%); }
+
+    .section-title {
+        padding: 16px 16px 8px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #666;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+    }
+
+    .list-card {
+        margin: 0 16px 16px;
+        background: #1a1a1a;
+        border-radius: 12px;
+        padding: 16px;
+        border: 1px solid #2a2a2a;
+    }
+
+    .list-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px;
+        background: #252525;
+        border-radius: 8px;
+        margin-bottom: 8px;
+    }
+
+    .list-item:last-child { margin-bottom: 0; }
+
+    .list-item .icon {
+        font-size: 1.5rem;
+    }
+
+    .list-item .info {
+        flex: 1;
+    }
+
+    .list-item .info h4 {
+        color: #f5f5f5;
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-bottom: 2px;
+    }
+
+    .list-item .info p {
+        color: #888;
+        font-size: 0.75rem;
+    }
+
+    .list-item .value {
+        text-align: right;
+    }
+
+    .list-item .value .amount {
+        color: #f5f5f5;
+        font-weight: 700;
+    }
+
+    .list-item .value .date {
+        color: #666;
+        font-size: 0.7rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <a href="{{ url_for('financial.index') }}" class="back-btn">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <div class="page-title">
+            <h1><i class="fas fa-arrow-down"></i> Despesas</h1>
+            <p>Visao geral de gastos</p>
+        </div>
+    </div>
+
+    <div class="kpi-grid">
+        <div class="kpi-card red">
+            <div class="kpi-label">Total Mes</div>
+            <div class="kpi-value">R$ 37k</div>
+        </div>
+        <div class="kpi-card orange">
+            <div class="kpi-label">Folha CLT</div>
+            <div class="kpi-value">R$ 18.5k</div>
+        </div>
+        <div class="kpi-card yellow">
+            <div class="kpi-label">Contas Fixas</div>
+            <div class="kpi-value">R$ 9.2k</div>
+        </div>
+        <div class="kpi-card purple">
+            <div class="kpi-label">Manutencao</div>
+            <div class="kpi-value">R$ 6.8k</div>
+        </div>
+    </div>
+
+    <div class="action-grid">
+        <a href="{{ url_for('financial.folha_clt') }}" class="action-btn blue">
+            <i class="fas fa-user-tie"></i>
+            <span>Folha</span>
+        </a>
+        <a href="{{ url_for('financial.freelancers') }}" class="action-btn green">
+            <i class="fas fa-user-friends"></i>
+            <span>Freelancers</span>
+        </a>
+        <a href="{{ url_for('financial.contas_pagar') }}" class="action-btn orange">
+            <i class="fas fa-file-invoice"></i>
+            <span>Contas</span>
+        </a>
+        <a href="{{ url_for('equipment.maintenance_list') }}" class="action-btn purple">
+            <i class="fas fa-tools"></i>
+            <span>Manutencao</span>
+        </a>
+    </div>
+
+    <h4 class="section-title">Ultimas Despesas</h4>
+
+    <div class="list-card">
+        <div class="list-item">
+            <div class="icon">🎯</div>
+            <div class="info">
+                <h4>Freelancer</h4>
+                <p>Joao Silva - 3 shows</p>
+            </div>
+            <div class="value">
+                <div class="amount">R$ 1.500</div>
+                <div class="date">20/06</div>
+            </div>
+        </div>
+        <div class="list-item">
+            <div class="icon">💡</div>
+            <div class="info">
+                <h4>Energia</h4>
+                <p>Conta de luz junho</p>
+            </div>
+            <div class="value">
+                <div class="amount">R$ 850</div>
+                <div class="date">18/06</div>
+            </div>
+        </div>
+        <div class="list-item">
+            <div class="icon">🔧</div>
+            <div class="info">
+                <h4>Manutencao</h4>
+                <p>Reparo Mesa X32</p>
+            </div>
+            <div class="value">
+                <div class="amount">R$ 620</div>
+                <div class="date">15/06</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

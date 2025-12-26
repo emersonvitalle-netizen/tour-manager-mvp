@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+
+{% block title %}Freelancers - Financeiro{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-container {
+        padding: 0;
+        min-height: 100vh;
+        padding-bottom: 90px;
+        background-color: #0a0a0a;
+    }
+
+    .page-header {
+        background: linear-gradient(135deg, rgba(139,92,246,0.3) 0%, rgba(26,26,26,0.95) 100%);
+        padding: 20px 16px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        border-bottom: 1px solid #2a2a2a;
+    }
+
+    .back-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #d4a574;
+        text-decoration: none;
+    }
+
+    .page-title h1 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #f5f5f5;
+        margin-bottom: 4px;
+    }
+
+    .form-card {
+        margin: 16px;
+        background: #1a1a1a;
+        border-radius: 12px;
+        padding: 20px;
+        border: 1px solid #2a2a2a;
+    }
+
+    .form-card h3 {
+        color: #f5f5f5;
+        font-weight: 700;
+        margin-bottom: 16px;
+    }
+
+    .form-group {
+        margin-bottom: 12px;
+    }
+
+    .form-control {
+        width: 100%;
+        background: #252525;
+        border: 1px solid #333;
+        border-radius: 8px;
+        padding: 12px;
+        color: #fff;
+        font-size: 0.95rem;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #8b5cf6;
+    }
+
+    .btn-registrar {
+        width: 100%;
+        background: #10b981;
+        color: #fff;
+        padding: 14px;
+        border-radius: 8px;
+        border: none;
+        font-weight: 700;
+        font-size: 1rem;
+        cursor: pointer;
+        margin-top: 8px;
+    }
+
+    .section-title {
+        padding: 16px 16px 8px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #666;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+    }
+
+    .list-card {
+        margin: 0 16px 16px;
+        background: #1a1a1a;
+        border-radius: 12px;
+        padding: 16px;
+        border: 1px solid #2a2a2a;
+    }
+
+    .pagamento-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px;
+        background: #252525;
+        border-radius: 8px;
+        margin-bottom: 8px;
+    }
+
+    .pagamento-item:last-child { margin-bottom: 0; }
+
+    .pagamento-info h4 {
+        color: #f5f5f5;
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-bottom: 2px;
+    }
+
+    .pagamento-info p {
+        color: #888;
+        font-size: 0.75rem;
+    }
+
+    .pagamento-value {
+        text-align: right;
+    }
+
+    .pagamento-value .amount {
+        color: #f5f5f5;
+        font-weight: 700;
+    }
+
+    .pagamento-value .status {
+        font-size: 0.9rem;
+    }
+
+    .status-pago { color: #10b981; }
+    .status-pendente { color: #f59e0b; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <a href="{{ url_for('financial.index') }}" class="back-btn">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <div class="page-title">
+            <h1><i class="fas fa-user-friends"></i> Pagamentos Freelancers</h1>
+        </div>
+    </div>
+
+    <div class="form-card">
+        <h3>Pagamento Rapido</h3>
+        <form method="POST" action="{{ url_for('rh.registrar_pagamento_freelancer') if 'rh.registrar_pagamento_freelancer' in url_map else '#' }}">
+            <div class="form-group">
+                <select class="form-control" name="freelancer_id">
+                    <option value="">Selecione freelancer...</option>
+                    {% for f in freelancers %}
+                    <option value="{{ f.id }}">{{ f.name }}</option>
+                    {% endfor %}
+                    {% if not freelancers %}
+                    <option value="">Carlos Tecnico</option>
+                    <option value="">Ana Fotografa</option>
+                    {% endif %}
+                </select>
+            </div>
+            <div class="form-group">
+                <input type="text" class="form-control" name="descricao" placeholder="Descricao do servico">
+            </div>
+            <div class="form-group">
+                <input type="number" class="form-control" name="valor" placeholder="R$ 0,00" step="0.01">
+            </div>
+            <button type="submit" class="btn-registrar">Registrar Pagamento</button>
+        </form>
+    </div>
+
+    <h4 class="section-title">Historico Recente</h4>
+
+    <div class="list-card">
+        {% if pagamentos %}
+            {% for p in pagamentos %}
+            <div class="pagamento-item">
+                <div class="pagamento-info">
+                    <h4>{{ p.employee.name if p.employee else 'Freelancer' }}</h4>
+                    <p>{{ p.description or 'Servico' }}</p>
+                </div>
+                <div class="pagamento-value">
+                    <div class="amount">R$ {{ "%.2f"|format(p.amount) }}</div>
+                    <div class="status {{ 'status-pago' if p.status == 'paid' else 'status-pendente' }}">
+                        {{ '✓' if p.status == 'paid' else '⏳' }}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="pagamento-item">
+                <div class="pagamento-info">
+                    <h4>Carlos Tecnico</h4>
+                    <p>3 shows</p>
+                </div>
+                <div class="pagamento-value">
+                    <div class="amount">R$ 1.500</div>
+                    <div class="status status-pago">✓</div>
+                </div>
+            </div>
+            <div class="pagamento-item">
+                <div class="pagamento-info">
+                    <h4>Ana Fotografa</h4>
+                    <p>Cobertura</p>
+                </div>
+                <div class="pagamento-value">
+                    <div class="amount">R$ 800</div>
+                    <div class="status status-pendente">⏳</div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
