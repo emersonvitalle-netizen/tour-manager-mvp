@@ -134,6 +134,12 @@
         box-shadow: 0 4px 20px rgba(231, 76, 60, 0.2);
     }
 
+    .category-kits {
+        background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%);
+        border: 1px solid #9b59b6;
+        box-shadow: 0 4px 20px rgba(155, 89, 182, 0.2);
+    }
+
     .category-content {
         position: relative;
         z-index: 1;
@@ -243,6 +249,14 @@
                 </div>
             </a>
         {% endfor %}
+        
+        <a href="{{ url_for('kit.index') }}" class="category-card category-kits">
+            <div class="category-content">
+                <div class="category-icon">📦</div>
+                <div class="category-name">KITS</div>
+                <div class="category-count">Conjuntos pre-definidos</div>
+            </div>
+        </a>
     </div>
 
     <a href="{{ url_for('equipment.scan') }}" class="fab">
