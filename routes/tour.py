@@ -11,36 +11,23 @@ tour_bp = Blueprint('tour', __name__, url_prefix='/tour')
 @tour_bp.route('/')
 @login_required
 def tour_menu():
-    from models.separation_list import SeparationList
+    from datetime import date
     
-    # Stats
-    active_tours = Tour.query.filter_by(
+    all_tours = Tour.query.filter_by(
         company_id=current_user.company_id,
-        is_active=True,
-        status='active'
-    ).count()
+        is_active=True
+    ).order_by(Tour.start_date.asc()).all()
     
-    kits_count = Kit.query.filter_by(
-        company_id=current_user.company_id
-    ).count()
+    today = date.today()
     
-    allocated_equipment = TourEquipment.query.join(Tour).filter(
-        Tour.company_id == current_user.company_id,
-        TourEquipment.returned_at == None
-    ).count()
-    
-    # Separações pendentes (para badge)
-    pending_separations = SeparationList.query.filter_by(
-        company_id=current_user.company_id,
-        is_active=True,
-        status='pending'
-    ).count()
+    proximos = [t for t in all_tours if t.status == 'planned' or (t.start_date and t.start_date > today)]
+    em_andamento = [t for t in all_tours if t.status == 'active']
+    concluidos = [t for t in all_tours if t.status == 'completed']
     
     return render_template('tour/menu.html',
-                          active_tours=active_tours,
-                          kits_count=kits_count,
-                          allocated_equipment=allocated_equipment,
-                          pending_separations=pending_separations)
+                          proximos=proximos,
+                          em_andamento=em_andamento,
+                          concluidos=concluidos)
 
 @tour_bp.route('/checklist-selection')
 @login_required
