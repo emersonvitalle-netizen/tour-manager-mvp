@@ -2,6 +2,7 @@
 from flask import Blueprint, render_template, redirect, url_for, request, flash, jsonify
 from flask_login import login_required, current_user
 from extensions import db
+from sqlalchemy import func
 from models.financial import Quote, QuoteItem, Contract, Invoice, Payment
 from models.tour import Tour
 from datetime import datetime, date, timedelta
@@ -566,24 +567,42 @@ def nova_conta_pagar():
     
     if request.method == 'POST':
         try:
-            conta = AccountPayable(
-                company_id=current_user.company_id,
-                description=request.form.get('description', '').strip(),
-                category=request.form.get('category', 'outros'),
-                supplier=request.form.get('supplier', '').strip(),
-                amount=Decimal(request.form.get('amount', '0').replace(',', '.')),
-                due_date=datetime.strptime(request.form.get('due_date'), '%Y-%m-%d').date(),
-                is_recurring=request.form.get('is_recurring') == 'on',
-                recurrence_type=request.form.get('recurrence_type') if request.form.get('is_recurring') == 'on' else None,
-                notes=request.form.get('notes', '').strip(),
-                status='pending',
-                created_by=current_user.id
-            )
+            total_installments = int(request.form.get('total_installments', '1') or '1')
+            valor_total = Decimal(request.form.get('amount', '0').replace(',', '.'))
+            valor_parcela = valor_total / total_installments if total_installments > 1 else valor_total
+            due_date_base = datetime.strptime(request.form.get('due_date'), '%Y-%m-%d').date()
             
-            db.session.add(conta)
+            from dateutil.relativedelta import relativedelta
+            
+            for i in range(total_installments):
+                due_date = due_date_base + relativedelta(months=i) if total_installments > 1 else due_date_base
+                
+                conta = AccountPayable(
+                    company_id=current_user.company_id,
+                    description=request.form.get('description', '').strip(),
+                    category=request.form.get('category', 'outros'),
+                    custom_category=request.form.get('custom_category', '').strip() if request.form.get('category') == 'outros' else None,
+                    supplier=request.form.get('supplier', '').strip(),
+                    amount=valor_parcela,
+                    due_date=due_date,
+                    is_recurring=request.form.get('is_recurring') == 'on' if total_installments == 1 else False,
+                    recurrence_type=request.form.get('recurrence_type') if request.form.get('is_recurring') == 'on' and total_installments == 1 else None,
+                    payment_method=request.form.get('payment_method', '').strip() or None,
+                    installment_number=i + 1 if total_installments > 1 else None,
+                    total_installments=total_installments if total_installments > 1 else None,
+                    notes=request.form.get('notes', '').strip(),
+                    status='pending',
+                    created_by=current_user.id
+                )
+                
+                db.session.add(conta)
+            
             db.session.commit()
             
-            flash('Conta cadastrada com sucesso!', 'success')
+            if total_installments > 1:
+                flash(f'{total_installments} parcelas cadastradas com sucesso!', 'success')
+            else:
+                flash('Conta cadastrada com sucesso!', 'success')
             return redirect(url_for('financial.contas_pagar'))
             
         except ValueError as e:
@@ -612,11 +631,13 @@ def editar_conta_pagar(id):
         try:
             conta.description = request.form.get('description', conta.description).strip()
             conta.category = request.form.get('category', conta.category)
+            conta.custom_category = request.form.get('custom_category', '').strip() if conta.category == 'outros' else None
             conta.supplier = request.form.get('supplier', '').strip()
             conta.amount = Decimal(request.form.get('amount', '0').replace(',', '.'))
             conta.due_date = datetime.strptime(request.form.get('due_date'), '%Y-%m-%d').date()
             conta.is_recurring = request.form.get('is_recurring') == 'on'
             conta.recurrence_type = request.form.get('recurrence_type') if conta.is_recurring else None
+            conta.payment_method = request.form.get('payment_method', '').strip() or None
             conta.notes = request.form.get('notes', '').strip()
             
             db.session.commit()
@@ -742,5 +763,320 @@ def gerar_pix():
 @login_required
 @admin_required
 def dre():
-    """Demonstrativo de Resultado do Exercicio"""
-    return render_template('financial/dre.html')
+    """Demonstrativo de Resultado do Exercicio com dados reais"""
+    from models.rh import AccountPayable, AccountReceivable, FreelancerPayment, PayrollEntry
+    
+    current_month = date.today().strftime('%Y-%m')
+    
+    receitas_locacao = db.session.query(func.sum(AccountReceivable.received_amount)).filter(
+        AccountReceivable.company_id == current_user.company_id,
+        AccountReceivable.status == 'received',
+        func.strftime('%Y-%m', AccountReceivable.received_at) == current_month
+    ).scalar() or 0
+    
+    receitas_pendentes = db.session.query(func.sum(AccountReceivable.amount)).filter(
+        AccountReceivable.company_id == current_user.company_id,
+        AccountReceivable.status == 'pending',
+        func.strftime('%Y-%m', AccountReceivable.due_date) == current_month
+    ).scalar() or 0
+    
+    despesas_folha = db.session.query(func.sum(PayrollEntry.net_salary)).filter(
+        PayrollEntry.company_id == current_user.company_id,
+        func.strftime('%Y-%m', PayrollEntry.reference_date) == current_month
+    ).scalar() or 0
+    
+    despesas_contas = db.session.query(func.sum(AccountPayable.paid_amount)).filter(
+        AccountPayable.company_id == current_user.company_id,
+        AccountPayable.status == 'paid',
+        func.strftime('%Y-%m', AccountPayable.paid_at) == current_month
+    ).scalar() or 0
+    
+    despesas_pendentes = db.session.query(func.sum(AccountPayable.amount)).filter(
+        AccountPayable.company_id == current_user.company_id,
+        AccountPayable.status == 'pending',
+        func.strftime('%Y-%m', AccountPayable.due_date) == current_month
+    ).scalar() or 0
+    
+    despesas_freelancers = db.session.query(func.sum(FreelancerPayment.amount)).filter(
+        FreelancerPayment.company_id == current_user.company_id,
+        FreelancerPayment.status == 'paid',
+        func.strftime('%Y-%m', FreelancerPayment.paid_at) == current_month
+    ).scalar() or 0
+    
+    total_receitas = float(receitas_locacao)
+    total_despesas = float(despesas_folha) + float(despesas_contas) + float(despesas_freelancers)
+    lucro = total_receitas - total_despesas
+    
+    return render_template('financial/dre.html',
+                          receitas_locacao=receitas_locacao,
+                          receitas_pendentes=receitas_pendentes,
+                          despesas_folha=despesas_folha,
+                          despesas_contas=despesas_contas,
+                          despesas_pendentes=despesas_pendentes,
+                          despesas_freelancers=despesas_freelancers,
+                          total_receitas=total_receitas,
+                          total_despesas=total_despesas,
+                          lucro=lucro,
+                          mes_atual=date.today().strftime('%B/%Y'))
+
+
+@financial_bp.route('/contas-receber')
+@login_required
+@admin_required
+def contas_receber():
+    """Lista de contas a receber"""
+    from models.rh import AccountReceivable, Client
+    
+    status_filter = request.args.get('status', 'pending')
+    
+    query = AccountReceivable.query.filter_by(company_id=current_user.company_id)
+    
+    if status_filter == 'pending':
+        query = query.filter(AccountReceivable.status == 'pending')
+    elif status_filter == 'overdue':
+        query = query.filter(
+            AccountReceivable.status == 'pending',
+            AccountReceivable.due_date < date.today()
+        )
+    elif status_filter == 'received':
+        query = query.filter(AccountReceivable.status == 'received')
+    
+    contas = query.order_by(AccountReceivable.due_date.asc()).all()
+    
+    total_vencidas = db.session.query(func.sum(AccountReceivable.amount)).filter(
+        AccountReceivable.company_id == current_user.company_id,
+        AccountReceivable.status == 'pending',
+        AccountReceivable.due_date < date.today()
+    ).scalar() or 0
+    
+    total_7_dias = db.session.query(func.sum(AccountReceivable.amount)).filter(
+        AccountReceivable.company_id == current_user.company_id,
+        AccountReceivable.status == 'pending',
+        AccountReceivable.due_date >= date.today(),
+        AccountReceivable.due_date <= date.today() + timedelta(days=7)
+    ).scalar() or 0
+    
+    current_month = date.today().strftime('%Y-%m')
+    total_mes = db.session.query(func.sum(AccountReceivable.amount)).filter(
+        AccountReceivable.company_id == current_user.company_id,
+        AccountReceivable.status == 'pending',
+        func.strftime('%Y-%m', AccountReceivable.due_date) == current_month
+    ).scalar() or 0
+    
+    clientes = Client.query.filter_by(company_id=current_user.company_id, is_active=True).all()
+    
+    return render_template('financial/contas_receber.html',
+                          contas=contas,
+                          total_vencidas=total_vencidas,
+                          total_7_dias=total_7_dias,
+                          total_mes=total_mes,
+                          clientes=clientes,
+                          status_filter=status_filter)
+
+
+@financial_bp.route('/contas-receber/nova', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def nova_conta_receber():
+    """Criar nova conta a receber"""
+    from models.rh import AccountReceivable, Client
+    
+    if request.method == 'POST':
+        try:
+            total_installments = int(request.form.get('total_installments', '1') or '1')
+            valor_total = Decimal(request.form.get('amount', '0').replace(',', '.'))
+            valor_parcela = valor_total / total_installments if total_installments > 1 else valor_total
+            due_date_base = datetime.strptime(request.form.get('due_date'), '%Y-%m-%d').date()
+            
+            from dateutil.relativedelta import relativedelta
+            
+            for i in range(total_installments):
+                due_date = due_date_base + relativedelta(months=i) if total_installments > 1 else due_date_base
+                
+                conta = AccountReceivable(
+                    company_id=current_user.company_id,
+                    description=request.form.get('description', '').strip(),
+                    category=request.form.get('category', 'servico'),
+                    client_id=int(request.form.get('client_id')) if request.form.get('client_id') else None,
+                    client_name=request.form.get('client_name', '').strip(),
+                    amount=valor_parcela,
+                    due_date=due_date,
+                    payment_method=request.form.get('payment_method', '').strip() or None,
+                    installment_number=i + 1 if total_installments > 1 else None,
+                    total_installments=total_installments if total_installments > 1 else None,
+                    notes=request.form.get('notes', '').strip(),
+                    status='pending',
+                    created_by=current_user.id
+                )
+                
+                db.session.add(conta)
+            
+            db.session.commit()
+            
+            if total_installments > 1:
+                flash(f'{total_installments} parcelas cadastradas com sucesso!', 'success')
+            else:
+                flash('Conta a receber cadastrada!', 'success')
+            return redirect(url_for('financial.contas_receber'))
+            
+        except ValueError as e:
+            flash(f'Erro nos dados: verifique valor e data.', 'danger')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Erro ao salvar: {str(e)}', 'danger')
+    
+    clientes = Client.query.filter_by(company_id=current_user.company_id, is_active=True).all()
+    categorias = ['servico', 'venda', 'locacao', 'projeto', 'outros']
+    return render_template('financial/conta_receber_form.html', conta=None, categorias=categorias, clientes=clientes)
+
+
+@financial_bp.route('/contas-receber/<int:id>/receber', methods=['POST'])
+@login_required
+@admin_required
+def receber_conta(id):
+    """Marcar conta como recebida"""
+    from models.rh import AccountReceivable
+    
+    conta = AccountReceivable.query.filter_by(
+        id=id,
+        company_id=current_user.company_id
+    ).first_or_404()
+    
+    valor_recebido = request.form.get('received_amount', '')
+    if valor_recebido:
+        conta.received_amount = Decimal(valor_recebido.replace(',', '.'))
+    else:
+        conta.received_amount = conta.amount
+    
+    conta.status = 'received'
+    conta.received_at = datetime.utcnow()
+    
+    db.session.commit()
+    flash('Recebimento confirmado!', 'success')
+    
+    return redirect(url_for('financial.contas_receber'))
+
+
+@financial_bp.route('/contas-receber/<int:id>/excluir', methods=['POST'])
+@login_required
+@admin_required
+def excluir_conta_receber(id):
+    """Excluir conta a receber"""
+    from models.rh import AccountReceivable
+    
+    conta = AccountReceivable.query.filter_by(
+        id=id,
+        company_id=current_user.company_id
+    ).first_or_404()
+    
+    conta.status = 'cancelled'
+    db.session.commit()
+    
+    flash('Conta cancelada.', 'warning')
+    return redirect(url_for('financial.contas_receber'))
+
+
+@financial_bp.route('/clientes')
+@login_required
+@admin_required
+def clientes():
+    """Lista de clientes"""
+    from models.rh import Client
+    
+    clientes = Client.query.filter_by(
+        company_id=current_user.company_id,
+        is_active=True
+    ).order_by(Client.name).all()
+    
+    return render_template('financial/clientes.html', clientes=clientes)
+
+
+@financial_bp.route('/clientes/novo', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def novo_cliente():
+    """Criar novo cliente"""
+    from models.rh import Client
+    
+    if request.method == 'POST':
+        try:
+            cliente = Client(
+                company_id=current_user.company_id,
+                name=request.form.get('name', '').strip(),
+                document=request.form.get('document', '').strip(),
+                document_type=request.form.get('document_type', 'cpf'),
+                email=request.form.get('email', '').strip(),
+                phone=request.form.get('phone', '').strip(),
+                address=request.form.get('address', '').strip(),
+                city=request.form.get('city', '').strip(),
+                state=request.form.get('state', '').strip(),
+                notes=request.form.get('notes', '').strip(),
+                is_active=True
+            )
+            
+            db.session.add(cliente)
+            db.session.commit()
+            
+            flash('Cliente cadastrado com sucesso!', 'success')
+            return redirect(url_for('financial.clientes'))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Erro ao salvar: {str(e)}', 'danger')
+    
+    return render_template('financial/cliente_form.html', cliente=None)
+
+
+@financial_bp.route('/clientes/<int:id>/editar', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def editar_cliente(id):
+    """Editar cliente"""
+    from models.rh import Client
+    
+    cliente = Client.query.filter_by(
+        id=id,
+        company_id=current_user.company_id
+    ).first_or_404()
+    
+    if request.method == 'POST':
+        try:
+            cliente.name = request.form.get('name', cliente.name).strip()
+            cliente.document = request.form.get('document', '').strip()
+            cliente.document_type = request.form.get('document_type', 'cpf')
+            cliente.email = request.form.get('email', '').strip()
+            cliente.phone = request.form.get('phone', '').strip()
+            cliente.address = request.form.get('address', '').strip()
+            cliente.city = request.form.get('city', '').strip()
+            cliente.state = request.form.get('state', '').strip()
+            cliente.notes = request.form.get('notes', '').strip()
+            
+            db.session.commit()
+            
+            flash('Cliente atualizado!', 'success')
+            return redirect(url_for('financial.clientes'))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Erro ao salvar: {str(e)}', 'danger')
+    
+    return render_template('financial/cliente_form.html', cliente=cliente)
+
+
+@financial_bp.route('/clientes/<int:id>/excluir', methods=['POST'])
+@login_required
+@admin_required
+def excluir_cliente(id):
+    """Desativar cliente"""
+    from models.rh import Client
+    
+    cliente = Client.query.filter_by(
+        id=id,
+        company_id=current_user.company_id
+    ).first_or_404()
+    
+    cliente.is_active = False
+    db.session.commit()
+    
+    flash('Cliente removido.', 'warning')
+    return redirect(url_for('financial.clientes'))

@@ -39,6 +39,11 @@
         margin-bottom: 4px;
     }
 
+    .page-title p {
+        color: #888;
+        font-size: 0.85rem;
+    }
+
     .dre-card {
         margin: 16px;
         background: #1a1a1a;
@@ -56,6 +61,9 @@
         font-weight: 700;
         margin-bottom: 12px;
         font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
     }
 
     .dre-section-title.despesas {
@@ -80,6 +88,23 @@
         font-weight: 600;
     }
 
+    .dre-item .value.receita {
+        color: #10b981;
+    }
+
+    .dre-item .value.despesa {
+        color: #ef4444;
+    }
+
+    .dre-item.pendente {
+        background: rgba(245,158,11,0.1);
+        border: 1px dashed #f59e0b;
+    }
+
+    .dre-item.pendente .label {
+        color: #f59e0b;
+    }
+
     .dre-total {
         border-top: 2px solid #333;
         padding-top: 16px;
@@ -98,9 +123,60 @@
     }
 
     .dre-total .value {
-        color: #fff;
         font-weight: 700;
         font-size: 1.2rem;
+    }
+
+    .dre-total .value.positivo {
+        color: #10b981;
+    }
+
+    .dre-total .value.negativo {
+        color: #ef4444;
+    }
+
+    .summary-cards {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin: 16px;
+    }
+
+    .summary-card {
+        background: #1a1a1a;
+        border-radius: 12px;
+        padding: 16px;
+        text-align: center;
+    }
+
+    .summary-card.receitas {
+        border-top: 3px solid #10b981;
+    }
+
+    .summary-card.despesas {
+        border-top: 3px solid #ef4444;
+    }
+
+    .summary-card.lucro {
+        border-top: 3px solid #3b82f6;
+    }
+
+    .summary-label {
+        font-size: 0.7rem;
+        color: #888;
+        text-transform: uppercase;
+    }
+
+    .summary-value {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #f5f5f5;
+    }
+
+    .empty-message {
+        text-align: center;
+        padding: 40px;
+        color: #666;
     }
 </style>
 {% endblock %}
@@ -113,42 +189,84 @@
         </a>
         <div class="page-title">
             <h1><i class="fas fa-file-contract"></i> DRE</h1>
+            <p>Demonstrativo de Resultado - {{ mes_atual }}</p>
+        </div>
+    </div>
+
+    <div class="summary-cards">
+        <div class="summary-card receitas">
+            <div class="summary-label">Receitas</div>
+            <div class="summary-value">R$ {{ "%.0f"|format(total_receitas) }}</div>
+        </div>
+        <div class="summary-card despesas">
+            <div class="summary-label">Despesas</div>
+            <div class="summary-value">R$ {{ "%.0f"|format(total_despesas) }}</div>
+        </div>
+        <div class="summary-card lucro">
+            <div class="summary-label">Resultado</div>
+            <div class="summary-value">R$ {{ "%.0f"|format(lucro) }}</div>
         </div>
     </div>
 
     <div class="dre-card">
         <div class="dre-section">
-            <div class="dre-section-title">RECEITAS</div>
-            <div class="dre-item">
-                <span class="label">Locacoes</span>
-                <span class="value">R$ 58.000</span>
+            <div class="dre-section-title">
+                <i class="fas fa-arrow-up"></i> RECEITAS
             </div>
+            <div class="dre-item">
+                <span class="label">Recebimentos do mes</span>
+                <span class="value receita">R$ {{ "%.2f"|format(receitas_locacao) }}</span>
+            </div>
+            {% if receitas_pendentes > 0 %}
+            <div class="dre-item pendente">
+                <span class="label">Pendente de recebimento</span>
+                <span class="value">R$ {{ "%.2f"|format(receitas_pendentes) }}</span>
+            </div>
+            {% endif %}
         </div>
 
         <div class="dre-section">
-            <div class="dre-section-title despesas">DESPESAS</div>
-            <div class="dre-item">
-                <span class="label">Folha</span>
-                <span class="value">R$ 18.500</span>
+            <div class="dre-section-title despesas">
+                <i class="fas fa-arrow-down"></i> DESPESAS
             </div>
+            {% if despesas_folha > 0 %}
             <div class="dre-item">
-                <span class="label">Contas</span>
-                <span class="value">R$ 9.200</span>
+                <span class="label">Folha de Pagamento</span>
+                <span class="value despesa">R$ {{ "%.2f"|format(despesas_folha) }}</span>
             </div>
+            {% endif %}
+            {% if despesas_contas > 0 %}
+            <div class="dre-item">
+                <span class="label">Contas Pagas</span>
+                <span class="value despesa">R$ {{ "%.2f"|format(despesas_contas) }}</span>
+            </div>
+            {% endif %}
+            {% if despesas_freelancers > 0 %}
             <div class="dre-item">
                 <span class="label">Freelancers</span>
-                <span class="value">R$ 5.800</span>
+                <span class="value despesa">R$ {{ "%.2f"|format(despesas_freelancers) }}</span>
             </div>
+            {% endif %}
+            {% if despesas_pendentes > 0 %}
+            <div class="dre-item pendente">
+                <span class="label">Pendente de pagamento</span>
+                <span class="value">R$ {{ "%.2f"|format(despesas_pendentes) }}</span>
+            </div>
+            {% endif %}
+            {% if despesas_folha == 0 and despesas_contas == 0 and despesas_freelancers == 0 %}
             <div class="dre-item">
-                <span class="label">Manutencao</span>
-                <span class="value">R$ 3.500</span>
+                <span class="label">Nenhuma despesa registrada</span>
+                <span class="value">R$ 0,00</span>
             </div>
+            {% endif %}
         </div>
 
         <div class="dre-total">
             <div class="dre-item">
-                <span class="label">LUCRO LIQUIDO</span>
-                <span class="value">R$ 21.000</span>
+                <span class="label">RESULTADO DO MES</span>
+                <span class="value {{ 'positivo' if lucro >= 0 else 'negativo' }}">
+                    R$ {{ "%.2f"|format(lucro) }}
+                </span>
             </div>
         </div>
     </div>

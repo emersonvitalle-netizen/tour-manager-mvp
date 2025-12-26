@@ -386,6 +386,24 @@ Desktop: min-width: 1024px
   - [x] CRUD de Orçamentos com itens e descontos
   - [x] CRUD de Faturas com registro de pagamentos
   - [x] Códigos únicos por empresa (ORC-{company}-{ano}-{seq})
+  - [x] **Contas a Pagar expandido:**
+    - [x] Suporte a categoria "Outros" customizada
+    - [x] Forma de pagamento (PIX, Boleto, Transferencia, etc)
+    - [x] Parcelamento automático (cria N parcelas)
+    - [x] Badges visuais de parcelas (ex: 2/6)
+  - [x] **Contas a Receber (NOVO):**
+    - [x] CRUD completo com filtros por status
+    - [x] Suporte a parcelamento automático
+    - [x] Integração com cadastro de clientes
+    - [x] KPIs: Vencidas, Próx. 7 dias, Este mês
+  - [x] **Cadastro de Clientes (NOVO):**
+    - [x] CRUD completo
+    - [x] Busca por nome no frontend
+    - [x] CPF/CNPJ, contato, endereço
+  - [x] **DRE com dados reais:**
+    - [x] Receitas recebidas e pendentes do mês
+    - [x] Despesas: Folha, Contas, Freelancers
+    - [x] Cálculo automático de lucro
 
 ### Próximas Etapas 📋
 1. Implementar contratos (templates e rotas)

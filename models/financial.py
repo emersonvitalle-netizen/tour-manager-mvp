@@ -12,6 +12,7 @@ class Quote(db.Model):
     code = db.Column(db.String(20), unique=True, nullable=False)
     
     tour_id = db.Column(db.Integer, db.ForeignKey('tour.id'))
+    client_id = db.Column(db.Integer, db.ForeignKey('client.id'))
     client_name = db.Column(db.String(200), nullable=False)
     client_email = db.Column(db.String(120))
     client_phone = db.Column(db.String(20))

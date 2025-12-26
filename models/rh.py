@@ -224,26 +224,53 @@ class AccountPayable(db.Model):
     company_id = db.Column(db.Integer, db.ForeignKey('company.id'), nullable=False)
 
     description = db.Column(db.String(200), nullable=False)
-    category = db.Column(db.String(50))  # aluguel, energia, agua, telefone, internet, outros
-    supplier = db.Column(db.String(200))
+    category = db.Column(db.String(50))  # aluguel, energia, agua, telefone, internet, folha, freelancer, veiculo, equipamento, outros
+    custom_category = db.Column(db.String(100))  # Quando categoria = outros
+    supplier_id = db.Column(db.Integer, db.ForeignKey('supplier.id'))
+    supplier = db.Column(db.String(200))  # Legacy field
     
     amount = db.Column(db.Numeric(10, 2), nullable=False)
     due_date = db.Column(db.Date, nullable=False)
     
+    # Recorrencia
     is_recurring = db.Column(db.Boolean, default=False)
     recurrence_type = db.Column(db.String(20))  # monthly, weekly, yearly
     
+    # Parcelas
+    installment_number = db.Column(db.Integer)  # 1, 2, 3...
+    total_installments = db.Column(db.Integer)  # Total de parcelas
+    parent_id = db.Column(db.Integer, db.ForeignKey('account_payable.id'))  # Parcela mãe
+    
+    # Pagamento
     status = db.Column(db.String(20), default='pending')  # pending, paid, overdue, cancelled
     paid_at = db.Column(db.DateTime)
     paid_amount = db.Column(db.Numeric(10, 2))
+    payment_method = db.Column(db.String(30))  # pix, boleto, cartao, dinheiro, transferencia, cheque
+    bank_account_id = db.Column(db.Integer, db.ForeignKey('bank_account.id'))
+    
+    # Comprovante
+    receipt_url = db.Column(db.String(500))
+    receipt_filename = db.Column(db.String(200))
+    
+    # Origem (automacao)
+    origin_type = db.Column(db.String(30))  # manual, payroll, freelancer, vehicle, equipment
+    origin_id = db.Column(db.Integer)  # ID do registro de origem
+    
+    # Centro de custo
+    cost_center_id = db.Column(db.Integer, db.ForeignKey('cost_center.id'))
     
     notes = db.Column(db.Text)
     
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     created_by = db.Column(db.Integer, db.ForeignKey('user.id'))
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     company = db.relationship('Company')
-    creator = db.relationship('User')
+    creator = db.relationship('User', foreign_keys=[created_by])
+    bank_account = db.relationship('BankAccount', foreign_keys=[bank_account_id])
+    cost_center = db.relationship('CostCenter', foreign_keys=[cost_center_id])
+    supplier_rel = db.relationship('Supplier', foreign_keys=[supplier_id])
+    children = db.relationship('AccountPayable', backref=db.backref('parent', remote_side='AccountPayable.id'), foreign_keys='AccountPayable.parent_id')
 
     @property
     def days_until_due(self):
@@ -297,3 +324,395 @@ class FreelancerPayment(db.Model):
 
     def __repr__(self):
         return f'<FreelancerPayment {self.freelancer_id} - R${self.amount}>'
+
+
+class BankAccount(db.Model):
+    """Contas bancarias da empresa"""
+    __tablename__ = 'bank_account'
+
+    id = db.Column(db.Integer, primary_key=True)
+    company_id = db.Column(db.Integer, db.ForeignKey('company.id'), nullable=False)
+
+    name = db.Column(db.String(100), nullable=False)
+    bank_name = db.Column(db.String(100))
+    bank_code = db.Column(db.String(10))
+    agency = db.Column(db.String(20))
+    account_number = db.Column(db.String(30))
+    account_type = db.Column(db.String(20))  # corrente, poupanca, pagamento
+
+    initial_balance = db.Column(db.Numeric(12, 2), default=0)
+    current_balance = db.Column(db.Numeric(12, 2), default=0)
+
+    pix_key = db.Column(db.String(100))
+    pix_key_type = db.Column(db.String(20))  # cpf, cnpj, email, telefone, aleatoria
+
+    is_default = db.Column(db.Boolean, default=False)
+    is_active = db.Column(db.Boolean, default=True)
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    company = db.relationship('Company')
+
+    def __repr__(self):
+        return f'<BankAccount {self.name}>'
+
+
+class CostCenter(db.Model):
+    """Centros de custo para alocacao de despesas/receitas"""
+    __tablename__ = 'cost_center'
+
+    id = db.Column(db.Integer, primary_key=True)
+    company_id = db.Column(db.Integer, db.ForeignKey('company.id'), nullable=False)
+
+    name = db.Column(db.String(100), nullable=False)
+    code = db.Column(db.String(20))
+    description = db.Column(db.Text)
+
+    parent_id = db.Column(db.Integer, db.ForeignKey('cost_center.id'))
+    
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    company = db.relationship('Company')
+    children = db.relationship('CostCenter', backref=db.backref('parent', remote_side='CostCenter.id'))
+
+    def __repr__(self):
+        return f'<CostCenter {self.name}>'
+
+
+class AccountReceivable(db.Model):
+    """Contas a receber - receitas previstas"""
+    __tablename__ = 'account_receivable'
+
+    id = db.Column(db.Integer, primary_key=True)
+    company_id = db.Column(db.Integer, db.ForeignKey('company.id'), nullable=False)
+
+    description = db.Column(db.String(200), nullable=False)
+    category = db.Column(db.String(50))  # locacao, servico, venda, outros
+    custom_category = db.Column(db.String(100))
+    
+    client_id = db.Column(db.Integer, db.ForeignKey('client.id'))
+    client_name = db.Column(db.String(200))
+
+    amount = db.Column(db.Numeric(12, 2), nullable=False)
+    due_date = db.Column(db.Date, nullable=False)
+
+    # Parcelas
+    installment_number = db.Column(db.Integer)
+    total_installments = db.Column(db.Integer)
+    parent_id = db.Column(db.Integer, db.ForeignKey('account_receivable.id'))
+
+    # Recebimento
+    status = db.Column(db.String(20), default='pending')  # pending, received, overdue, cancelled
+    received_at = db.Column(db.DateTime)
+    received_amount = db.Column(db.Numeric(12, 2))
+    payment_method = db.Column(db.String(30))
+    bank_account_id = db.Column(db.Integer, db.ForeignKey('bank_account.id'))
+
+    # Origem
+    origin_type = db.Column(db.String(30))  # manual, quote, contract
+    origin_id = db.Column(db.Integer)
+    quote_id = db.Column(db.Integer, db.ForeignKey('quote.id'))
+    contract_id = db.Column(db.Integer, db.ForeignKey('contract.id'))
+
+    # Centro de custo
+    cost_center_id = db.Column(db.Integer, db.ForeignKey('cost_center.id'))
+
+    notes = db.Column(db.Text)
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'))
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    company = db.relationship('Company')
+    creator = db.relationship('User')
+    bank_account = db.relationship('BankAccount')
+    cost_center = db.relationship('CostCenter')
+    children = db.relationship('AccountReceivable', backref=db.backref('parent', remote_side='AccountReceivable.id'))
+
+    @property
+    def days_until_due(self):
+        from datetime import date
+        if self.due_date:
+            return (self.due_date - date.today()).days
+        return 0
+
+    @property
+    def is_overdue(self):
+        return self.days_until_due < 0 and self.status == 'pending'
+
+    @property
+    def formatted_amount(self):
+        return f"R$ {self.amount:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.')
+
+    def __repr__(self):
+        return f'<AccountReceivable {self.description}>'
+
+
+class Supplier(db.Model):
+    """Fornecedores"""
+    __tablename__ = 'supplier'
+
+    id = db.Column(db.Integer, primary_key=True)
+    company_id = db.Column(db.Integer, db.ForeignKey('company.id'), nullable=False)
+
+    name = db.Column(db.String(200), nullable=False)
+    trading_name = db.Column(db.String(200))
+    cpf_cnpj = db.Column(db.String(18))
+    
+    email = db.Column(db.String(120))
+    phone = db.Column(db.String(20))
+    whatsapp = db.Column(db.String(20))
+    
+    address = db.Column(db.Text)
+    city = db.Column(db.String(100))
+    state = db.Column(db.String(2))
+    zip_code = db.Column(db.String(10))
+
+    category = db.Column(db.String(50))  # equipamentos, servicos, manutencao, transporte, outros
+    
+    # Dados bancarios para pagamento
+    bank_name = db.Column(db.String(100))
+    bank_agency = db.Column(db.String(20))
+    bank_account = db.Column(db.String(30))
+    pix_key = db.Column(db.String(100))
+
+    # Desconto por antecipacao
+    early_payment_discount = db.Column(db.Numeric(5, 2))  # % desconto
+    early_payment_days = db.Column(db.Integer)  # dias de antecedencia
+
+    notes = db.Column(db.Text)
+    is_active = db.Column(db.Boolean, default=True)
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    company = db.relationship('Company')
+
+    def __repr__(self):
+        return f'<Supplier {self.name}>'
+
+
+class Client(db.Model):
+    """Clientes"""
+    __tablename__ = 'client'
+
+    id = db.Column(db.Integer, primary_key=True)
+    company_id = db.Column(db.Integer, db.ForeignKey('company.id'), nullable=False)
+
+    # Dados basicos
+    name = db.Column(db.String(200), nullable=False)
+    trading_name = db.Column(db.String(200))
+    person_type = db.Column(db.String(10))  # pf, pj
+    cpf_cnpj = db.Column(db.String(18))
+    rg_ie = db.Column(db.String(20))
+
+    # Contato
+    email = db.Column(db.String(120))
+    phone = db.Column(db.String(20))
+    whatsapp = db.Column(db.String(20))
+    contact_name = db.Column(db.String(100))
+
+    # Endereco
+    address = db.Column(db.Text)
+    city = db.Column(db.String(100))
+    state = db.Column(db.String(2))
+    zip_code = db.Column(db.String(10))
+
+    # Comercial
+    source = db.Column(db.String(50))  # indicacao, google, instagram, facebook, site, outro
+    segment = db.Column(db.String(100))  # produtora, banda, igreja, empresa, particular
+
+    # Financeiro
+    credit_limit = db.Column(db.Numeric(12, 2))
+    payment_terms = db.Column(db.Integer, default=0)  # dias para pagamento
+
+    notes = db.Column(db.Text)
+    is_active = db.Column(db.Boolean, default=True)
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    company = db.relationship('Company')
+    quotes = db.relationship('Quote', backref='client', lazy='dynamic', foreign_keys='Quote.client_id')
+
+    @property
+    def total_quotes(self):
+        return self.quotes.count() if self.quotes else 0
+
+    def __repr__(self):
+        return f'<Client {self.name}>'
+
+
+class Vehicle(db.Model):
+    """Veiculos da frota"""
+    __tablename__ = 'vehicle'
+
+    id = db.Column(db.Integer, primary_key=True)
+    company_id = db.Column(db.Integer, db.ForeignKey('company.id'), nullable=False)
+
+    # Identificacao
+    name = db.Column(db.String(100), nullable=False)
+    plate = db.Column(db.String(10))
+    renavam = db.Column(db.String(20))
+
+    # Detalhes
+    brand = db.Column(db.String(50))
+    model = db.Column(db.String(100))
+    year = db.Column(db.Integer)
+    color = db.Column(db.String(30))
+    vehicle_type = db.Column(db.String(30))  # carro, van, caminhao, moto
+
+    # Financeiro
+    purchase_date = db.Column(db.Date)
+    purchase_value = db.Column(db.Numeric(12, 2))
+    current_value = db.Column(db.Numeric(12, 2))
+
+    # Financiamento
+    is_financed = db.Column(db.Boolean, default=False)
+    financing_bank = db.Column(db.String(100))
+    financing_total = db.Column(db.Numeric(12, 2))
+    financing_installments = db.Column(db.Integer)
+    financing_installment_value = db.Column(db.Numeric(10, 2))
+    financing_due_day = db.Column(db.Integer)  # Dia do vencimento
+
+    # Controle
+    odometer = db.Column(db.Integer)
+    fuel_type = db.Column(db.String(20))  # gasolina, etanol, diesel, flex, eletrico
+
+    # Documentos
+    ipva_due_date = db.Column(db.Date)
+    insurance_due_date = db.Column(db.Date)
+    last_maintenance_date = db.Column(db.Date)
+    next_maintenance_km = db.Column(db.Integer)
+
+    status = db.Column(db.String(20), default='active')  # active, maintenance, inactive
+    is_active = db.Column(db.Boolean, default=True)
+
+    notes = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    company = db.relationship('Company')
+
+    def __repr__(self):
+        return f'<Vehicle {self.name} - {self.plate}>'
+
+
+class Consumable(db.Model):
+    """Estoque de consumiveis"""
+    __tablename__ = 'consumable'
+
+    id = db.Column(db.Integer, primary_key=True)
+    company_id = db.Column(db.Integer, db.ForeignKey('company.id'), nullable=False)
+
+    name = db.Column(db.String(100), nullable=False)
+    code = db.Column(db.String(30))
+    category = db.Column(db.String(50))  # fitas, pilhas, cabos, conectores, outros
+    
+    unit = db.Column(db.String(20))  # un, m, kg, rolo
+    quantity = db.Column(db.Numeric(10, 2), default=0)
+    min_quantity = db.Column(db.Numeric(10, 2), default=0)  # Estoque minimo
+
+    unit_cost = db.Column(db.Numeric(10, 2))
+    total_value = db.Column(db.Numeric(12, 2))
+
+    location = db.Column(db.String(100))  # Onde esta armazenado
+
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    company = db.relationship('Company')
+
+    @property
+    def is_low_stock(self):
+        return float(self.quantity or 0) <= float(self.min_quantity or 0)
+
+    def __repr__(self):
+        return f'<Consumable {self.name}>'
+
+
+class ContractTemplate(db.Model):
+    """Templates de contrato"""
+    __tablename__ = 'contract_template'
+
+    id = db.Column(db.Integer, primary_key=True)
+    company_id = db.Column(db.Integer, db.ForeignKey('company.id'), nullable=False)
+
+    name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text)
+    
+    content = db.Column(db.Text)  # HTML/Markdown com variaveis {{cliente}}, {{valor}}, etc
+    
+    # Upload de arquivo
+    file_url = db.Column(db.String(500))
+    file_name = db.Column(db.String(200))
+    file_type = db.Column(db.String(20))  # pdf, doc, docx
+
+    is_default = db.Column(db.Boolean, default=False)
+    is_active = db.Column(db.Boolean, default=True)
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    company = db.relationship('Company')
+
+    def __repr__(self):
+        return f'<ContractTemplate {self.name}>'
+
+
+class CashRegister(db.Model):
+    """Caixa diario - controle de dinheiro fisico"""
+    __tablename__ = 'cash_register'
+
+    id = db.Column(db.Integer, primary_key=True)
+    company_id = db.Column(db.Integer, db.ForeignKey('company.id'), nullable=False)
+
+    date = db.Column(db.Date, nullable=False)
+    
+    opening_balance = db.Column(db.Numeric(12, 2), default=0)
+    closing_balance = db.Column(db.Numeric(12, 2))
+    
+    total_in = db.Column(db.Numeric(12, 2), default=0)
+    total_out = db.Column(db.Numeric(12, 2), default=0)
+    
+    status = db.Column(db.String(20), default='open')  # open, closed
+    
+    opened_by = db.Column(db.Integer, db.ForeignKey('user.id'))
+    opened_at = db.Column(db.DateTime)
+    closed_by = db.Column(db.Integer, db.ForeignKey('user.id'))
+    closed_at = db.Column(db.DateTime)
+    
+    notes = db.Column(db.Text)
+
+    company = db.relationship('Company')
+    opener = db.relationship('User', foreign_keys=[opened_by])
+    closer = db.relationship('User', foreign_keys=[closed_by])
+    entries = db.relationship('CashEntry', backref='register', lazy='dynamic')
+
+    def __repr__(self):
+        return f'<CashRegister {self.date}>'
+
+
+class CashEntry(db.Model):
+    """Lancamentos do caixa diario"""
+    __tablename__ = 'cash_entry'
+
+    id = db.Column(db.Integer, primary_key=True)
+    register_id = db.Column(db.Integer, db.ForeignKey('cash_register.id'), nullable=False)
+
+    entry_type = db.Column(db.String(10), nullable=False)  # in, out
+    amount = db.Column(db.Numeric(12, 2), nullable=False)
+    description = db.Column(db.String(200), nullable=False)
+    category = db.Column(db.String(50))
+
+    # Origem
+    origin_type = db.Column(db.String(30))  # receivable, payable, manual
+    origin_id = db.Column(db.Integer)
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'))
+
+    creator = db.relationship('User')
+
+    def __repr__(self):
+        return f'<CashEntry {self.entry_type} R${self.amount}>'

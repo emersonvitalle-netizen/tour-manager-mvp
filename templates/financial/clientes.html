@@ -1,0 +1,252 @@
+{% extends "base.html" %}
+
+{% block title %}Clientes{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-container {
+        padding: 0;
+        min-height: 100vh;
+        padding-bottom: 90px;
+        background-color: #0a0a0a;
+    }
+
+    .page-header {
+        background: linear-gradient(135deg, rgba(139,92,246,0.3) 0%, rgba(26,26,26,0.95) 100%);
+        padding: 20px 16px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        border-bottom: 1px solid #2a2a2a;
+    }
+
+    .back-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #8b5cf6;
+        text-decoration: none;
+    }
+
+    .page-title {
+        flex: 1;
+    }
+
+    .page-title h1 {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #f5f5f5;
+        margin-bottom: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .page-title h1 i {
+        color: #8b5cf6;
+    }
+
+    .btn-add {
+        width: 44px;
+        height: 44px;
+        background: #8b5cf6;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        text-decoration: none;
+        font-size: 1.2rem;
+    }
+
+    .search-bar {
+        padding: 16px;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 14px 16px;
+        background: #1a1a1a;
+        border: 1px solid #2a2a2a;
+        border-radius: 10px;
+        color: #f5f5f5;
+        font-size: 1rem;
+    }
+
+    .search-input::placeholder {
+        color: #666;
+    }
+
+    .list-section {
+        padding: 0 16px;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: #444;
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 16px;
+    }
+
+    .empty-state h3 {
+        color: #888;
+        margin-bottom: 8px;
+    }
+
+    .empty-state a {
+        color: #8b5cf6;
+        text-decoration: none;
+    }
+
+    .cliente-card {
+        background: #1a1a1a;
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .cliente-avatar {
+        width: 48px;
+        height: 48px;
+        background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 1.2rem;
+        font-weight: 700;
+    }
+
+    .cliente-info {
+        flex: 1;
+    }
+
+    .cliente-info h4 {
+        color: #f5f5f5;
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 4px;
+    }
+
+    .cliente-info p {
+        color: #888;
+        font-size: 0.8rem;
+        margin: 0;
+    }
+
+    .cliente-actions {
+        display: flex;
+        gap: 8px;
+    }
+
+    .btn-action {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        cursor: pointer;
+        font-size: 0.9rem;
+    }
+
+    .btn-edit {
+        background: #374151;
+        color: #fff;
+        text-decoration: none;
+    }
+
+    .btn-delete {
+        background: transparent;
+        color: #ef4444;
+        border: 1px solid #ef4444;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <a href="{{ url_for('financial.index') }}" class="back-btn">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <div class="page-title">
+            <h1><i class="fas fa-users"></i> Clientes</h1>
+        </div>
+        <a href="{{ url_for('financial.novo_cliente') }}" class="btn-add">
+            <i class="fas fa-plus"></i>
+        </a>
+    </div>
+
+    <div class="search-bar">
+        <input type="text" class="search-input" id="searchInput" placeholder="Buscar cliente..." onkeyup="filterClientes()">
+    </div>
+
+    <div class="list-section" id="clientesList">
+        {% if clientes %}
+            {% for cliente in clientes %}
+            <div class="cliente-card" data-name="{{ cliente.name|lower }}">
+                <div class="cliente-avatar">
+                    {{ cliente.name[0]|upper if cliente.name else '?' }}
+                </div>
+                <div class="cliente-info">
+                    <h4>{{ cliente.name }}</h4>
+                    {% if cliente.email %}
+                    <p><i class="fas fa-envelope"></i> {{ cliente.email }}</p>
+                    {% endif %}
+                    {% if cliente.phone %}
+                    <p><i class="fas fa-phone"></i> {{ cliente.phone }}</p>
+                    {% endif %}
+                </div>
+                <div class="cliente-actions">
+                    <a href="{{ url_for('financial.editar_cliente', id=cliente.id) }}" class="btn-action btn-edit">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    <form action="{{ url_for('financial.excluir_cliente', id=cliente.id) }}" method="POST" style="display:inline;"
+                          onsubmit="return confirm('Remover este cliente?')">
+                        <button type="submit" class="btn-action btn-delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-users"></i>
+                <h3>Nenhum cliente cadastrado</h3>
+                <p><a href="{{ url_for('financial.novo_cliente') }}">Cadastrar primeiro cliente</a></p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function filterClientes() {
+    var input = document.getElementById('searchInput').value.toLowerCase();
+    var cards = document.querySelectorAll('.cliente-card');
+    
+    cards.forEach(function(card) {
+        var name = card.dataset.name;
+        if (name.indexOf(input) > -1) {
+            card.style.display = '';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
+</script>
+{% endblock %}

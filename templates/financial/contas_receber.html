@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Contas a Pagar - Financeiro{% endblock %}
+{% block title %}Contas a Receber{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -12,7 +12,7 @@
     }
 
     .page-header {
-        background: linear-gradient(135deg, rgba(245,158,11,0.3) 0%, rgba(26,26,26,0.95) 100%);
+        background: linear-gradient(135deg, rgba(16,185,129,0.3) 0%, rgba(26,26,26,0.95) 100%);
         padding: 20px 16px;
         display: flex;
         align-items: center;
@@ -28,7 +28,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        color: #d4a574;
+        color: #10b981;
         text-decoration: none;
     }
 
@@ -37,91 +37,92 @@
     }
 
     .page-title h1 {
-        font-size: 1.5rem;
+        font-size: 1.3rem;
         font-weight: 700;
         color: #f5f5f5;
         margin-bottom: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .page-title h1 i {
+        color: #10b981;
     }
 
     .btn-add {
         width: 44px;
         height: 44px;
+        background: #10b981;
         border-radius: 50%;
-        background: linear-gradient(135deg, #d4a574 0%, #c9956a 100%);
         display: flex;
         align-items: center;
         justify-content: center;
-        color: #0a0a0a;
+        color: #fff;
         text-decoration: none;
         font-size: 1.2rem;
     }
 
     .kpi-grid {
-        padding: 16px;
         display: grid;
         grid-template-columns: repeat(3, 1fr);
         gap: 12px;
+        padding: 16px;
     }
 
     .kpi-card {
-        padding: 16px;
+        background: #1a1a1a;
         border-radius: 12px;
+        padding: 16px;
         text-align: center;
     }
 
-    .kpi-card.red { background: linear-gradient(135deg, #b71c1c 0%, #c62828 100%); }
-    .kpi-card.yellow { background: linear-gradient(135deg, #f9a825 0%, #fbc02d 100%); }
-    .kpi-card.blue { background: linear-gradient(135deg, #0d47a1 0%, #1565c0 100%); }
+    .kpi-card.green { border-top: 3px solid #10b981; }
+    .kpi-card.yellow { border-top: 3px solid #f59e0b; }
+    .kpi-card.blue { border-top: 3px solid #3b82f6; }
 
-    .kpi-card .kpi-label {
+    .kpi-label {
         font-size: 0.7rem;
-        color: rgba(255,255,255,0.7);
+        color: #888;
+        text-transform: uppercase;
         margin-bottom: 4px;
     }
 
-    .kpi-card .kpi-value {
+    .kpi-value {
         font-size: 1.1rem;
         font-weight: 700;
-        color: #fff;
+        color: #f5f5f5;
     }
 
     .filter-bar {
-        padding: 0 16px 16px;
         display: flex;
         gap: 8px;
+        padding: 0 16px 16px;
         overflow-x: auto;
     }
 
     .filter-btn {
         padding: 8px 16px;
-        border-radius: 20px;
         background: #1a1a1a;
-        color: #a0a0a0;
-        border: 1px solid #2a2a2a;
+        border-radius: 20px;
+        color: #888;
         font-size: 0.85rem;
-        white-space: nowrap;
         text-decoration: none;
+        white-space: nowrap;
     }
 
     .filter-btn.active {
-        background: #d4a574;
-        color: #0a0a0a;
-        border-color: #d4a574;
+        background: #10b981;
+        color: #fff;
     }
 
     .list-section {
-        padding: 0 16px 16px;
+        padding: 0 16px;
     }
 
     .empty-state {
         text-align: center;
-        padding: 60px 20px;
-        color: #666;
-    }
-
-    .empty-state i {
-        font-size: 3rem;
-        margin-bottom: 16px;
+        padding: 40px 20px;
         color: #444;
     }
 
@@ -131,7 +132,7 @@
     }
 
     .empty-state a {
-        color: #d4a574;
+        color: #10b981;
         text-decoration: none;
     }
 
@@ -146,7 +147,7 @@
     .conta-card.urgente { border-left-color: #ef4444; }
     .conta-card.atencao { border-left-color: #f59e0b; }
     .conta-card.ok { border-left-color: #10b981; }
-    .conta-card.pago { border-left-color: #6366f1; opacity: 0.7; }
+    .conta-card.recebido { border-left-color: #6366f1; opacity: 0.7; }
 
     .conta-header {
         display: flex;
@@ -171,8 +172,8 @@
     }
 
     .badge-rec {
-        background: rgba(139,92,246,0.2);
-        color: #a78bfa;
+        background: rgba(16,185,129,0.2);
+        color: #34d399;
         font-size: 0.6rem;
         padding: 2px 8px;
         border-radius: 10px;
@@ -193,7 +194,7 @@
     }
 
     .conta-value .amount {
-        color: #f5f5f5;
+        color: #10b981;
         font-weight: 700;
         font-size: 1.1rem;
     }
@@ -212,7 +213,7 @@
         gap: 8px;
     }
 
-    .btn-pagar {
+    .btn-receber {
         flex: 1;
         background: #10b981;
         color: #fff;
@@ -224,19 +225,8 @@
         font-size: 0.85rem;
     }
 
-    .btn-pagar:hover {
+    .btn-receber:hover {
         background: #059669;
-    }
-
-    .btn-editar {
-        padding: 10px 16px;
-        background: #374151;
-        color: #fff;
-        border-radius: 8px;
-        border: none;
-        cursor: pointer;
-        text-decoration: none;
-        font-size: 0.85rem;
     }
 
     .btn-excluir {
@@ -275,22 +265,22 @@
     }
 
     .modal-content h3 {
-        color: #f5f5f5;
+        color: #10b981;
+        margin-bottom: 12px;
+    }
+
+    .form-group {
         margin-bottom: 16px;
     }
 
-    .modal-content .form-group {
-        margin-bottom: 16px;
-    }
-
-    .modal-content label {
+    .form-group label {
         display: block;
-        color: #a0a0a0;
+        color: #888;
         font-size: 0.85rem;
         margin-bottom: 8px;
     }
 
-    .modal-content input {
+    .form-group input {
         width: 100%;
         padding: 12px;
         background: #0a0a0a;
@@ -333,15 +323,15 @@
             <i class="fas fa-arrow-left"></i>
         </a>
         <div class="page-title">
-            <h1><i class="fas fa-file-invoice"></i> Contas a Pagar</h1>
+            <h1><i class="fas fa-hand-holding-usd"></i> Contas a Receber</h1>
         </div>
-        <a href="{{ url_for('financial.nova_conta_pagar') }}" class="btn-add">
+        <a href="{{ url_for('financial.nova_conta_receber') }}" class="btn-add">
             <i class="fas fa-plus"></i>
         </a>
     </div>
 
     <div class="kpi-grid">
-        <div class="kpi-card red">
+        <div class="kpi-card green">
             <div class="kpi-label">Vencidas</div>
             <div class="kpi-value">R$ {{ "%.0f"|format(total_vencidas) if total_vencidas else '0' }}</div>
         </div>
@@ -356,47 +346,39 @@
     </div>
 
     <div class="filter-bar">
-        <a href="{{ url_for('financial.contas_pagar', status='pending') }}" 
+        <a href="{{ url_for('financial.contas_receber', status='pending') }}" 
            class="filter-btn {{ 'active' if status_filter == 'pending' else '' }}">Pendentes</a>
-        <a href="{{ url_for('financial.contas_pagar', status='overdue') }}" 
+        <a href="{{ url_for('financial.contas_receber', status='overdue') }}" 
            class="filter-btn {{ 'active' if status_filter == 'overdue' else '' }}">Vencidas</a>
-        <a href="{{ url_for('financial.contas_pagar', status='paid') }}" 
-           class="filter-btn {{ 'active' if status_filter == 'paid' else '' }}">Pagas</a>
-        <a href="{{ url_for('financial.contas_pagar', status='all') }}" 
+        <a href="{{ url_for('financial.contas_receber', status='received') }}" 
+           class="filter-btn {{ 'active' if status_filter == 'received' else '' }}">Recebidas</a>
+        <a href="{{ url_for('financial.contas_receber', status='all') }}" 
            class="filter-btn {{ 'active' if status_filter == 'all' else '' }}">Todas</a>
     </div>
 
     <div class="list-section">
         {% if contas %}
             {% for conta in contas %}
-            <div class="conta-card {{ 'pago' if conta.status == 'paid' else 'urgente' if conta.days_until_due < 0 else 'atencao' if conta.days_until_due < 7 else 'ok' }}">
+            <div class="conta-card {{ 'recebido' if conta.status == 'received' else 'urgente' if conta.days_until_due < 0 else 'atencao' if conta.days_until_due < 7 else 'ok' }}">
                 <div class="conta-header">
                     <div class="conta-info">
                         <h4>
-                            {% if conta.category == 'outros' and conta.custom_category %}
-                                {{ conta.custom_category }}
-                            {% else %}
-                                {{ conta.category|capitalize if conta.category else 'Conta' }}
-                            {% endif %}
-                            {% if conta.is_recurring %}<span class="badge-rec">REC</span>{% endif %}
+                            {{ conta.client_name if conta.client_name else 'Cliente' }}
                             {% if conta.total_installments and conta.total_installments > 1 %}
                                 <span class="badge-rec" style="background: rgba(14,165,233,0.2); color: #38bdf8;">{{ conta.installment_number }}/{{ conta.total_installments }}</span>
                             {% endif %}
-                            {% if conta.status == 'paid' %}<span class="badge-paid">PAGO</span>{% endif %}
+                            {% if conta.status == 'received' %}<span class="badge-paid">RECEBIDO</span>{% endif %}
                         </h4>
                         <p>{{ conta.description }}</p>
-                        {% if conta.supplier %}
-                        <p style="color: #666; font-size: 0.75rem;">{{ conta.supplier }}</p>
-                        {% endif %}
-                        {% if conta.payment_method %}
-                        <p style="color: #666; font-size: 0.7rem;"><i class="fas fa-credit-card"></i> {{ conta.payment_method|upper }}</p>
+                        {% if conta.category %}
+                        <p style="color: #666; font-size: 0.75rem;">{{ conta.category|capitalize }}</p>
                         {% endif %}
                     </div>
                     <div class="conta-value">
                         <div class="amount">R$ {{ "%.2f"|format(conta.amount) }}</div>
                         <div class="date {{ 'overdue' if conta.days_until_due < 0 and conta.status == 'pending' else '' }}">
-                            {% if conta.status == 'paid' %}
-                                Pago em {{ conta.paid_at.strftime('%d/%m') if conta.paid_at else '-' }}
+                            {% if conta.status == 'received' %}
+                                Recebido em {{ conta.received_at.strftime('%d/%m') if conta.received_at else '-' }}
                             {% elif conta.days_until_due < 0 %}
                                 Vencida ha {{ conta.days_until_due|abs }} dias
                             {% elif conta.days_until_due == 0 %}
@@ -410,13 +392,10 @@
                 
                 {% if conta.status == 'pending' %}
                 <div class="conta-actions">
-                    <button class="btn-pagar" data-id="{{ conta.id }}" data-desc="{{ conta.description|e }}" data-amount="{{ conta.amount }}" onclick="openPayModal(this)">
-                        <i class="fas fa-check"></i> Pagar
+                    <button class="btn-receber" data-id="{{ conta.id }}" data-desc="{{ conta.description|e }}" data-amount="{{ conta.amount }}" onclick="openReceiveModal(this)">
+                        <i class="fas fa-check"></i> Receber
                     </button>
-                    <a href="{{ url_for('financial.editar_conta_pagar', id=conta.id) }}" class="btn-editar">
-                        <i class="fas fa-edit"></i>
-                    </a>
-                    <form action="{{ url_for('financial.excluir_conta_pagar', id=conta.id) }}" method="POST" style="display:inline;" 
+                    <form action="{{ url_for('financial.excluir_conta_receber', id=conta.id) }}" method="POST" style="display:inline;" 
                           onsubmit="return confirm('Cancelar esta conta?')">
                         <button type="submit" class="btn-excluir">
                             <i class="fas fa-times"></i>
@@ -428,48 +407,49 @@
             {% endfor %}
         {% else %}
             <div class="empty-state">
-                <i class="fas fa-file-invoice"></i>
+                <i class="fas fa-hand-holding-usd" style="font-size: 3rem;"></i>
                 <h3>Nenhuma conta encontrada</h3>
-                <p><a href="{{ url_for('financial.nova_conta_pagar') }}">Cadastrar primeira conta</a></p>
+                <p><a href="{{ url_for('financial.nova_conta_receber') }}">Cadastrar primeira conta a receber</a></p>
             </div>
         {% endif %}
     </div>
 </div>
 
-<div class="modal-overlay" id="payModal">
+<div class="modal-overlay" id="receiveModal">
     <div class="modal-content">
-        <h3><i class="fas fa-check-circle"></i> Confirmar Pagamento</h3>
-        <p id="payDescription" style="color: #888; margin-bottom: 16px;"></p>
-        <form id="payForm" method="POST">
+        <h3><i class="fas fa-check-circle"></i> Confirmar Recebimento</h3>
+        <p id="receiveDescription" style="color: #888; margin-bottom: 16px;"></p>
+        <form id="receiveForm" method="POST">
             <div class="form-group">
-                <label>Valor Pago</label>
-                <input type="text" name="paid_amount" id="payAmount" placeholder="0,00">
+                <label>Valor Recebido</label>
+                <input type="text" name="received_amount" id="receiveAmount" placeholder="0,00">
             </div>
             <div class="modal-actions">
-                <button type="button" class="btn-cancel" onclick="closePayModal()">Cancelar</button>
-                <button type="submit" class="btn-confirm">Confirmar Pagamento</button>
+                <button type="button" class="btn-cancel" onclick="closeReceiveModal()">Cancelar</button>
+                <button type="submit" class="btn-confirm">Confirmar Recebimento</button>
             </div>
         </form>
     </div>
 </div>
 
 <script>
-function openPayModal(btn) {
-    var id = btn.getAttribute('data-id');
-    var description = btn.getAttribute('data-desc');
-    var amount = parseFloat(btn.getAttribute('data-amount'));
-    document.getElementById('payDescription').textContent = description;
-    document.getElementById('payAmount').value = amount.toFixed(2).replace('.', ',');
-    document.getElementById('payForm').action = '/financial/contas-pagar/' + id + '/pagar';
-    document.getElementById('payModal').classList.add('show');
+function openReceiveModal(btn) {
+    var id = btn.dataset.id;
+    var desc = btn.dataset.desc;
+    var amount = btn.dataset.amount;
+    
+    document.getElementById('receiveDescription').textContent = desc;
+    document.getElementById('receiveAmount').value = parseFloat(amount).toFixed(2).replace('.', ',');
+    document.getElementById('receiveForm').action = '/financial/contas-receber/' + id + '/receber';
+    document.getElementById('receiveModal').classList.add('show');
 }
 
-function closePayModal() {
-    document.getElementById('payModal').classList.remove('show');
+function closeReceiveModal() {
+    document.getElementById('receiveModal').classList.remove('show');
 }
 
-document.getElementById('payModal').addEventListener('click', function(e) {
-    if (e.target === this) closePayModal();
+document.getElementById('receiveModal').addEventListener('click', function(e) {
+    if (e.target === this) closeReceiveModal();
 });
 </script>
 {% endblock %}
