@@ -394,7 +394,7 @@ def send_to_maintenance(id):
         maintenance_type='corrective',
         status='in_progress',
         company_id=current_user.company_id,
-        started_by=current_user.id,
+        reported_by=current_user.id,
         started_at=datetime.now()
     )
 
