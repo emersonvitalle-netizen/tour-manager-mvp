@@ -1,0 +1,423 @@
+SISTEMA INTELIGENTE - ASSISTENTE FINANCEIRO/COMERCIAL
+MÓDULO 1: ASSISTENTE DE PAGAMENTOS
+TELA: ESTRATÉGIA DE PAGAMENTOS
+🤖 ASSISTENTE INTELIGENTE DE PAGAMENTOS
+
+Analisando seu fluxo de caixa...
+
+┌─────────────────────────────────────────┐
+│  SITUAÇÃO ATUAL                         │
+├─────────────────────────────────────────┤
+│  Saldo disponível: R$ 18.500           │
+│  Entradas próximos 7 dias: R$ 12.000   │
+│  Saídas próximos 7 dias: R$ 15.300     │
+│                                         │
+│  Projeção dia 14/07: R$ 15.200 ✅      │
+└─────────────────────────────────────────┘
+
+💡 RECOMENDAÇÕES INTELIGENTES:
+
+┌─────────────────────────────────────────┐
+│  🎯 ESTRATÉGIA ÓTIMA                    │
+├─────────────────────────────────────────┤
+│  1. PAGAR AGORA (economiza R$ 85):     │
+│     ✅ Energia (venc 10/07) - R$ 850   │
+│        Desconto 2% pgto antecipado      │
+│        Economia: R$ 17                  │
+│                                         │
+│     ✅ Internet (venc 12/07) - R$ 299  │
+│        Desconto R$ 15 se pagar hoje    │
+│        Economia: R$ 15                  │
+│                                         │
+│  2. AGENDAR (dia 24/07):               │
+│     ⏰ Folha CLT - R$ 18.500           │
+│        Aguardar entrada Fatura #013     │
+│        (prevista 20/07 - R$ 15.000)    │
+│                                         │
+│  3. NEGOCIAR PRAZO:                    │
+│     🔄 Aluguel galpão - R$ 3.500       │
+│        Vencimento: 05/07               │
+│        Sugestão: Pedir 10 dias prazo   │
+│        Motivo: Aguardar recebimento    │
+│              de R$ 25k dia 15/07       │
+│                                         │
+│  ECONOMIA TOTAL: R$ 85                 │
+│  RISCO: BAIXO ✅                       │
+└─────────────────────────────────────────┘
+
+┌─────────────────────────────────────────┐
+│  ⚠️ ESTRATÉGIA ARRISCADA (não recom.)  │
+├─────────────────────────────────────────┤
+│  Pagar todas agora: R$ 15.300          │
+│  Saldo restante: R$ 3.200              │
+│  Risco: ALTO se entrada atrasar        │
+└─────────────────────────────────────────┘
+
+[APLICAR ESTRATÉGIA ÓTIMA] [CUSTOMIZAR]
+
+TELA: FLUXO PREDITIVO (15 DIAS)
+📊 PREVISÃO DE FLUXO - Próximos 15 dias
+
+        Hoje  07  08  09  10  11  12  13  14  15  16  17  18  19  20  21
+Saldo   18.5k ────────────────────────────────────────────────────────▶
+                ↓        ↓   ↓       ↓                   ↑           ↑
+               -0.8    -0.3 -0.8   -3.5                +15k        +12k
+
+TIMELINE DETALHADA:
+
+07/07 (HOJ)  Saldo inicial: R$ 18.500
+08/07        -R$ 850  Energia (SUGESTÃO: pagar hoje)
+             Saldo: R$ 17.650 ✅
+
+10/07        -R$ 299  Internet
+             Saldo: R$ 17.351 ✅
+
+12/07        -R$ 850  Manutenção preventiva
+             Saldo: R$ 16.501 ✅
+
+15/07        -R$ 3.500  Aluguel (RISCO: saldo baixo!)
+             Saldo: R$ 13.001 ⚠️
+
+20/07        +R$ 15.000  Fatura #013 (CONFIRMADO 90%)
+             Saldo: R$ 28.001 ✅
+
+22/07        +R$ 12.300  Fatura #014 (PROVÁVEL 70%)
+             Saldo: R$ 40.301 ✅
+
+🤖 ANÁLISE:
+- Zona de risco: 15-19/07 (saldo < R$ 15k)
+- Solução: Negociar aluguel para dia 22/07
+- Ou: Acelerar recebimento Fatura #013
+
+MÓDULO 2: ASSISTENTE COMERCIAL
+TELA: ORÇAMENTOS INTELIGENTES
+🎯 ASSISTENTE DE FECHAMENTO DE VENDAS
+
+┌─────────────────────────────────────────┐
+│  ORÇAMENTOS PENDENTES (5)               │
+└─────────────────────────────────────────┘
+
+╔═════════════════════════════════════════╗
+║  🔥 ALTA PRIORIDADE - AÇÃO IMEDIATA     ║
+╚═════════════════════════════════════════╝
+
+📋 Orçamento #045 - Festival Rock 2025
+Cliente: Produtora ABC
+Valor: R$ 35.000
+Status: PENDENTE (enviado há 8 dias)
+Data evento: 15/08/2025 (39 dias)
+Última interação: 05/07 (WhatsApp visualizado)
+
+🤖 ANÁLISE INTELIGENTE:
+├─ Temperatura: 🟡 MORNA (estava quente)
+├─ Probabilidade fechamento: 65% → 45% ⚠️
+├─ Motivo provável: Preço alto
+└─ Ação sugerida: CONTATO URGENTE
+
+💡 ESTRATÉGIAS RECOMENDADAS:
+
+1. 💰 DESCONTO PROGRESSIVO
+   ┌──────────────────────────────┐
+   │ Valor original: R$ 35.000    │
+   │ Desconto 5%: R$ 33.250       │
+   │                              │
+   │ 📊 Análise de viabilidade:   │
+   │ Margem atual: 42%            │
+   │ Com desconto: 37% ✅         │
+   │ Ainda acima da meta (35%)    │
+   │                              │
+   │ 🎯 Pitch sugerido:           │
+   │ "Revisamos os custos e       │
+   │  conseguimos oferecer 5%     │
+   │  de desconto se fecharmos    │
+   │  esta semana"                │
+   └──────────────────────────────┘
+   [ENVIAR PROPOSTA]
+
+2. 🔄 EQUIPAMENTOS ALTERNATIVOS
+   ┌──────────────────────────────┐
+   │ Análise de substituição:     │
+   │                              │
+   │ ESTAVA NO ORÇAMENTO:         │
+   │ 4x Moving Head Martin (R$ 3.2k/dia) │
+   │ Status: LOCADOS (outro evento)│
+   │                              │
+   │ ALTERNATIVA DISPONÍVEL:      │
+   │ 4x Moving Head Showtec (R$ 2.4k/dia)│
+   │ Status: DISPONÍVEL ✅        │
+   │ Diferença: 80% da potência   │
+   │ Economia: R$ 800/dia         │
+   │                              │
+   │ 🎯 Pitch:                    │
+   │ "Temos equipamento similar   │
+   │  disponível por R$ 33.000"   │
+   └──────────────────────────────┘
+   [GERAR ORÇAMENTO REVISADO]
+
+3. 🤝 SUBLOCAÇÃO PARCIAL
+   ┌──────────────────────────────┐
+   │ Análise:                     │
+   │ - Seus equipamentos: R$ 28k  │
+   │ - Faltam: Mesa X32 + 8 PAR LED│
+   │                              │
+   │ Parceiro disponível:         │
+   │ SomLuz Locações              │
+   │ - Mesa X32: R$ 1.2k/dia      │
+   │ - 8x PAR LED: R$ 0.8k/dia    │
+   │ Total sublocação: R$ 2k      │
+   │                              │
+   │ Seu custo: R$ 30k            │
+   │ Margem: 40% ✅              │
+   │                              │
+   │ [ACEITAR COM SUBLOCAÇÃO]    │
+   └──────────────────────────────┘
+
+4. ⏰ URGÊNCIA TEMPORAL
+   ┌──────────────────────────────┐
+   │ 📅 Evento em 39 dias         │
+   │                              │
+   │ Regra do mercado:            │
+   │ Eventos < 45 dias = urgente  │
+   │                              │
+   │ 🎯 Script sugerido:          │
+   │ "O evento está próximo e     │
+   │  nossa agenda está se        │
+   │  fechando. Podemos garantir  │
+   │  os equipamentos se          │
+   │  fecharmos até sexta"        │
+   │                              │
+   │ [ENVIAR MENSAGEM URGÊNCIA]   │
+   └──────────────────────────────┘
+
+[EXECUTAR ESTRATÉGIA 1] [COMBINAR 1+4]
+
+TELA: ORÇAMENTO RECUSADO - REATIVAÇÃO
+❌ Orçamento #038 - Show Corporativo
+Status: RECUSADO (há 12 dias)
+Motivo: "Preço alto"
+Data evento: 25/08/2025 (49 dias)
+
+🤖 OPORTUNIDADE DE REATIVAÇÃO!
+
+┌─────────────────────────────────────────┐
+│  SINAIS POSITIVOS:                      │
+├─────────────────────────────────────────┤
+│  ✅ Evento ainda não aconteceu          │
+│  ✅ Cliente NÃO fechou com concorrente  │
+│     (checagem: Instagram sem posts)     │
+│  ✅ Data ainda tem 49 dias              │
+│  ✅ Seus equipamentos DISPONÍVEIS       │
+└─────────────────────────────────────────┘
+
+💡 ESTRATÉGIAS DE RECONQUISTA:
+
+1. 💰 PROPOSTA ECONÔMICA
+   ┌──────────────────────────────┐
+   │ Orçamento original: R$ 18.000│
+   │                              │
+   │ NOVA PROPOSTA:               │
+   │ Pacote essencial: R$ 14.500  │
+   │ (-19% equipamentos)          │
+   │                              │
+   │ Removido (não essencial):    │
+   │ - 4 Moving Heads             │
+   │ - 2 Caixas Sub graves        │
+   │                              │
+   │ Mantido (core):              │
+   │ - Mesa de som ✅            │
+   │ - PA system completo ✅     │
+   │ - Iluminação básica ✅      │
+   │                              │
+   │ Margem: 32% ✅              │
+   └──────────────────────────────┘
+   [ENVIAR PROPOSTA ECONÔMICA]
+
+2. 🎁 COMBO COM VALOR AGREGADO
+   ┌──────────────────────────────┐
+   │ Mesmo valor: R$ 18.000       │
+   │                              │
+   │ INCLUI GRÁTIS:               │
+   │ + Técnico durante evento     │
+   │   (valor: R$ 800)            │
+   │ + Seguro equipamentos        │
+   │   (valor: R$ 400)            │
+   │                              │
+   │ Valor percebido: R$ 19.200   │
+   │ Seu custo extra: R$ 200      │
+   │                              │
+   │ 🎯 Pitch:                    │
+   │ "Incluímos técnico e seguro  │
+   │  sem custo adicional"        │
+   └──────────────────────────────┘
+   [ENVIAR COMBO PREMIUM]
+
+3. 🔄 JANELA DE OPORTUNIDADE
+   ┌──────────────────────────────┐
+   │ ANÁLISE DE AGENDA:           │
+   │                              │
+   │ Fim de semana 23-25/08:      │
+   │ Você tem: ZERO eventos ⚠️   │
+   │                              │
+   │ Opções:                      │
+   │ A) Aceitar com margem menor  │
+   │    Margem 25% = R$ 15.750    │
+   │                              │
+   │ B) Manter equipamento parado │
+   │    Receita: R$ 0             │
+   │                              │
+   │ 💡 Recomendação:             │
+   │ Oferecer R$ 15.750           │
+   │ Melhor ter 25% que 0%        │
+   └──────────────────────────────┘
+   [ACEITAR COM MARGEM REDUZIDA]
+
+MÓDULO 3: DASHBOARD ESTRATÉGICO
+TELA: OVERVIEW INTELIGENTE
+🧠 VISÃO ESTRATÉGICA - Semana 08-14/07
+
+┌─────────────────────────────────────────┐
+│  🎯 METAS vs REALIZADO                  │
+├─────────────────────────────────────────┤
+│  Receita meta semana: R$ 15.000        │
+│  Receita confirmada: R$ 8.500 (57%)    │
+│  GAP: R$ 6.500 ⚠️                      │
+│                                         │
+│  🤖 AÇÃO URGENTE:                       │
+│  Fechar 1 dos 3 orçamentos quentes     │
+│  para bater meta da semana             │
+└─────────────────────────────────────────┘
+
+┌─────────────────────────────────────────┐
+│  💰 SAÚDE FINANCEIRA                    │
+├─────────────────────────────────────────┤
+│  Score: 8.2/10 ✅                       │
+│                                         │
+│  ✅ Fluxo de caixa positivo             │
+│  ✅ Margem acima da meta                │
+│  ⚠️ Contas a pagar próx. 7 dias: Alto  │
+│                                         │
+│  Tendência: ESTÁVEL ➡️                 │
+└─────────────────────────────────────────┘
+
+┌─────────────────────────────────────────┐
+│  🎪 UTILIZAÇÃO DE EQUIPAMENTOS          │
+├─────────────────────────────────────────┤
+│  Taxa esta semana: 45%                 │
+│  OPORTUNIDADE: 55% equipamentos parados│
+│                                         │
+│  💡 SUGESTÕES:                          │
+│  1. Oferecer desconto em pacotes       │
+│     para fim de semana disponível      │
+│                                         │
+│  2. Promoção relâmpago Instagram:      │
+│     "Locação com 15% OFF para          │
+│     eventos nos próximos 15 dias"      │
+│                                         │
+│  Potencial receita extra: R$ 8.500     │
+└─────────────────────────────────────────┘
+
+TELA: ANÁLISE PREDITIVA
+🔮 PREVISÃO INTELIGENTE - Próximos 30 dias
+
+┌─────────────────────────────────────────┐
+│  CENÁRIO BASE (Sem novas ações)         │
+├─────────────────────────────────────────┤
+│  Receita provável: R$ 112.000          │
+│  Despesas fixas: R$ 74.000             │
+│  Lucro: R$ 38.000 (34% margem)         │
+│                                         │
+│  Status: ABAIXO DA META (-8%) ⚠️       │
+└─────────────────────────────────────────┘
+
+┌─────────────────────────────────────────┐
+│  CENÁRIO OTIMISTA (Com ações sugeridas) │
+├─────────────────────────────────────────┤
+│  Se fechar 2 dos 5 orçamentos pendentes:│
+│  + R$ 53.000                            │
+│                                         │
+│  Se aplicar estratégias de pagamento:   │
+│  - R$ 285 (economia juros/descontos)    │
+│                                         │
+│  RESULTADO:                             │
+│  Receita: R$ 165.000                    │
+│  Despesas: R$ 73.715                    │
+│  Lucro: R$ 91.285 (55% margem) ✅      │
+│                                         │
+│  Status: ACIMA DA META (+12%) 🎉       │
+└─────────────────────────────────────────┘
+
+💡 AÇÕES PRIORITÁRIAS:
+1. [CONTATAR] Produtora ABC (Festival #045)
+2. [NEGOCIAR] Aluguel para dia 22/07
+3. [PAGAR ANTECIPADO] Energia + Internet
+
+[EXECUTAR PLANO DE AÇÃO]
+
+MÓDULO 4: GRÁFICOS INTELIGENTES
+GRÁFICO: FUNIL COM INTENÇÃO DE COMPRA
+FUNIL DE VENDAS - Com Score de Intenção
+
+Leads (150)                     100%  Temp média: 🔵
+  ↓                                   Score: 30/100
+Contato (100)                    67%  Temp média: 🟡
+  ↓                                   Score: 55/100
+Orçamento Enviado (80)           53%  Temp média: 🟡
+  ├─ Quentes (24) ────────── 🔴 Score: 85/100
+  ├─ Mornos (38) ────────── 🟡 Score: 60/100
+  └─ Frios (18) ─────────── 🔵 Score: 35/100
+  ↓
+Negociação (60)                  40%  Temp média: 🔴
+  ↓                                   Score: 75/100
+Fechados (40)                    27%  
+  └─ Ticket médio: R$ 12.500
+
+🤖 INSIGHTS:
+- 24 leads quentes = potencial R$ 300k
+- Priorize: leads quentes em "orçamento"
+- Taxa conversão quente→fechado: 85%
+
+GRÁFICO: PERFORMANCE POR ESTRATÉGIA
+ESTRATÉGIAS APLICADAS (Último mês)
+
+Desconto Progressivo
+├─ Usada: 8 vezes
+├─ Conversão: 75% (6 fechamentos)
+└─ Margem média: 36% ✅
+
+Equipamento Alternativo
+├─ Usada: 5 vezes
+├─ Conversão: 60% (3 fechamentos)
+└─ Margem média: 38% ✅
+
+Sublocação
+├─ Usada: 3 vezes
+├─ Conversão: 100% (3 fechamentos) 🏆
+└─ Margem média: 32% ⚠️
+
+Urgência Temporal
+├─ Usada: 12 vezes
+├─ Conversão: 42% (5 fechamentos)
+└─ Margem média: 40% ✅
+
+💡 RECOMENDAÇÃO:
+Use mais "Sublocação" - maior conversão!
+
+NOTIFICAÇÕES INTELIGENTES
+🔔 HOJE - 08/07/2025, 9:00
+
+🎯 Orçamento #045 esfriando!
+   Sem resposta há 8 dias
+   [VER ESTRATÉGIAS]
+
+💰 Você pode economizar R$ 32
+   pagando 2 contas hoje
+   [VER QUAIS]
+
+📊 Meta da semana: 57% atingida
+   Faltam R$ 6.500
+   [ACELERAR FECHAMENTOS]
+
+⚠️ Aluguel vence em 2 dias
+   Saldo insuficiente previsto
+   [NEGOCIAR PRAZO]
+
