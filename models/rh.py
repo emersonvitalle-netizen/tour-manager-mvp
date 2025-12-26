@@ -214,3 +214,68 @@ class PayrollEntry(db.Model):
 
     def __repr__(self):
         return f'<PayrollEntry {self.reference_month}/{self.reference_year}>'
+
+
+class AccountPayable(db.Model):
+    """Contas a pagar - despesas fixas e variaveis"""
+    __tablename__ = 'account_payable'
+
+    id = db.Column(db.Integer, primary_key=True)
+    company_id = db.Column(db.Integer, db.ForeignKey('company.id'), nullable=False)
+
+    description = db.Column(db.String(200), nullable=False)
+    category = db.Column(db.String(50))  # aluguel, energia, agua, telefone, internet, outros
+    supplier = db.Column(db.String(200))
+    
+    amount = db.Column(db.Numeric(10, 2), nullable=False)
+    due_date = db.Column(db.Date, nullable=False)
+    
+    is_recurring = db.Column(db.Boolean, default=False)
+    recurrence_type = db.Column(db.String(20))  # monthly, weekly, yearly
+    
+    status = db.Column(db.String(20), default='pending')  # pending, paid, overdue, cancelled
+    paid_at = db.Column(db.DateTime)
+    paid_amount = db.Column(db.Numeric(10, 2))
+    
+    notes = db.Column(db.Text)
+    
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'))
+
+    company = db.relationship('Company')
+    creator = db.relationship('User')
+
+    def __repr__(self):
+        return f'<AccountPayable {self.description}>'
+
+
+class FreelancerPayment(db.Model):
+    """Pagamentos para freelancers"""
+    __tablename__ = 'freelancer_payment'
+
+    id = db.Column(db.Integer, primary_key=True)
+    company_id = db.Column(db.Integer, db.ForeignKey('company.id'), nullable=False)
+    freelancer_id = db.Column(db.Integer, db.ForeignKey('freelancer.id'), nullable=False)
+    assignment_id = db.Column(db.Integer, db.ForeignKey('freelancer_assignment.id'))
+
+    amount = db.Column(db.Numeric(10, 2), nullable=False)
+    payment_date = db.Column(db.Date, nullable=False)
+    payment_method = db.Column(db.String(50))  # pix, transferencia, dinheiro
+    
+    reference = db.Column(db.String(100))  # Referencia do evento/trabalho
+    
+    status = db.Column(db.String(20), default='pending')  # pending, paid, cancelled
+    paid_at = db.Column(db.DateTime)
+    
+    notes = db.Column(db.Text)
+    
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'))
+
+    company = db.relationship('Company')
+    freelancer = db.relationship('Freelancer')
+    assignment = db.relationship('FreelancerAssignment')
+    creator = db.relationship('User')
+
+    def __repr__(self):
+        return f'<FreelancerPayment {self.freelancer_id} - R${self.amount}>'
