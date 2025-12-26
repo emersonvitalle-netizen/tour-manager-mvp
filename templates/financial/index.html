@@ -193,6 +193,8 @@
     .action-btn.folha-btn { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); }
     .action-btn.freelancers-btn { background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); }
     .action-btn.contas-btn { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+    .action-btn.receber-btn { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+    .action-btn.clientes-btn { background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); }
     .action-btn.nfse-btn { background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); }
     .action-btn.pix-btn { background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%); }
     .action-btn.dre-btn { background: linear-gradient(135deg, #64748b 0%, #475569 100%); }
@@ -395,6 +397,14 @@
         <a href="{{ url_for('financial.contas_pagar') }}" class="action-btn contas-btn">
             <i class="fas fa-file-invoice"></i>
             <span>Contas a Pagar</span>
+        </a>
+        <a href="{{ url_for('financial.contas_receber') }}" class="action-btn receber-btn">
+            <i class="fas fa-hand-holding-usd"></i>
+            <span>Contas a Receber</span>
+        </a>
+        <a href="{{ url_for('financial.clientes') }}" class="action-btn clientes-btn">
+            <i class="fas fa-users"></i>
+            <span>Clientes</span>
         </a>
         <a href="{{ url_for('financial.emitir_nfse') }}" class="action-btn nfse-btn">
             <i class="fas fa-file-alt"></i>

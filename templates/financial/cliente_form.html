@@ -1,0 +1,215 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'Editar' if cliente else 'Novo' }} Cliente{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-container {
+        padding: 0;
+        min-height: 100vh;
+        padding-bottom: 90px;
+        background-color: #0a0a0a;
+    }
+
+    .page-header {
+        background: linear-gradient(135deg, rgba(139,92,246,0.3) 0%, rgba(26,26,26,0.95) 100%);
+        padding: 20px 16px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        border-bottom: 1px solid #2a2a2a;
+    }
+
+    .back-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #8b5cf6;
+        text-decoration: none;
+    }
+
+    .page-title h1 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #f5f5f5;
+        margin-bottom: 0;
+    }
+
+    .form-container {
+        padding: 20px 16px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-label {
+        display: block;
+        color: #a0a0a0;
+        font-size: 0.85rem;
+        margin-bottom: 8px;
+        font-weight: 500;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 14px 16px;
+        background: #1a1a1a;
+        border: 1px solid #2a2a2a;
+        border-radius: 10px;
+        color: #f5f5f5;
+        font-size: 1rem;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #8b5cf6;
+    }
+
+    .form-select {
+        width: 100%;
+        padding: 14px 16px;
+        background: #1a1a1a;
+        border: 1px solid #2a2a2a;
+        border-radius: 10px;
+        color: #f5f5f5;
+        font-size: 1rem;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23a0a0a0' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 16px center;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+    }
+
+    .form-row-3 {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr;
+        gap: 16px;
+    }
+
+    .btn-submit {
+        width: 100%;
+        padding: 16px;
+        background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+        color: #fff;
+        font-size: 1.1rem;
+        font-weight: 700;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        margin-top: 20px;
+    }
+
+    .btn-submit:hover {
+        transform: translateY(-2px);
+    }
+
+    textarea.form-control {
+        min-height: 100px;
+        resize: vertical;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <a href="{{ url_for('financial.clientes') }}" class="back-btn">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <div class="page-title">
+            <h1>{{ 'Editar' if cliente else 'Novo' }} Cliente</h1>
+        </div>
+    </div>
+
+    <div class="form-container">
+        <form method="POST">
+            <div class="form-group">
+                <label class="form-label">Nome *</label>
+                <input type="text" name="name" class="form-control" 
+                       value="{{ cliente.name if cliente else '' }}" 
+                       placeholder="Nome completo ou razao social"
+                       required>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Tipo de Documento</label>
+                    <select name="document_type" class="form-select">
+                        <option value="cpf" {{ 'selected' if not cliente or cliente.document_type == 'cpf' else '' }}>CPF</option>
+                        <option value="cnpj" {{ 'selected' if cliente and cliente.document_type == 'cnpj' else '' }}>CNPJ</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">CPF/CNPJ</label>
+                    <input type="text" name="document" class="form-control" 
+                           value="{{ cliente.document if cliente else '' }}" 
+                           placeholder="000.000.000-00">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" name="email" class="form-control" 
+                           value="{{ cliente.email if cliente else '' }}" 
+                           placeholder="email@exemplo.com">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Telefone</label>
+                    <input type="tel" name="phone" class="form-control" 
+                           value="{{ cliente.phone if cliente else '' }}" 
+                           placeholder="(00) 00000-0000">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Endereco</label>
+                <input type="text" name="address" class="form-control" 
+                       value="{{ cliente.address if cliente else '' }}" 
+                       placeholder="Rua, numero, complemento">
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Cidade</label>
+                    <input type="text" name="city" class="form-control" 
+                           value="{{ cliente.city if cliente else '' }}" 
+                           placeholder="Cidade">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Estado</label>
+                    <select name="state" class="form-select">
+                        <option value="">Selecione...</option>
+                        {% for uf in ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'] %}
+                        <option value="{{ uf }}" {{ 'selected' if cliente and cliente.state == uf else '' }}>{{ uf }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Observacoes</label>
+                <textarea name="notes" class="form-control" 
+                          placeholder="Informacoes adicionais sobre o cliente...">{{ cliente.notes if cliente else '' }}</textarea>
+            </div>
+
+            <button type="submit" class="btn-submit">
+                <i class="fas fa-save"></i> {{ 'Atualizar' if cliente else 'Cadastrar' }} Cliente
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
