@@ -245,6 +245,24 @@ class AccountPayable(db.Model):
     company = db.relationship('Company')
     creator = db.relationship('User')
 
+    @property
+    def days_until_due(self):
+        """Dias ate o vencimento (negativo se vencida)"""
+        from datetime import date
+        if self.due_date:
+            return (self.due_date - date.today()).days
+        return 0
+
+    @property
+    def is_overdue(self):
+        """Verifica se esta vencida"""
+        return self.days_until_due < 0 and self.status == 'pending'
+
+    @property
+    def formatted_amount(self):
+        """Valor formatado em reais"""
+        return f"R$ {self.amount:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.')
+
     def __repr__(self):
         return f'<AccountPayable {self.description}>'
 
