@@ -400,7 +400,7 @@
                 
                 {% if conta.status == 'pending' %}
                 <div class="conta-actions">
-                    <button class="btn-pagar" onclick="openPayModal({{ conta.id }}, '{{ conta.description }}', {{ conta.amount }})">
+                    <button class="btn-pagar" data-id="{{ conta.id }}" data-desc="{{ conta.description|e }}" data-amount="{{ conta.amount }}" onclick="openPayModal(this)">
                         <i class="fas fa-check"></i> Pagar
                     </button>
                     <a href="{{ url_for('financial.editar_conta_pagar', id=conta.id) }}" class="btn-editar">
@@ -444,7 +444,10 @@
 </div>
 
 <script>
-function openPayModal(id, description, amount) {
+function openPayModal(btn) {
+    var id = btn.getAttribute('data-id');
+    var description = btn.getAttribute('data-desc');
+    var amount = parseFloat(btn.getAttribute('data-amount'));
     document.getElementById('payDescription').textContent = description;
     document.getElementById('payAmount').value = amount.toFixed(2).replace('.', ',');
     document.getElementById('payForm').action = '/financial/contas-pagar/' + id + '/pagar';

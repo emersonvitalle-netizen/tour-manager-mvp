@@ -538,11 +538,11 @@ def contas_pagar():
         AccountPayable.due_date <= date.today() + timedelta(days=7)
     ).scalar() or 0
     
+    current_month = date.today().strftime('%Y-%m')
     total_mes = db.session.query(func.sum(AccountPayable.amount)).filter(
         AccountPayable.company_id == current_user.company_id,
         AccountPayable.status == 'pending',
-        func.extract('month', AccountPayable.due_date) == date.today().month,
-        func.extract('year', AccountPayable.due_date) == date.today().year
+        func.strftime('%Y-%m', AccountPayable.due_date) == current_month
     ).scalar() or 0
     
     categorias = ['aluguel', 'energia', 'agua', 'telefone', 'internet', 'combustivel', 'manutencao', 'outros']
@@ -656,6 +656,8 @@ def pagar_conta(id):
     db.session.commit()
     
     if conta.is_recurring:
+        from dateutil.relativedelta import relativedelta
+        
         proxima = AccountPayable(
             company_id=conta.company_id,
             description=conta.description,
@@ -670,13 +672,13 @@ def pagar_conta(id):
         )
         
         if conta.recurrence_type == 'monthly':
-            proxima.due_date = conta.due_date + timedelta(days=30)
+            proxima.due_date = conta.due_date + relativedelta(months=1)
         elif conta.recurrence_type == 'weekly':
             proxima.due_date = conta.due_date + timedelta(days=7)
         elif conta.recurrence_type == 'yearly':
-            proxima.due_date = conta.due_date + timedelta(days=365)
+            proxima.due_date = conta.due_date + relativedelta(years=1)
         else:
-            proxima.due_date = conta.due_date + timedelta(days=30)
+            proxima.due_date = conta.due_date + relativedelta(months=1)
         
         db.session.add(proxima)
         db.session.commit()
