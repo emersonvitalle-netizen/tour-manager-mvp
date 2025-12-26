@@ -391,9 +391,11 @@ def send_to_maintenance(id):
     maintenance = Maintenance(
         equipment_id=id,
         problem_description=problem,
+        maintenance_type='corrective',
         status='in_progress',
         company_id=current_user.company_id,
-        started_by=current_user.id
+        started_by=current_user.id,
+        started_at=datetime.now()
     )
 
     equipment.status = 'maintenance'
