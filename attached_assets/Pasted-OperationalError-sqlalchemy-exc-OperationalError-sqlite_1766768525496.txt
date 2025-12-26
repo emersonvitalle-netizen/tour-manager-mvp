@@ -1,0 +1,97 @@
+OperationalError
+sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) no such column: quote.client_id
+[SQL: SELECT count(*) AS count_1 
+FROM (SELECT quote.id AS quote_id, quote.code AS quote_code, quote.tour_id AS quote_tour_id, quote.client_id AS quote_client_id, quote.client_name AS quote_client_name, quote.client_email AS quote_client_email, quote.client_phone AS quote_client_phone, quote.client_document AS quote_client_document, quote.title AS quote_title, quote.description AS quote_description, quote.subtotal AS quote_subtotal, quote.discount_percent AS quote_discount_percent, quote.discount_value AS quote_discount_value, quote.total AS quote_total, quote.valid_until AS quote_valid_until, quote.status AS quote_status, quote.notes AS quote_notes, quote.terms AS quote_terms, quote.created_by AS quote_created_by, quote.created_at AS quote_created_at, quote.updated_at AS quote_updated_at, quote.approved_at AS quote_approved_at, quote.approved_by AS quote_approved_by, quote.company_id AS quote_company_id, quote.is_active AS quote_is_active 
+FROM quote 
+WHERE quote.company_id = ? AND quote.status = ? AND quote.is_active = 1) AS anon_1]
+[parameters: (1, 'sent')]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+Traceback (most recent call last)
+File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+self.dialect.do_execute(
+^
+File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 951, in do_execute
+cursor.execute(statement, parameters)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The above exception was the direct cause of the following exception:
+File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1478, in __call__
+return self.wsgi_app(environ, start_response)
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1458, in wsgi_app
+response = self.handle_exception(e)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1455, in wsgi_app
+response = self.full_dispatch_request()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 869, in full_dispatch_request
+rv = self.handle_user_exception(e)
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 867, in full_dispatch_request
+rv = self.dispatch_request()
+     ^^^^^^^^^^^^^^^^^^^^^^^
+File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 852, in dispatch_request
+return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask_login/utils.py", line 290, in decorated_view
+return current_app.ensure_sync(func)(*args, **kwargs)
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+File "/home/runner/workspace/routes/financial.py", line 22, in decorated_function
+return f(*args, **kwargs)
+       ^^^^^^^^^^^^^^^^^^
+File "/home/runner/workspace/routes/financial.py", line 68, in index
+).count()
+  ^^^^^^^
+File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/query.py", line 3146, in count
+self._legacy_from_self(col).enable_eagerloads(False).scalar()
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/query.py", line 2835, in scalar
+ret = self.one()
+      ^^^^^^^^^^
+File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/query.py", line 2808, in one
+return self._iter().one()  # type: ignore
+       ^^^^^^^^^^^^
+File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/query.py", line 2857, in _iter
+result: Union[ScalarResult[_T], Result[_T]] = self.session.execute(
+                                              
+File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 2365, in execute
+return self._execute_internal(
+       
+File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 2251, in _execute_internal
+result: Result[Any] = compile_state_cls.orm_execute_statement(
+                      
+File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/context.py", line 306, in orm_execute_statement
+result = conn.execute(
+         
+File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1419, in execute
+return meth(
+       
+File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/sql/elements.py", line 526, in _execute_on_connection
+return connection._execute_clauseelement(
+       
+File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1641, in _execute_clauseelement
+ret = self._execute_context(
+      
+File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1846, in _execute_context
+return self._exec_single_context(
+       
+File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1986, in _exec_single_context
+self._handle_dbapi_exception(
+^
+File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 2355, in _handle_dbapi_exception
+raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+self.dialect.do_execute(
+^
+File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 951, in do_execute
+cursor.execute(statement, parameters)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) no such column: quote.client_id [SQL: SELECT count(*) AS count_1  FROM (SELECT quote.id AS quote_id, quote.code AS quote_code, quote.tour_id AS quote_tour_id, quote.client_id AS quote_client_id, quote.client_name AS quote_client_name, quote.client_email AS quote_client_email, quote.client_phone AS quote_client_phone, quote.client_document AS quote_client_document, quote.title AS quote_title, quote.description AS quote_description, quote.subtotal AS quote_subtotal, quote.discount_percent AS quote_discount_percent, quote.discount_value AS quote_discount_value, quote.total AS quote_total, quote.valid_until AS quote_valid_until, quote.status AS quote_status, quote.notes AS quote_notes, quote.terms AS quote_terms, quote.created_by AS quote_created_by, quote.created_at AS quote_created_at, quote.updated_at AS quote_updated_at, quote.approved_at AS quote_approved_at, quote.approved_by AS quote_approved_by, quote.company_id AS quote_company_id, quote.is_active AS quote_is_active  FROM quote  WHERE quote.company_id = ? AND quote.status = ? AND quote.is_active = 1) AS anon_1] [parameters: (1, 'sent')] (Background on this error at: https://sqlalche.me/e/20/e3q8) 
+The debugger caught an exception in your WSGI application. You can now look at the traceback which led to the error.
+To switch between the interactive traceback and the plaintext one, you can click on the "Traceback" headline. From the text traceback you can also create a paste of it. For code execution mouse-over the frame you want to debug and click on the console icon on the right side.
+
+You can execute arbitrary Python code in the stack frames and there are some extra helpers available for introspection:
+
+dump() shows all variables in the frame
+dump(obj) dumps all that's known about the object
+Brought to you by DON'T PANIC, your friendly Werkzeug powered traceback interpreter.
