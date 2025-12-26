@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}Emitir NFSe - Financeiro{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-container {
+        padding: 0;
+        min-height: 100vh;
+        padding-bottom: 90px;
+        background-color: #0a0a0a;
+    }
+
+    .page-header {
+        background: linear-gradient(135deg, rgba(99,102,241,0.3) 0%, rgba(26,26,26,0.95) 100%);
+        padding: 20px 16px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        border-bottom: 1px solid #2a2a2a;
+    }
+
+    .back-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #d4a574;
+        text-decoration: none;
+    }
+
+    .page-title h1 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #f5f5f5;
+        margin-bottom: 4px;
+    }
+
+    .form-card {
+        margin: 16px;
+        background: #1a1a1a;
+        border-radius: 12px;
+        padding: 20px;
+        border: 1px solid #2a2a2a;
+    }
+
+    .form-group {
+        margin-bottom: 16px;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+
+    .form-control {
+        width: 100%;
+        background: #252525;
+        border: 1px solid #333;
+        border-radius: 8px;
+        padding: 12px;
+        color: #fff;
+        font-size: 0.95rem;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #6366f1;
+    }
+
+    textarea.form-control {
+        min-height: 100px;
+        resize: vertical;
+    }
+
+    .btn-emitir {
+        width: 100%;
+        background: #10b981;
+        color: #fff;
+        padding: 16px;
+        border-radius: 8px;
+        border: none;
+        font-weight: 700;
+        font-size: 1rem;
+        cursor: pointer;
+        margin-top: 8px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <a href="{{ url_for('financial.index') }}" class="back-btn">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <div class="page-title">
+            <h1><i class="fas fa-file-alt"></i> Emitir NFSe</h1>
+        </div>
+    </div>
+
+    <div class="form-card">
+        <form method="POST">
+            <div class="form-group">
+                <input type="text" class="form-control" name="razao_social" placeholder="Nome/Razao Social">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <input type="text" class="form-control" name="cpf_cnpj" placeholder="CPF/CNPJ">
+                </div>
+                <div class="form-group">
+                    <input type="text" class="form-control" name="insc_municipal" placeholder="Insc. Municipal">
+                </div>
+            </div>
+            <div class="form-group">
+                <textarea class="form-control" name="descricao" placeholder="Descricao do servico"></textarea>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <input type="number" class="form-control" name="valor" placeholder="Valor Total" step="0.01">
+                </div>
+                <div class="form-group">
+                    <input type="number" class="form-control" name="aliquota" placeholder="Aliquota ISS (%)" step="0.01">
+                </div>
+            </div>
+            <div class="form-group">
+                <select class="form-control" name="provedor">
+                    <option value="focus">Focus NFe</option>
+                    <option value="manual">Manual</option>
+                </select>
+            </div>
+            <button type="submit" class="btn-emitir">Emitir NFSe</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

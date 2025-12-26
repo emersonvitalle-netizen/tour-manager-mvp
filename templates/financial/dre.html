@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block title %}DRE - Financeiro{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-container {
+        padding: 0;
+        min-height: 100vh;
+        padding-bottom: 90px;
+        background-color: #0a0a0a;
+    }
+
+    .page-header {
+        background: linear-gradient(135deg, rgba(100,116,139,0.3) 0%, rgba(26,26,26,0.95) 100%);
+        padding: 20px 16px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        border-bottom: 1px solid #2a2a2a;
+    }
+
+    .back-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #d4a574;
+        text-decoration: none;
+    }
+
+    .page-title h1 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #f5f5f5;
+        margin-bottom: 4px;
+    }
+
+    .dre-card {
+        margin: 16px;
+        background: #1a1a1a;
+        border-radius: 12px;
+        padding: 20px;
+        border: 1px solid #2a2a2a;
+    }
+
+    .dre-section {
+        margin-bottom: 20px;
+    }
+
+    .dre-section-title {
+        color: #10b981;
+        font-weight: 700;
+        margin-bottom: 12px;
+        font-size: 0.9rem;
+    }
+
+    .dre-section-title.despesas {
+        color: #ef4444;
+    }
+
+    .dre-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px;
+        background: #252525;
+        border-radius: 8px;
+        margin-bottom: 8px;
+    }
+
+    .dre-item .label {
+        color: #a0a0a0;
+    }
+
+    .dre-item .value {
+        color: #f5f5f5;
+        font-weight: 600;
+    }
+
+    .dre-total {
+        border-top: 2px solid #333;
+        padding-top: 16px;
+        margin-top: 16px;
+    }
+
+    .dre-total .dre-item {
+        background: transparent;
+        padding: 0;
+    }
+
+    .dre-total .label {
+        color: #60a5fa;
+        font-weight: 700;
+        font-size: 1.1rem;
+    }
+
+    .dre-total .value {
+        color: #fff;
+        font-weight: 700;
+        font-size: 1.2rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <a href="{{ url_for('financial.index') }}" class="back-btn">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <div class="page-title">
+            <h1><i class="fas fa-file-contract"></i> DRE</h1>
+        </div>
+    </div>
+
+    <div class="dre-card">
+        <div class="dre-section">
+            <div class="dre-section-title">RECEITAS</div>
+            <div class="dre-item">
+                <span class="label">Locacoes</span>
+                <span class="value">R$ 58.000</span>
+            </div>
+        </div>
+
+        <div class="dre-section">
+            <div class="dre-section-title despesas">DESPESAS</div>
+            <div class="dre-item">
+                <span class="label">Folha</span>
+                <span class="value">R$ 18.500</span>
+            </div>
+            <div class="dre-item">
+                <span class="label">Contas</span>
+                <span class="value">R$ 9.200</span>
+            </div>
+            <div class="dre-item">
+                <span class="label">Freelancers</span>
+                <span class="value">R$ 5.800</span>
+            </div>
+            <div class="dre-item">
+                <span class="label">Manutencao</span>
+                <span class="value">R$ 3.500</span>
+            </div>
+        </div>
+
+        <div class="dre-total">
+            <div class="dre-item">
+                <span class="label">LUCRO LIQUIDO</span>
+                <span class="value">R$ 21.000</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

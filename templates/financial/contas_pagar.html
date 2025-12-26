@@ -1,0 +1,263 @@
+{% extends "base.html" %}
+
+{% block title %}Contas a Pagar - Financeiro{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-container {
+        padding: 0;
+        min-height: 100vh;
+        padding-bottom: 90px;
+        background-color: #0a0a0a;
+    }
+
+    .page-header {
+        background: linear-gradient(135deg, rgba(245,158,11,0.3) 0%, rgba(26,26,26,0.95) 100%);
+        padding: 20px 16px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        border-bottom: 1px solid #2a2a2a;
+    }
+
+    .back-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #d4a574;
+        text-decoration: none;
+    }
+
+    .page-title h1 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #f5f5f5;
+        margin-bottom: 4px;
+    }
+
+    .kpi-grid {
+        padding: 16px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+    }
+
+    .kpi-card {
+        padding: 16px;
+        border-radius: 12px;
+        text-align: center;
+    }
+
+    .kpi-card.red { background: linear-gradient(135deg, #b71c1c 0%, #c62828 100%); }
+    .kpi-card.yellow { background: linear-gradient(135deg, #f9a825 0%, #fbc02d 100%); }
+    .kpi-card.blue { background: linear-gradient(135deg, #0d47a1 0%, #1565c0 100%); }
+
+    .kpi-card .kpi-label {
+        font-size: 0.7rem;
+        color: rgba(255,255,255,0.7);
+        margin-bottom: 4px;
+    }
+
+    .kpi-card .kpi-value {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #fff;
+    }
+
+    .list-section {
+        padding: 0 16px 16px;
+    }
+
+    .conta-card {
+        background: #1a1a1a;
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 12px;
+        border-left: 4px solid;
+    }
+
+    .conta-card.urgente { border-left-color: #ef4444; }
+    .conta-card.atencao { border-left-color: #f59e0b; }
+    .conta-card.ok { border-left-color: #10b981; }
+
+    .conta-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 12px;
+    }
+
+    .conta-info h4 {
+        color: #f5f5f5;
+        font-size: 1rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .conta-info p {
+        color: #888;
+        font-size: 0.8rem;
+    }
+
+    .badge-rec {
+        background: rgba(139,92,246,0.2);
+        color: #a78bfa;
+        font-size: 0.6rem;
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-weight: 600;
+    }
+
+    .conta-value {
+        text-align: right;
+    }
+
+    .conta-value .amount {
+        color: #f5f5f5;
+        font-weight: 700;
+        font-size: 1.1rem;
+    }
+
+    .conta-value .date {
+        color: #888;
+        font-size: 0.75rem;
+    }
+
+    .conta-actions {
+        display: flex;
+        gap: 8px;
+    }
+
+    .btn-pagar {
+        flex: 1;
+        background: #10b981;
+        color: #fff;
+        padding: 10px;
+        border-radius: 8px;
+        border: none;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .btn-agendar {
+        flex: 1;
+        background: #374151;
+        color: #fff;
+        padding: 10px;
+        border-radius: 8px;
+        border: none;
+        font-weight: 600;
+        cursor: pointer;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <a href="{{ url_for('financial.index') }}" class="back-btn">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <div class="page-title">
+            <h1><i class="fas fa-file-invoice"></i> Contas a Pagar</h1>
+        </div>
+    </div>
+
+    <div class="kpi-grid">
+        <div class="kpi-card red">
+            <div class="kpi-label">Vencidas</div>
+            <div class="kpi-value">R$ 2.4k</div>
+        </div>
+        <div class="kpi-card yellow">
+            <div class="kpi-label">7 dias</div>
+            <div class="kpi-value">R$ 4.6k</div>
+        </div>
+        <div class="kpi-card blue">
+            <div class="kpi-label">Mes</div>
+            <div class="kpi-value">R$ 9.2k</div>
+        </div>
+    </div>
+
+    <div class="list-section">
+        {% if contas %}
+            {% for conta in contas %}
+            <div class="conta-card {{ 'urgente' if conta.days_until_due < 3 else 'atencao' if conta.days_until_due < 7 else 'ok' }}">
+                <div class="conta-header">
+                    <div class="conta-info">
+                        <h4>
+                            {{ conta.category or 'Conta' }}
+                            {% if conta.is_recurring %}<span class="badge-rec">REC</span>{% endif %}
+                        </h4>
+                        <p>{{ conta.description }}</p>
+                    </div>
+                    <div class="conta-value">
+                        <div class="amount">R$ {{ "%.2f"|format(conta.amount) }}</div>
+                        <div class="date">{{ conta.due_date.strftime('%d/%m') }}</div>
+                    </div>
+                </div>
+                <div class="conta-actions">
+                    <button class="btn-pagar">Pagar</button>
+                    <button class="btn-agendar">Agendar</button>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="conta-card urgente">
+                <div class="conta-header">
+                    <div class="conta-info">
+                        <h4>Energia <span class="badge-rec">REC</span></h4>
+                        <p>Luz - Junho</p>
+                    </div>
+                    <div class="conta-value">
+                        <div class="amount">R$ 850</div>
+                        <div class="date">25/06</div>
+                    </div>
+                </div>
+                <div class="conta-actions">
+                    <button class="btn-pagar">Pagar</button>
+                    <button class="btn-agendar">Agendar</button>
+                </div>
+            </div>
+
+            <div class="conta-card atencao">
+                <div class="conta-header">
+                    <div class="conta-info">
+                        <h4>Internet <span class="badge-rec">REC</span></h4>
+                        <p>Fibra 500MB</p>
+                    </div>
+                    <div class="conta-value">
+                        <div class="amount">R$ 299</div>
+                        <div class="date">28/06</div>
+                    </div>
+                </div>
+                <div class="conta-actions">
+                    <button class="btn-pagar">Pagar</button>
+                    <button class="btn-agendar">Agendar</button>
+                </div>
+            </div>
+
+            <div class="conta-card ok">
+                <div class="conta-header">
+                    <div class="conta-info">
+                        <h4>Aluguel <span class="badge-rec">REC</span></h4>
+                        <p>Galpao</p>
+                    </div>
+                    <div class="conta-value">
+                        <div class="amount">R$ 3.500</div>
+                        <div class="date">05/07</div>
+                    </div>
+                </div>
+                <div class="conta-actions">
+                    <button class="btn-pagar">Pagar</button>
+                    <button class="btn-agendar">Agendar</button>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
