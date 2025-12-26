@@ -208,9 +208,9 @@ class PayrollEntry(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     approved_by = db.Column(db.Integer, db.ForeignKey('user.id'))
 
-    # Relacionamentos
+    # Relacionamentos (employee ja definido via backref em Employee.payroll_entries)
     company = db.relationship('Company')
     approver = db.relationship('User')
 
     def __repr__(self):
-        return f'<PayrollEntry {self.employee.name} - {self.reference_month}/{self.reference_year}>'
+        return f'<PayrollEntry {self.reference_month}/{self.reference_year}>'

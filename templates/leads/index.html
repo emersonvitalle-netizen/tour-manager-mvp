@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+
+{% block title %}Comercial - Leads{% endblock %}
+
+{% block extra_css %}
+<style>
+    .comercial-container {
+        padding: 16px;
+        padding-bottom: 100px;
+        background: #0a0a0a;
+        min-height: 100vh;
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+    }
+
+    .page-title {
+        color: #f5f5f5;
+        font-size: 1.5rem;
+        font-weight: 600;
+    }
+
+    .btn-new {
+        background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+    .kpis {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin-bottom: 24px;
+    }
+
+    .kpi-card {
+        background: #1a1a1a;
+        border-radius: 12px;
+        padding: 16px;
+        text-align: center;
+    }
+
+    .kpi-value {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #f5f5f5;
+    }
+
+    .kpi-value.green { color: #2e7d32; }
+    .kpi-value.red { color: #c62828; }
+    .kpi-value.gold { color: #d4a574; }
+
+    .kpi-label {
+        font-size: 0.75rem;
+        color: #888;
+        margin-top: 4px;
+    }
+
+    .kanban-container {
+        display: flex;
+        gap: 12px;
+        overflow-x: auto;
+        padding-bottom: 16px;
+    }
+
+    .kanban-column {
+        min-width: 280px;
+        background: #1a1a1a;
+        border-radius: 12px;
+        padding: 12px;
+    }
+
+    .column-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+        padding-bottom: 8px;
+        border-bottom: 2px solid #2a2a2a;
+    }
+
+    .column-title {
+        color: #f5f5f5;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .column-count {
+        background: #333;
+        color: #888;
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 0.75rem;
+    }
+
+    .lead-card {
+        background: #252525;
+        border-radius: 8px;
+        padding: 12px;
+        margin-bottom: 8px;
+        border-left: 3px solid #d4a574;
+        cursor: grab;
+        transition: transform 0.2s;
+    }
+
+    .lead-card:hover {
+        transform: translateX(4px);
+    }
+
+    .lead-card.hot { border-left-color: #e53935; }
+    .lead-card.warm { border-left-color: #fb8c00; }
+    .lead-card.cold { border-left-color: #1e88e5; }
+
+    .lead-name {
+        color: #f5f5f5;
+        font-weight: 600;
+        font-size: 0.9rem;
+        margin-bottom: 4px;
+    }
+
+    .lead-event {
+        color: #888;
+        font-size: 0.75rem;
+        margin-bottom: 8px;
+    }
+
+    .lead-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .lead-value {
+        color: #2e7d32;
+        font-weight: 600;
+        font-size: 0.8rem;
+    }
+
+    .lead-score {
+        background: #333;
+        color: #d4a574;
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+
+    .empty-state {
+        text-align: center;
+        color: #666;
+        padding: 40px 20px;
+    }
+
+    @media (min-width: 768px) {
+        .kanban-column {
+            min-width: 200px;
+            flex: 1;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="comercial-container">
+    <div class="page-header">
+        <h1 class="page-title"><i class="fas fa-handshake"></i> Comercial</h1>
+        <a href="{{ url_for('leads.new') }}" class="btn-new">
+            <i class="fas fa-plus"></i> Novo Lead
+        </a>
+    </div>
+
+    <div class="kpis">
+        <div class="kpi-card">
+            <div class="kpi-value green">{{ won_count }}</div>
+            <div class="kpi-label">Ganhos</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-value red">{{ lost_count }}</div>
+            <div class="kpi-label">Perdidos</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-value gold">R$ {{ '{:,.0f}'.format(total_value).replace(',', '.') }}</div>
+            <div class="kpi-label">Pipeline</div>
+        </div>
+    </div>
+
+    <div class="kanban-container">
+        {% for stage_key, stage_data in stages.items() %}
+        <div class="kanban-column" data-stage="{{ stage_key }}">
+            <div class="column-header">
+                <span class="column-title">{{ stage_data.name }}</span>
+                <span class="column-count">{{ stage_data.leads|length }}</span>
+            </div>
+            
+            {% if stage_data.leads %}
+                {% for lead in stage_data.leads %}
+                <a href="{{ url_for('leads.view', id=lead.id) }}" class="lead-card {% if lead.ai_score >= 75 %}hot{% elif lead.ai_score >= 50 %}warm{% else %}cold{% endif %}" draggable="true" data-lead-id="{{ lead.id }}">
+                    <div class="lead-name">{{ lead.name }}</div>
+                    <div class="lead-event">
+                        {% if lead.event_type %}{{ lead.event_type }}{% endif %}
+                        {% if lead.event_date %} - {{ lead.event_date.strftime('%d/%m') }}{% endif %}
+                    </div>
+                    <div class="lead-footer">
+                        <span class="lead-value">
+                            {% if lead.estimated_value %}R$ {{ '{:,.0f}'.format(lead.estimated_value).replace(',', '.') }}{% else %}-{% endif %}
+                        </span>
+                        <span class="lead-score">{{ lead.ai_score }}%</span>
+                    </div>
+                </a>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">Nenhum lead</div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

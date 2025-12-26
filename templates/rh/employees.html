@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}RH - Funcionarios{% endblock %}
+
+{% block extra_css %}
+<style>
+    .employees-container {
+        padding: 16px;
+        padding-bottom: 100px;
+        background: #0a0a0a;
+        min-height: 100vh;
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+    }
+
+    .page-title {
+        color: #f5f5f5;
+        font-size: 1.3rem;
+        font-weight: 600;
+    }
+
+    .btn-new {
+        background: linear-gradient(135deg, #7b1fa2 0%, #4a148c 100%);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+    .employee-card {
+        background: #1a1a1a;
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        text-decoration: none;
+    }
+
+    .employee-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #7b1fa2 0%, #4a148c 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 700;
+        font-size: 1.2rem;
+        margin-right: 16px;
+    }
+
+    .employee-info {
+        flex: 1;
+    }
+
+    .employee-name {
+        color: #f5f5f5;
+        font-weight: 600;
+        font-size: 1rem;
+        margin-bottom: 4px;
+    }
+
+    .employee-role {
+        color: #888;
+        font-size: 0.85rem;
+    }
+
+    .employee-salary {
+        color: #2e7d32;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        margin-left: 8px;
+    }
+
+    .status-active { background: #1b5e20; color: white; }
+    .status-inactive { background: #b71c1c; color: white; }
+
+    .empty-state {
+        text-align: center;
+        color: #666;
+        padding: 60px 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="employees-container">
+    <div class="page-header">
+        <h1 class="page-title"><i class="fas fa-id-card"></i> Funcionarios CLT</h1>
+        <a href="{{ url_for('rh.new_employee') }}" class="btn-new">
+            <i class="fas fa-plus"></i> Novo
+        </a>
+    </div>
+
+    {% if employees %}
+        {% for emp in employees %}
+        <a href="{{ url_for('rh.edit_employee', id=emp.id) }}" class="employee-card">
+            <div class="employee-avatar">{{ emp.name[0].upper() }}</div>
+            <div class="employee-info">
+                <div class="employee-name">
+                    {{ emp.name }}
+                    <span class="status-badge status-{{ emp.status }}">
+                        {{ 'Ativo' if emp.status == 'active' else 'Inativo' }}
+                    </span>
+                </div>
+                <div class="employee-role">{{ emp.position or 'Sem cargo' }} {% if emp.department %} - {{ emp.department }}{% endif %}</div>
+            </div>
+            <div class="employee-salary">
+                R$ {{ '{:,.2f}'.format(emp.salary).replace(',', 'X').replace('.', ',').replace('X', '.') if emp.salary else '-' }}
+            </div>
+        </a>
+        {% endfor %}
+    {% else %}
+        <div class="empty-state">
+            <i class="fas fa-user-slash fa-3x" style="margin-bottom: 16px; color: #444;"></i>
+            <p>Nenhum funcionario cadastrado</p>
+            <a href="{{ url_for('rh.new_employee') }}" class="btn-new" style="margin-top: 16px; display: inline-block;">Cadastrar Primeiro</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
