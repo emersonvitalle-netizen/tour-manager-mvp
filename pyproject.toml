@@ -15,6 +15,7 @@ qrcode = "^7.4.2"
 Pillow = "^10.1.0"
 sqlalchemy = "^2.0.43"
 flask-migrate = "^4.1.0"
+python-dateutil = "^2.9.0.post0"
 
 [build-system]
 requires = ["poetry-core"]
