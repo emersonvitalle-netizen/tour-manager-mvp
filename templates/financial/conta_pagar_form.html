@@ -1,0 +1,240 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'Editar' if conta else 'Nova' }} Conta a Pagar{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-container {
+        padding: 0;
+        min-height: 100vh;
+        padding-bottom: 90px;
+        background-color: #0a0a0a;
+    }
+
+    .page-header {
+        background: linear-gradient(135deg, rgba(245,158,11,0.3) 0%, rgba(26,26,26,0.95) 100%);
+        padding: 20px 16px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        border-bottom: 1px solid #2a2a2a;
+    }
+
+    .back-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #d4a574;
+        text-decoration: none;
+    }
+
+    .page-title h1 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #f5f5f5;
+        margin-bottom: 0;
+    }
+
+    .form-container {
+        padding: 20px 16px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-label {
+        display: block;
+        color: #a0a0a0;
+        font-size: 0.85rem;
+        margin-bottom: 8px;
+        font-weight: 500;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 14px 16px;
+        background: #1a1a1a;
+        border: 1px solid #2a2a2a;
+        border-radius: 10px;
+        color: #f5f5f5;
+        font-size: 1rem;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #d4a574;
+    }
+
+    .form-select {
+        width: 100%;
+        padding: 14px 16px;
+        background: #1a1a1a;
+        border: 1px solid #2a2a2a;
+        border-radius: 10px;
+        color: #f5f5f5;
+        font-size: 1rem;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23a0a0a0' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 16px center;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+    }
+
+    .checkbox-group {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 16px;
+        background: #1a1a1a;
+        border-radius: 10px;
+    }
+
+    .checkbox-group input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+        accent-color: #d4a574;
+    }
+
+    .checkbox-group label {
+        color: #f5f5f5;
+        font-size: 0.95rem;
+    }
+
+    .recurrence-options {
+        margin-top: 12px;
+        padding: 16px;
+        background: rgba(139,92,246,0.1);
+        border-radius: 10px;
+        display: none;
+    }
+
+    .recurrence-options.show {
+        display: block;
+    }
+
+    .btn-submit {
+        width: 100%;
+        padding: 16px;
+        background: linear-gradient(135deg, #d4a574 0%, #c9956a 100%);
+        color: #0a0a0a;
+        font-size: 1.1rem;
+        font-weight: 700;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        margin-top: 20px;
+    }
+
+    .btn-submit:hover {
+        transform: translateY(-2px);
+    }
+
+    textarea.form-control {
+        min-height: 100px;
+        resize: vertical;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <a href="{{ url_for('financial.contas_pagar') }}" class="back-btn">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <div class="page-title">
+            <h1>{{ 'Editar' if conta else 'Nova' }} Conta a Pagar</h1>
+        </div>
+    </div>
+
+    <div class="form-container">
+        <form method="POST">
+            <div class="form-group">
+                <label class="form-label">Descricao *</label>
+                <input type="text" name="description" class="form-control" 
+                       value="{{ conta.description if conta else '' }}" 
+                       placeholder="Ex: Conta de luz, Aluguel do galpao..."
+                       required>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Categoria</label>
+                    <select name="category" class="form-select">
+                        {% for cat in categorias %}
+                        <option value="{{ cat }}" {{ 'selected' if conta and conta.category == cat else '' }}>
+                            {{ cat|capitalize }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Valor *</label>
+                    <input type="text" name="amount" class="form-control" 
+                           value="{{ '%.2f'|format(conta.amount) if conta else '' }}" 
+                           placeholder="0,00"
+                           required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Fornecedor</label>
+                <input type="text" name="supplier" class="form-control" 
+                       value="{{ conta.supplier if conta else '' }}" 
+                       placeholder="Nome do fornecedor ou empresa">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Data de Vencimento *</label>
+                <input type="date" name="due_date" class="form-control" 
+                       value="{{ conta.due_date.strftime('%Y-%m-%d') if conta else '' }}" 
+                       required>
+            </div>
+
+            <div class="form-group">
+                <div class="checkbox-group">
+                    <input type="checkbox" name="is_recurring" id="is_recurring"
+                           {{ 'checked' if conta and conta.is_recurring else '' }}>
+                    <label for="is_recurring">Conta recorrente (mensal, semanal, etc)</label>
+                </div>
+
+                <div class="recurrence-options {{ 'show' if conta and conta.is_recurring else '' }}" id="recurrence-options">
+                    <label class="form-label">Tipo de Recorrencia</label>
+                    <select name="recurrence_type" class="form-select">
+                        <option value="monthly" {{ 'selected' if conta and conta.recurrence_type == 'monthly' else '' }}>Mensal</option>
+                        <option value="weekly" {{ 'selected' if conta and conta.recurrence_type == 'weekly' else '' }}>Semanal</option>
+                        <option value="yearly" {{ 'selected' if conta and conta.recurrence_type == 'yearly' else '' }}>Anual</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Observacoes</label>
+                <textarea name="notes" class="form-control" 
+                          placeholder="Informacoes adicionais...">{{ conta.notes if conta else '' }}</textarea>
+            </div>
+
+            <button type="submit" class="btn-submit">
+                <i class="fas fa-save"></i> {{ 'Atualizar' if conta else 'Cadastrar' }} Conta
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+document.getElementById('is_recurring').addEventListener('change', function() {
+    document.getElementById('recurrence-options').classList.toggle('show', this.checked);
+});
+</script>
+{% endblock %}
