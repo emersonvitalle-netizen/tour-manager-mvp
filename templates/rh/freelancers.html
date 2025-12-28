@@ -160,6 +160,15 @@
                     <div class="rate-label">Diaria</div>
                 </div>
             </div>
+            <div style="display: flex; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid #333;">
+                <a href="{{ url_for('rh.edit_freelancer', id=fl.id) }}" style="flex: 1; background: #333; color: #fff; padding: 10px; border-radius: 6px; text-align: center; text-decoration: none; font-size: 0.85rem;">
+                    <i class="fas fa-edit"></i> Editar
+                </a>
+                <button type="button" onclick="startFreelancerPaymentWizard({{ fl.id }}, '{{ fl.name|e }}', 'Evento', {{ fl.daily_rate or 0 }})" 
+                        style="flex: 1; background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%); color: #fff; padding: 10px; border-radius: 6px; border: none; cursor: pointer; font-size: 0.85rem;">
+                    <i class="bi bi-cash"></i> Pagar + Conta
+                </button>
+            </div>
         </div>
         {% endfor %}
     {% else %}
