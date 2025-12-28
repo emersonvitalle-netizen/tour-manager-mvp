@@ -6,11 +6,12 @@ Automation Service - Cronjobs e Automacoes
 - Reativacao de leads
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime, date, timedelta
+from dateutil.relativedelta import relativedelta
 from extensions import db
 from models.maintenance import Maintenance
 from models.material_stock import MaterialStock
-from models.lead import Lead
+from models.commercial import Lead
 from models.financial_expanded import FinancialAlert, CashFlowProjection
 import json
 
@@ -249,3 +250,201 @@ class AutomationService:
         # TODO: Enviar email
         
         return report
+    
+    @staticmethod
+    def approve_quote(quote_id, company_id):
+        from models.financial import Quote
+        quote = Quote.query.filter_by(id=quote_id, company_id=company_id).first()
+        if not quote:
+            return {'success': False, 'message': 'Orçamento não encontrado'}
+        
+        quote.status = 'approved'
+        db.session.commit()
+        return {'success': True, 'data': {'quote_id': quote.id}}
+    
+    @staticmethod
+    def create_contract_from_quote(quote_id, company_id, user_id):
+        from models.financial import Quote, Contract
+        quote = Quote.query.filter_by(id=quote_id, company_id=company_id).first()
+        if not quote:
+            return {'success': False, 'message': 'Orçamento não encontrado'}
+        
+        contract = Contract(
+            quote_id=quote.id,
+            client_id=quote.client_id,
+            company_id=company_id,
+            title=f"Contrato - {quote.title}",
+            value=quote.total,
+            status='draft',
+            created_by=user_id
+        )
+        db.session.add(contract)
+        db.session.commit()
+        return {'success': True, 'data': {'contract_id': contract.id}}
+    
+    @staticmethod
+    def create_receivables_from_quote(quote_id, company_id, user_id, installments=1, first_due_date=None):
+        from models.financial import Quote, AccountReceivable
+        quote = Quote.query.filter_by(id=quote_id, company_id=company_id).first()
+        if not quote:
+            return {'success': False, 'message': 'Orçamento não encontrado'}
+        
+        if first_due_date is None:
+            first_due_date = date.today() + timedelta(days=30)
+        elif isinstance(first_due_date, str):
+            first_due_date = date.fromisoformat(first_due_date)
+        
+        total = float(quote.total or 0)
+        installment_value = total / installments
+        
+        created = []
+        for i in range(installments):
+            due_date = first_due_date + relativedelta(months=i)
+            
+            receivable = AccountReceivable(
+                company_id=company_id,
+                client_id=quote.client_id,
+                quote_id=quote.id,
+                description=f"{quote.title} - Parcela {i+1}/{installments}",
+                value=installment_value,
+                due_date=due_date,
+                status='pending',
+                installment_number=i+1,
+                total_installments=installments,
+                created_by=user_id
+            )
+            db.session.add(receivable)
+            created.append(receivable)
+        
+        db.session.commit()
+        return {'success': True, 'data': {'receivables_created': len(created)}}
+    
+    @staticmethod
+    def create_employee_auto_expenses(employee_id, company_id, user_id, 
+                                       auto_salary=True, auto_benefits=False,
+                                       vt_value=0, vr_value=0):
+        from models.rh import Employee
+        from models.financial import AccountPayable
+        employee = Employee.query.filter_by(id=employee_id, company_id=company_id).first()
+        if not employee:
+            return {'success': False, 'message': 'Funcionário não encontrado'}
+        
+        created = []
+        today = date.today()
+        
+        if auto_salary and employee.salary:
+            for month_offset in range(12):
+                due_date = date(today.year, today.month, 5) + relativedelta(months=month_offset)
+                
+                payable = AccountPayable(
+                    company_id=company_id,
+                    description=f"Salário - {employee.name} ({due_date.strftime('%m/%Y')})",
+                    category='folha_pagamento',
+                    value=float(employee.salary),
+                    due_date=due_date,
+                    status='pending',
+                    recurrence='monthly',
+                    employee_id=employee.id,
+                    created_by=user_id
+                )
+                db.session.add(payable)
+                created.append(payable)
+        
+        if auto_benefits:
+            if vt_value and float(vt_value) > 0:
+                for month_offset in range(12):
+                    due_date = date(today.year, today.month, 1) + relativedelta(months=month_offset)
+                    payable = AccountPayable(
+                        company_id=company_id,
+                        description=f"VT - {employee.name} ({due_date.strftime('%m/%Y')})",
+                        category='beneficios',
+                        value=float(vt_value),
+                        due_date=due_date,
+                        status='pending',
+                        recurrence='monthly',
+                        employee_id=employee.id,
+                        created_by=user_id
+                    )
+                    db.session.add(payable)
+                    created.append(payable)
+            
+            if vr_value and float(vr_value) > 0:
+                for month_offset in range(12):
+                    due_date = date(today.year, today.month, 1) + relativedelta(months=month_offset)
+                    payable = AccountPayable(
+                        company_id=company_id,
+                        description=f"VR - {employee.name} ({due_date.strftime('%m/%Y')})",
+                        category='beneficios',
+                        value=float(vr_value),
+                        due_date=due_date,
+                        status='pending',
+                        recurrence='monthly',
+                        employee_id=employee.id,
+                        created_by=user_id
+                    )
+                    db.session.add(payable)
+                    created.append(payable)
+        
+        db.session.commit()
+        return {'success': True, 'data': {'expenses_created': len(created)}}
+    
+    @staticmethod
+    def create_freelancer_payable(freelancer_id, company_id, user_id, 
+                                   value, event_name='', payment_date=None):
+        from models.rh import Freelancer
+        from models.financial import AccountPayable
+        freelancer = Freelancer.query.filter_by(id=freelancer_id, company_id=company_id).first()
+        if not freelancer:
+            return {'success': False, 'message': 'Freelancer não encontrado'}
+        
+        if payment_date is None:
+            payment_date = date.today()
+        elif isinstance(payment_date, str):
+            payment_date = date.fromisoformat(payment_date)
+        
+        payable = AccountPayable(
+            company_id=company_id,
+            description=f"Freelancer - {freelancer.name}" + (f" ({event_name})" if event_name else ""),
+            category='freelancer',
+            value=float(value),
+            due_date=payment_date,
+            status='pending',
+            freelancer_id=freelancer.id,
+            created_by=user_id
+        )
+        db.session.add(payable)
+        db.session.commit()
+        
+        return {'success': True, 'data': {'payable_id': payable.id}}
+    
+    @staticmethod
+    def create_vehicle_installments(vehicle_id, company_id, user_id,
+                                     total_value, installments, first_due_date=None):
+        from models.financial import AccountPayable
+        if first_due_date is None:
+            first_due_date = date.today()
+        elif isinstance(first_due_date, str):
+            first_due_date = date.fromisoformat(first_due_date)
+        
+        installment_value = float(total_value) / installments
+        created = []
+        
+        for i in range(installments):
+            due_date = first_due_date + relativedelta(months=i)
+            
+            payable = AccountPayable(
+                company_id=company_id,
+                description=f"Aluguel Veículo - Parcela {i+1}/{installments}",
+                category='veiculos',
+                value=installment_value,
+                due_date=due_date,
+                status='pending',
+                installment_number=i+1,
+                total_installments=installments,
+                created_by=user_id
+            )
+            db.session.add(payable)
+            created.append(payable)
+        
+        db.session.commit()
+        return {'success': True, 'data': {'installments_created': len(created)}}

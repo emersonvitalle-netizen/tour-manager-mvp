@@ -202,12 +202,16 @@ def detail(id):
 @login_required
 @admin_required
 def approve(id):
+    is_json = request.is_json or request.headers.get('Content-Type', '').startswith('application/json')
+    
     sep_list = SeparationList.query.filter_by(
         id=id,
         company_id=current_user.company_id
     ).first_or_404()
 
     if sep_list.status != 'pending':
+        if is_json:
+            return jsonify({'success': False, 'message': 'Este orçamento já foi processado.'})
         flash('Este orcamento ja foi processado.', 'warning')
         return redirect(url_for('orcamento.detail', id=id))
 
@@ -257,11 +261,24 @@ def approve(id):
         if automation_result.get('equipment_allocated', 0) > 0:
             msg += f' {automation_result["equipment_allocated"]} equipamentos alocados.'
         
+        if is_json:
+            return jsonify({
+                'success': True, 
+                'message': msg,
+                'data': {
+                    'quote_id': id,
+                    'work_list_id': work_list.id,
+                    **automation_result
+                }
+            })
+        
         flash(msg, 'success')
         return redirect(url_for('orcamento.detail', id=id))
 
     except Exception as e:
         db.session.rollback()
+        if is_json:
+            return jsonify({'success': False, 'message': str(e)})
         flash(f'Erro ao aprovar orcamento: {str(e)}', 'danger')
         return redirect(url_for('orcamento.detail', id=id))
 
