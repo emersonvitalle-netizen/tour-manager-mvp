@@ -347,7 +347,12 @@ function startQuoteApprovalWizard(quoteId, quoteName, quoteTotal) {
     wizard.start();
 }
 
+function formatCurrency(value) {
+    return parseFloat(value || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
 function startEmployeeWizard(employeeId, employeeName, salary) {
+    const salaryNum = parseFloat(salary) || 0;
     const wizard = new WizardController({
         onComplete: (data) => {
             showToast('Funcionário configurado com sucesso!', 'success');
@@ -362,7 +367,7 @@ function startEmployeeWizard(employeeId, employeeName, salary) {
                 <i class="bi bi-person-badge" style="font-size: 3rem; color: #d4a574;"></i>
             </div>
             <h5 class="text-center mb-3">${employeeName}</h5>
-            <p class="text-center text-muted mb-4">Salário: R$ ${salary}</p>
+            <p class="text-center text-muted mb-4">Salário: R$ ${formatCurrency(salaryNum)}</p>
             <div class="form-check mb-2">
                 <input class="form-check-input" type="checkbox" name="auto_salary" id="autoSalary" checked>
                 <label class="form-check-label" for="autoSalary">
@@ -399,6 +404,7 @@ function startEmployeeWizard(employeeId, employeeName, salary) {
 }
 
 function startFreelancerPaymentWizard(freelancerId, freelancerName, eventName, value) {
+    const valueNum = parseFloat(value) || 0;
     const wizard = new WizardController({
         onComplete: (data) => {
             showToast('Pagamento registrado!', 'success');
@@ -417,7 +423,7 @@ function startFreelancerPaymentWizard(freelancerId, freelancerName, eventName, v
             <div class="mb-3">
                 <label class="form-label">Valor</label>
                 <input type="number" name="value" class="form-control bg-dark text-white border-secondary" 
-                       value="${value}" step="0.01">
+                       value="${valueNum}" step="0.01">
             </div>
             <div class="mb-3">
                 <label class="form-label">Data de Pagamento</label>
