@@ -282,7 +282,15 @@
             </div>
             <div class="user-details">
                 <h3>{{ current_user.name or 'Admin User' }}</h3>
-                <p>{{ current_user.company.name if current_user.company else 'Empresa' }}</p>
+                <p>
+                    {% if current_user.role == 'admin' %}
+                    <span class="role-badge admin"><i class="fas fa-crown"></i> Admin</span>
+                    {% elif current_user.role == 'tech_responsible' %}
+                    <span class="role-badge tech"><i class="fas fa-wrench"></i> Tecnico</span>
+                    {% elif current_user.role == 'tech_tour' %}
+                    <span class="role-badge tour"><i class="fas fa-route"></i> Tour</span>
+                    {% endif %}
+                </p>
             </div>
         </div>
         <div class="notification-badge">
@@ -293,7 +301,7 @@
         </div>
     </div>
 
-    {% if current_user.is_admin %}
+    {% if user_permissions.can_financial %}
     <div class="main-cards">
         <a href="{{ url_for('orcamento.index') }}" class="trigger-card">
             <div class="card-icon"><i class="fas fa-file-invoice-dollar"></i></div>
@@ -309,7 +317,7 @@
     <h4 class="section-title">Modulos</h4>
 
     <div class="module-cards">
-        {% if current_user.is_admin %}
+        {% if user_permissions.can_financial %}
         <a href="{{ url_for('financial.index') }}" class="module-card card-financeiro">
             <div class="card-icon"><i class="fas fa-chart-line"></i></div>
             <h3>FINANCEIRO</h3>
@@ -329,23 +337,90 @@
         </a>
         {% endif %}
 
+        {% if user_permissions.can_equipment %}
         <a href="{{ url_for('equipment.index') }}" class="module-card card-hardcase">
             <div class="card-icon"><i class="fas fa-box-open"></i></div>
             <h3>HARDCASE</h3>
             <p>Equipamentos</p>
         </a>
+        {% endif %}
 
+        {% if user_permissions.can_tours %}
         <a href="{{ url_for('tour.tour_menu') }}" class="module-card card-eventos">
             <div class="card-icon"><i class="fas fa-calendar-alt"></i></div>
             <h3>EVENTOS</h3>
             <p>Tours e Shows</p>
         </a>
+        {% endif %}
 
+        {% if user_permissions.can_maintenance %}
         <a href="{{ url_for('maintenance.index') }}" class="module-card card-manutencao">
             <div class="card-icon"><i class="fas fa-tools"></i></div>
             <h3>MANUTENCAO</h3>
             <p>Estoque e Fabricacao</p>
         </a>
+        {% endif %}
+
+        {% if user_permissions.can_separation %}
+        <a href="{{ url_for('work_list.index') }}" class="module-card card-separacao">
+            <div class="card-icon"><i class="fas fa-clipboard-list"></i></div>
+            <h3>SEPARACAO</h3>
+            <p>Listas de Trabalho</p>
+        </a>
+        {% endif %}
+
+        {% if user_permissions.can_users %}
+        <a href="{{ url_for('users.technicians') }}" class="module-card card-acessos">
+            <div class="card-icon"><i class="fas fa-qrcode"></i></div>
+            <h3>ACESSOS</h3>
+            <p>Tecnicos e QR Codes</p>
+        </a>
+        {% endif %}
     </div>
+
+    {% if user_permissions.can_scanner %}
+    <div class="scanner-fab" onclick="window.location.href='{{ url_for('scanner.index') }}'">
+        <i class="fas fa-qrcode"></i>
+    </div>
+    {% endif %}
 </div>
+
+<style>
+.role-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+.role-badge.admin { background: rgba(212,175,55,0.2); color: #d4af37; }
+.role-badge.tech { background: rgba(52,152,219,0.2); color: #3498db; }
+.role-badge.tour { background: rgba(46,204,113,0.2); color: #2ecc71; }
+.card-separacao { background: linear-gradient(135deg, #00897b 0%, #00695c 100%); }
+.card-acessos { background: linear-gradient(135deg, #5e35b1 0%, #4527a0 100%); }
+.scanner-fab {
+    position: fixed;
+    bottom: 100px;
+    right: 20px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #d4af37 0%, #cd7f32 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: #000;
+    box-shadow: 0 4px 16px rgba(212,175,55,0.4);
+    cursor: pointer;
+    transition: all 0.3s;
+    z-index: 100;
+}
+.scanner-fab:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 24px rgba(212,175,55,0.6);
+}
+</style>
 {% endblock %}

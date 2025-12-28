@@ -1,4 +1,5 @@
-from datetime import datetime
+from datetime import datetime, date
+import secrets
 from extensions import db
 from flask_login import UserMixin
 
@@ -7,8 +8,8 @@ class User(UserMixin, db.Model):
     __tablename__ = 'user'
 
     id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    password_hash = db.Column(db.String(200), nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=True)
+    password_hash = db.Column(db.String(200), nullable=True)
     name = db.Column(db.String(100), nullable=False)
     phone = db.Column(db.String(20))
     photo_url = db.Column(db.String(500))
@@ -16,10 +17,16 @@ class User(UserMixin, db.Model):
     # ROLES: admin, tech_responsible, tech_tour
     role = db.Column(db.String(20), default='tech_responsible')
     
+    # PIN para acesso rápido (técnicos)
+    pin_hash = db.Column(db.String(200))
+    
     company_id = db.Column(db.Integer, db.ForeignKey('company.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     last_login = db.Column(db.DateTime)
     is_active = db.Column(db.Boolean, default=True)
+    
+    # Flag para usuários criados via convite QR (ainda não completaram cadastro)
+    pending_setup = db.Column(db.Boolean, default=False)
 
     # Propriedades de permissão
     @property
@@ -76,60 +83,176 @@ class User(UserMixin, db.Model):
         return f'<User {self.email}>'
 
 
+class TechnicianAccess(db.Model):
+    """Convite/Acesso para técnico responsável via QR Code"""
+    __tablename__ = 'technician_access'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    
+    # Usuário técnico (criado após onboarding)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    
+    # Token único do convite/acesso
+    access_token = db.Column(db.String(64), unique=True, nullable=False)
+    qr_code_url = db.Column(db.String(500))
+    
+    # Status do convite: pending, active, expired, revoked
+    status = db.Column(db.String(20), default='pending')
+    
+    # Dados do convite (preenchidos pelo admin)
+    invite_name = db.Column(db.String(100))
+    invite_phone = db.Column(db.String(20))
+    
+    # Permissões granulares
+    can_equipment = db.Column(db.Boolean, default=True)
+    can_maintenance = db.Column(db.Boolean, default=True)
+    can_separation = db.Column(db.Boolean, default=True)
+    can_tours = db.Column(db.Boolean, default=True)
+    can_scanner = db.Column(db.Boolean, default=True)
+    
+    # Validade (null = permanente)
+    expires_at = db.Column(db.Date, nullable=True)
+    
+    # Auditoria
+    company_id = db.Column(db.Integer, db.ForeignKey('company.id'), nullable=False)
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    activated_at = db.Column(db.DateTime)
+    revoked_at = db.Column(db.DateTime)
+    revoked_by = db.Column(db.Integer)
+    
+    # Relacionamentos
+    user = db.relationship('User', foreign_keys=[user_id], backref='technician_access')
+    creator = db.relationship('User', foreign_keys=[created_by])
+    company = db.relationship('Company')
+    
+    @staticmethod
+    def generate_token():
+        return secrets.token_urlsafe(32)
+    
+    @property
+    def is_expired(self):
+        if not self.expires_at:
+            return False
+        return date.today() > self.expires_at
+    
+    @property
+    def is_valid(self):
+        return self.status == 'active' and not self.is_expired
+    
+    @property
+    def is_pending(self):
+        return self.status == 'pending'
+    
+    @property
+    def status_label(self):
+        labels = {
+            'pending': 'Aguardando Cadastro',
+            'active': 'Ativo',
+            'expired': 'Expirado',
+            'revoked': 'Revogado'
+        }
+        if self.status == 'active' and self.is_expired:
+            return 'Expirado'
+        return labels.get(self.status, self.status)
+    
+    @property
+    def status_badge(self):
+        if self.status == 'pending':
+            return 'badge-warning'
+        if self.status == 'active' and not self.is_expired:
+            return 'badge-success'
+        return 'badge-secondary'
+    
+    def __repr__(self):
+        return f'<TechnicianAccess {self.access_token[:8]}...>'
+
+
 class TourAccess(db.Model):
     """Acesso temporário para técnico de tour via QR Code"""
     __tablename__ = 'tour_access'
     
     id = db.Column(db.Integer, primary_key=True)
     
-    # Usuário técnico tour
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    # Usuário técnico tour (criado após onboarding)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
     
     # Tour específica
-    tour_id = db.Column(db.Integer, nullable=False)
-    tour_name = db.Column(db.String(200), nullable=False)
+    tour_id = db.Column(db.Integer, db.ForeignKey('tour.id'), nullable=False)
     
-    # QR Code único de acesso
-    access_code = db.Column(db.String(64), unique=True, nullable=False)
+    # Token único do convite/acesso
+    access_token = db.Column(db.String(64), unique=True, nullable=False)
     qr_code_url = db.Column(db.String(500))
     
-    # Período de acesso
+    # Status do convite: pending, active, expired, revoked
+    status = db.Column(db.String(20), default='pending')
+    
+    # Dados do convite (preenchidos pelo admin)
+    invite_name = db.Column(db.String(100))
+    invite_phone = db.Column(db.String(20))
+    
+    # Permissões específicas para tour
+    can_scanner = db.Column(db.Boolean, default=True)
+    can_checkpoints = db.Column(db.Boolean, default=True)
+    can_view_list = db.Column(db.Boolean, default=True)
+    
+    # Período de acesso (automaticamente da tour ou customizado)
     start_date = db.Column(db.Date, nullable=False)
     end_date = db.Column(db.Date, nullable=False)
     
-    # Status
-    is_active = db.Column(db.Boolean, default=True)
-    revoked_at = db.Column(db.DateTime)
-    revoked_by = db.Column(db.Integer)
-    
     # Auditoria
-    created_by = db.Column(db.Integer, nullable=False)
+    company_id = db.Column(db.Integer, db.ForeignKey('company.id'), nullable=False)
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    company_id = db.Column(db.Integer, nullable=False)
+    activated_at = db.Column(db.DateTime)
+    revoked_at = db.Column(db.DateTime)
+    revoked_by_id = db.Column(db.Integer)
+    
+    # Relacionamentos
+    user = db.relationship('User', foreign_keys=[user_id], backref='tour_accesses')
+    tour = db.relationship('Tour', backref='access_passes')
+    creator = db.relationship('User', foreign_keys=[created_by])
+    company = db.relationship('Company')
+    
+    @staticmethod
+    def generate_token():
+        return secrets.token_urlsafe(32)
     
     @property
     def is_expired(self):
-        """Verifica se acesso expirou"""
-        from datetime import date
         return date.today() > self.end_date
     
     @property
     def is_valid(self):
-        """Acesso válido: ativo, não revogado, não expirado"""
-        return self.is_active and not self.is_expired
+        today = date.today()
+        return (self.status == 'active' and 
+                self.start_date <= today <= self.end_date)
+    
+    @property
+    def is_pending(self):
+        return self.status == 'pending'
     
     @property
     def status_label(self):
-        if not self.is_active:
+        if self.status == 'revoked':
             return 'Revogado'
-        if self.is_expired:
+        if self.status == 'active' and self.is_expired:
             return 'Expirado'
-        return 'Ativo'
+        if self.status == 'pending':
+            return 'Aguardando Cadastro'
+        if self.status == 'active':
+            return 'Ativo'
+        return self.status
     
     @property
     def status_badge(self):
-        if not self.is_active:
+        if self.status == 'pending':
+            return 'badge-warning'
+        if self.status == 'revoked':
             return 'badge-danger'
-        if self.is_expired:
-            return 'badge-secondary'
-        return 'badge-success'
+        if self.status == 'active' and not self.is_expired:
+            return 'badge-success'
+        return 'badge-secondary'
+    
+    def __repr__(self):
+        return f'<TourAccess {self.access_token[:8]}... for Tour {self.tour_id}>'
