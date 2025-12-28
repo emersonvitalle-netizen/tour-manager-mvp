@@ -292,7 +292,7 @@ class AutomationService:
     
     @staticmethod
     def create_receivables_from_quote(quote_id, company_id, user_id, installments=1, first_due_date=None):
-        from models.financial import AccountReceivable
+        from models.rh import AccountReceivable
         from models.separation_list import SeparationList
         
         sep_list = SeparationList.query.filter_by(id=quote_id, company_id=company_id).first()
@@ -314,12 +314,13 @@ class AutomationService:
             receivable = AccountReceivable(
                 company_id=company_id,
                 description=f"{sep_list.name} - Parcela {i+1}/{installments}",
-                value=installment_value,
+                amount=installment_value,
                 due_date=due_date,
                 status='pending',
                 installment_number=i+1,
                 total_installments=installments,
-                created_by=user_id
+                client_name=sep_list.client_name,
+                origin_type='quote'
             )
             db.session.add(receivable)
             created.append(receivable)
@@ -508,7 +509,7 @@ class AutomationService:
             'success': True, 
             'data': {
                 'work_list_id': work_list.id,
-                'items_count': len(quote.items),
+                'items_count': len(sep_list.items),
                 'share_token': share_token
             }
         }
