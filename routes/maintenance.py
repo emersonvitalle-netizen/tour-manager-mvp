@@ -61,7 +61,7 @@ def index():
     current_month = date.today().month
     current_year = date.today().year
     
-    month_cost = db.session.query(db.func.sum(Maintenance.cost)).filter(
+    month_cost = db.session.query(db.func.sum(Maintenance.total_cost)).filter(
         Maintenance.company_id == current_user.company_id,
         Maintenance.status == 'completed',
         db.extract('month', Maintenance.completed_at) == current_month,
@@ -264,7 +264,7 @@ def reports():
         Equipment.model,
         Equipment.value,
         db.func.count(Maintenance.id).label('total_maintenances'),
-        db.func.sum(Maintenance.cost).label('total_cost')
+        db.func.sum(Maintenance.total_cost).label('total_cost')
     ).join(Maintenance, Equipment.id == Maintenance.equipment_id).filter(
         Equipment.company_id == current_user.company_id,
         db.extract('year', Maintenance.created_at) == year
