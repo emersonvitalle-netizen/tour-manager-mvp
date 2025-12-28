@@ -594,3 +594,133 @@ def scan():
 @login_required
 def scan_status():
     return render_template('equipment/scan_status.html')
+
+@equipment_bp.route('/models')
+@login_required
+def models():
+    from models.equipment_model import EquipmentModel
+    
+    models = EquipmentModel.query.filter_by(
+        company_id=current_user.company_id,
+        is_active=True
+    ).order_by(EquipmentModel.brand, EquipmentModel.model).all()
+    
+    categories = Category.query.filter_by(
+        company_id=current_user.company_id
+    ).all()
+    
+    return render_template('equipment/models.html', models=models, categories=categories)
+
+@equipment_bp.route('/models/add', methods=['POST'])
+@login_required
+def add_model():
+    from models.equipment_model import EquipmentModel
+    
+    if current_user.role != 'admin':
+        flash('Apenas administradores podem criar modelos.', 'danger')
+        return redirect(url_for('equipment.models'))
+    
+    brand = request.form.get('brand', '').strip()
+    model = request.form.get('model', '').strip()
+    type_id = request.form.get('type_id')
+    
+    if not brand or not model:
+        flash('Marca e modelo são obrigatórios.', 'danger')
+        return redirect(url_for('equipment.models'))
+    
+    existing = EquipmentModel.query.filter_by(
+        company_id=current_user.company_id,
+        brand=brand,
+        model=model
+    ).first()
+    
+    if existing:
+        flash('Este modelo já existe.', 'warning')
+        return redirect(url_for('equipment.models'))
+    
+    new_model = EquipmentModel(
+        company_id=current_user.company_id,
+        brand=brand,
+        model=model,
+        type_id=int(type_id) if type_id else None
+    )
+    
+    if 'photo' in request.files:
+        photo = request.files['photo']
+        if photo and photo.filename and allowed_file(photo.filename):
+            filename = secure_filename(f"{brand}_{model}_{photo.filename}")
+            upload_folder = os.path.join('static', 'uploads', 'models')
+            os.makedirs(upload_folder, exist_ok=True)
+            photo_path = os.path.join(upload_folder, filename)
+            photo.save(photo_path)
+            new_model.photo_url = '/' + photo_path
+    
+    db.session.add(new_model)
+    db.session.commit()
+    
+    flash(f'Modelo {brand} {model} criado!', 'success')
+    return redirect(url_for('equipment.models'))
+
+@equipment_bp.route('/models/<int:id>/edit', methods=['POST'])
+@login_required
+def edit_model(id):
+    from models.equipment_model import EquipmentModel
+    
+    if current_user.role != 'admin':
+        flash('Apenas administradores podem editar modelos.', 'danger')
+        return redirect(url_for('equipment.models'))
+    
+    model = EquipmentModel.query.filter_by(
+        id=id,
+        company_id=current_user.company_id
+    ).first_or_404()
+    
+    model.brand = request.form.get('brand', model.brand).strip()
+    model.model = request.form.get('model', model.model).strip()
+    
+    if 'photo' in request.files:
+        photo = request.files['photo']
+        if photo and photo.filename and allowed_file(photo.filename):
+            filename = secure_filename(f"{model.brand}_{model.model}_{photo.filename}")
+            upload_folder = os.path.join('static', 'uploads', 'models')
+            os.makedirs(upload_folder, exist_ok=True)
+            photo_path = os.path.join(upload_folder, filename)
+            photo.save(photo_path)
+            model.photo_url = '/' + photo_path
+    
+    db.session.commit()
+    flash('Modelo atualizado!', 'success')
+    return redirect(url_for('equipment.models'))
+
+@equipment_bp.route('/models/<int:id>/photo', methods=['POST'])
+@login_required
+def update_model_photo(id):
+    from models.equipment_model import EquipmentModel
+    
+    if current_user.role != 'admin':
+        flash('Apenas administradores podem atualizar fotos.', 'danger')
+        return redirect(url_for('equipment.models'))
+    
+    model = EquipmentModel.query.filter_by(
+        id=id,
+        company_id=current_user.company_id
+    ).first_or_404()
+    
+    if 'photo' not in request.files:
+        flash('Nenhuma foto enviada.', 'warning')
+        return redirect(url_for('equipment.models'))
+    
+    photo = request.files['photo']
+    if photo and photo.filename and allowed_file(photo.filename):
+        filename = secure_filename(f"{model.brand}_{model.model}_{photo.filename}")
+        upload_folder = os.path.join('static', 'uploads', 'models')
+        os.makedirs(upload_folder, exist_ok=True)
+        photo_path = os.path.join(upload_folder, filename)
+        photo.save(photo_path)
+        model.photo_url = '/' + photo_path
+        db.session.commit()
+        flash('Foto atualizada para todos os equipamentos deste modelo!', 'success')
+    else:
+        flash('Formato de arquivo não suportado.', 'danger')
+    
+    return redirect(url_for('equipment.models'))
