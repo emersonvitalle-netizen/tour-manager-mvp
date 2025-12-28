@@ -103,3 +103,21 @@ def create_vehicle_installments():
         first_due_date=data.get('first_due_date')
     )
     return jsonify(result)
+
+
+@automation_api.route('/quote/<int:quote_id>/worklist', methods=['POST'])
+@login_required
+@admin_required
+def create_worklist_from_quote(quote_id):
+    """Cria WorkList a partir do orçamento aprovado (sem preços)"""
+    data = request.get_json() or {}
+    
+    result = AutomationService.create_worklist_from_quote(
+        quote_id,
+        current_user.company_id,
+        current_user.id,
+        event_date=data.get('event_date'),
+        event_location=data.get('event_location'),
+        assigned_to=data.get('assigned_to')
+    )
+    return jsonify(result)

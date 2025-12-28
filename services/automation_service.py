@@ -448,3 +448,62 @@ class AutomationService:
         
         db.session.commit()
         return {'success': True, 'data': {'installments_created': len(created)}}
+    
+    @staticmethod
+    def create_worklist_from_quote(quote_id, company_id, user_id, 
+                                    event_date=None, event_location=None, assigned_to=None):
+        """Cria WorkList a partir do orçamento aprovado (sem preços)"""
+        import secrets
+        from models.financial import Quote, QuoteItem
+        from models.work_list import WorkList, WorkListItem
+        
+        quote = Quote.query.filter_by(id=quote_id, company_id=company_id).first()
+        if not quote:
+            return {'success': False, 'message': 'Orçamento não encontrado ou não pertence à sua empresa'}
+        
+        if quote.company_id != company_id:
+            return {'success': False, 'message': 'Acesso negado'}
+        
+        if quote.status != 'approved':
+            return {'success': False, 'message': 'Orçamento precisa estar aprovado'}
+        
+        if event_date and isinstance(event_date, str):
+            event_date = date.fromisoformat(event_date)
+        
+        share_token = secrets.token_urlsafe(32)
+        
+        work_list = WorkList(
+            company_id=company_id,
+            quote_id=quote.id,
+            name=f"Separação - {quote.title}",
+            description=f"Lista de separação para {quote.client_name}",
+            client_name=quote.client_name,
+            event_date=event_date,
+            event_location=event_location,
+            share_token=share_token,
+            status='pending',
+            created_by=user_id,
+            assigned_to=assigned_to
+        )
+        db.session.add(work_list)
+        db.session.flush()
+        
+        for item in quote.items:
+            work_item = WorkListItem(
+                work_list_id=work_list.id,
+                item_name=item.description,
+                quantity=item.quantity,
+                separated=False
+            )
+            db.session.add(work_item)
+        
+        db.session.commit()
+        
+        return {
+            'success': True, 
+            'data': {
+                'work_list_id': work_list.id,
+                'items_count': len(quote.items),
+                'share_token': share_token
+            }
+        }

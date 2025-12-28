@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Separação - {{ work_list.name }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #1a1a1a;
+            --accent: #d4a574;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0a0;
+        }
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            font-family: 'Inter', sans-serif;
+        }
+        .card {
+            background: var(--bg-secondary);
+            border: 1px solid #2a2a2a;
+            border-radius: 12px;
+        }
+        .header-section {
+            background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+            border-bottom: 1px solid var(--accent);
+            padding: 24px 0;
+            margin-bottom: 24px;
+        }
+        .accent-text {
+            color: var(--accent);
+        }
+        .item-card {
+            background: var(--bg-secondary);
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .item-card.separated {
+            border-color: #28a745;
+            background: rgba(40, 167, 69, 0.1);
+        }
+        .quantity-badge {
+            background: var(--accent);
+            color: #000;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+        .progress-bar-custom {
+            background: #333;
+            border-radius: 8px;
+            height: 8px;
+            overflow: hidden;
+        }
+        .progress-bar-custom .fill {
+            background: var(--accent);
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+        .event-info {
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+        }
+        .event-info .info-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .event-info .info-item i {
+            color: var(--accent);
+        }
+    </style>
+</head>
+<body>
+    <div class="header-section">
+        <div class="container">
+            <h1 class="accent-text mb-2">
+                <i class="bi bi-list-check"></i> {{ work_list.name }}
+            </h1>
+            <div class="event-info">
+                {% if work_list.client_name %}
+                <div class="info-item">
+                    <i class="bi bi-person"></i>
+                    <span>{{ work_list.client_name }}</span>
+                </div>
+                {% endif %}
+                {% if work_list.event_date %}
+                <div class="info-item">
+                    <i class="bi bi-calendar-event"></i>
+                    <span>{{ work_list.event_date.strftime('%d/%m/%Y') }}</span>
+                </div>
+                {% endif %}
+                {% if work_list.event_location %}
+                <div class="info-item">
+                    <i class="bi bi-geo-alt"></i>
+                    <span>{{ work_list.event_location }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="container pb-5">
+        <div class="card p-3 mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="text-secondary">Progresso da Separação</span>
+                <span class="accent-text fw-bold">{{ work_list.separated_items }}/{{ work_list.total_items }}</span>
+            </div>
+            <div class="progress-bar-custom">
+                <div class="fill" style="width: {{ work_list.progress_percentage }}%"></div>
+            </div>
+        </div>
+
+        <h5 class="mb-3 text-secondary">
+            <i class="bi bi-box-seam"></i> Itens para Separação
+        </h5>
+
+        {% for item in items %}
+        <div class="item-card {% if item.separated %}separated{% endif %}">
+            <div class="d-flex align-items-center gap-3">
+                <i class="bi {% if item.separated %}bi-check-circle-fill text-success{% else %}bi-circle text-secondary{% endif %}" style="font-size: 1.5rem;"></i>
+                <div>
+                    <div class="fw-medium">{{ item.item_name }}</div>
+                    {% if item.separated %}
+                    <small class="text-success">Separado</small>
+                    {% endif %}
+                </div>
+            </div>
+            <span class="quantity-badge">{{ item.quantity }}x</span>
+        </div>
+        {% else %}
+        <div class="text-center text-secondary py-5">
+            <i class="bi bi-inbox" style="font-size: 3rem;"></i>
+            <p class="mt-2">Nenhum item na lista</p>
+        </div>
+        {% endfor %}
+
+        <div class="text-center mt-4 text-secondary">
+            <small>
+                <i class="bi bi-shield-check"></i> 
+                Lista de visualização - os valores não são exibidos
+            </small>
+        </div>
+    </div>
+</body>
+</html>

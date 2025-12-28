@@ -297,7 +297,10 @@
     {% elif sep_list.status == 'approved' %}
     <div class="action-buttons">
         <button type="button" class="btn" style="background: #28a745; color: #fff;" onclick="startPostApprovalWizard({{ sep_list.id }}, '{{ sep_list.name|e }}', '{{ "%.2f"|format(sep_list.total_value or sep_list.items|list|sum(attribute="total_price") or 0)|replace(".", ",") }}')">
-            <i class="bi bi-arrow-right-circle"></i> Continuar Fluxo (Contrato / Recebíveis)
+            <i class="bi bi-arrow-right-circle"></i> Contrato / Recebíveis
+        </button>
+        <button type="button" class="btn" style="background: #6f42c1; color: #fff;" onclick="startWorkListWizard({{ sep_list.id }}, '{{ sep_list.name|e }}', '{{ sep_list.client_name|e if sep_list.client_name else '' }}')">
+            <i class="bi bi-list-check"></i> Gerar WorkList
         </button>
     </div>
     {% endif %}
