@@ -954,41 +954,44 @@ def dre():
     """Demonstrativo de Resultado do Exercicio com dados reais"""
     from models.rh import AccountPayable, AccountReceivable, FreelancerPayment, PayrollEntry
     
-    current_month = date.today().strftime('%Y-%m')
+    current_month = date.today().month
+    current_year = date.today().year
+    current_month_str = date.today().strftime('%Y-%m')
     
     receitas_locacao = db.session.query(func.sum(AccountReceivable.received_amount)).filter(
         AccountReceivable.company_id == current_user.company_id,
         AccountReceivable.status == 'received',
-        func.strftime('%Y-%m', AccountReceivable.received_at) == current_month
+        func.strftime('%Y-%m', AccountReceivable.received_at) == current_month_str
     ).scalar() or 0
     
     receitas_pendentes = db.session.query(func.sum(AccountReceivable.amount)).filter(
         AccountReceivable.company_id == current_user.company_id,
         AccountReceivable.status == 'pending',
-        func.strftime('%Y-%m', AccountReceivable.due_date) == current_month
+        func.strftime('%Y-%m', AccountReceivable.due_date) == current_month_str
     ).scalar() or 0
     
     despesas_folha = db.session.query(func.sum(PayrollEntry.net_salary)).filter(
         PayrollEntry.company_id == current_user.company_id,
-        func.strftime('%Y-%m', PayrollEntry.reference_date) == current_month
+        PayrollEntry.reference_month == current_month,
+        PayrollEntry.reference_year == current_year
     ).scalar() or 0
     
     despesas_contas = db.session.query(func.sum(AccountPayable.paid_amount)).filter(
         AccountPayable.company_id == current_user.company_id,
         AccountPayable.status == 'paid',
-        func.strftime('%Y-%m', AccountPayable.paid_at) == current_month
+        func.strftime('%Y-%m', AccountPayable.paid_at) == current_month_str
     ).scalar() or 0
     
     despesas_pendentes = db.session.query(func.sum(AccountPayable.amount)).filter(
         AccountPayable.company_id == current_user.company_id,
         AccountPayable.status == 'pending',
-        func.strftime('%Y-%m', AccountPayable.due_date) == current_month
+        func.strftime('%Y-%m', AccountPayable.due_date) == current_month_str
     ).scalar() or 0
     
     despesas_freelancers = db.session.query(func.sum(FreelancerPayment.amount)).filter(
         FreelancerPayment.company_id == current_user.company_id,
         FreelancerPayment.status == 'paid',
-        func.strftime('%Y-%m', FreelancerPayment.paid_at) == current_month
+        func.strftime('%Y-%m', FreelancerPayment.paid_at) == current_month_str
     ).scalar() or 0
     
     total_receitas = float(receitas_locacao)
