@@ -1,10 +1,22 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_required, current_user
 from extensions import db
 from models.work_list import WorkList, WorkListItem
 from datetime import datetime
 
 work_list_bp = Blueprint('work_list', __name__, url_prefix='/work-list')
+
+
+@work_list_bp.route('/share/<token>')
+def public_view(token):
+    """Visualização pública da WorkList (sem login, sem preços)"""
+    work_list = WorkList.query.filter_by(share_token=token).first_or_404()
+    
+    items = work_list.items.all()
+    
+    return render_template('work_list/public.html', 
+                          work_list=work_list, 
+                          items=items)
 
 @work_list_bp.route('/')
 @login_required
