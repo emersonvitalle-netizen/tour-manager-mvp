@@ -152,6 +152,29 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
+# TOUR Manager specific
+static/qr/*
+static/uploads/*
+attached_assets/
+backups/
+instance/backup*.db
+*.db-journal
+
+# Helper scripts (not needed in production)
+apagar_banco.py
+cleanup_residuos.py
+corrigir_*.py
+criar_css_*.py
+fix_*.py
+investigar*.py
+migrate_all.py
+regenerate_qr.py
+reset_banco.py
+reverter_*.py
+
+# Logs
+/tmp/logs/
+
 # PyCharm
 #  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
 #  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
