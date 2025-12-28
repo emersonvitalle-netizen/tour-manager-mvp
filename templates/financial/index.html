@@ -198,6 +198,7 @@
     .action-btn.nfse-btn { background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); }
     .action-btn.pix-btn { background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%); }
     .action-btn.dre-btn { background: linear-gradient(135deg, #64748b 0%, #475569 100%); }
+    .action-btn.contratos-btn { background: linear-gradient(135deg, #d4a574 0%, #c49464 100%); }
 
     .pending-section {
         padding: 0 16px 16px;
@@ -413,6 +414,10 @@
         <a href="{{ url_for('financial.gerar_pix') }}" class="action-btn pix-btn">
             <i class="fas fa-qrcode"></i>
             <span>Gerar PIX</span>
+        </a>
+        <a href="{{ url_for('financial.contracts') }}" class="action-btn contratos-btn">
+            <i class="fas fa-file-signature"></i>
+            <span>Contratos</span>
         </a>
         <a href="{{ url_for('financial.dre') }}" class="action-btn dre-btn">
             <i class="fas fa-file-contract"></i>
