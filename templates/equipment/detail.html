@@ -487,6 +487,35 @@
         </div>
         {% endif %}
 
+        {% if usage_history %}
+        <div class="history-section">
+            <h3 class="section-title">🎸 Histórico do Equipamento</h3>
+            <div style="max-height: 300px; overflow-y: auto; background: var(--bg-tertiary); border-radius: var(--radius-md); padding: var(--spacing-md);">
+                {% for tour_eq, tour, show in usage_history %}
+                <div style="padding: var(--spacing-sm) 0; border-bottom: 1px solid var(--border-subtle);">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <strong style="color: var(--accent-gold);">{{ tour.name }}</strong>
+                            {% if tour.artist %}<span style="color: var(--text-secondary);"> - {{ tour.artist }}</span>{% endif %}
+                        </div>
+                        <span style="color: var(--text-tertiary); font-size: 0.85rem;">
+                            {{ tour_eq.allocated_at.strftime('%d/%m/%Y') if tour_eq.allocated_at else '-' }}
+                        </span>
+                    </div>
+                    <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 4px;">
+                        {% if show %}
+                            {{ show.city or 'Cidade nao informada' }}
+                            {% if show.responsible %}| {{ show.responsible.name }}{% endif %}
+                        {% else %}
+                            {% if tour_eq.allocator %}{{ tour_eq.allocator.name }}{% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
         {% if maintenances %}
         <div class="history-section">
             <h3 class="section-title">📋 Histórico de Manutenções</h3>
