@@ -1,11 +1,11 @@
-from flask import Blueprint, render_template, redirect, url_for, request, flash
+from flask import Blueprint, render_template, redirect, url_for, request, flash, jsonify
 from flask_login import login_required, current_user
 from extensions import db, bcrypt
-from models.user import User, TourAccess
+from models.user import User, TourAccess, TechnicianAccess
 from models.tour import Tour
-from datetime import datetime
-import secrets
+from datetime import datetime, date
 import qrcode
+import secrets
 import os
 
 users_bp = Blueprint('users', __name__, url_prefix='/users')
@@ -221,11 +221,209 @@ def revoke_access(access_id):
         company_id=current_user.company_id
     ).first_or_404()
     
-    access.is_active = False
+    access.status = 'revoked'
     access.revoked_at = datetime.utcnow()
     access.revoked_by = current_user.id
     
     db.session.commit()
     
     flash('Acesso revogado.', 'warning')
-    return redirect(url_for('users.tour_access', user_id=access.user_id))
+    return redirect(url_for('users.technicians'))
+
+
+@users_bp.route('/technicians')
+@login_required
+@admin_required
+def technicians():
+    """Lista convites/acessos de tecnicos"""
+    tech_accesses = TechnicianAccess.query.filter_by(
+        company_id=current_user.company_id
+    ).order_by(TechnicianAccess.created_at.desc()).all()
+    
+    tour_accesses = TourAccess.query.filter_by(
+        company_id=current_user.company_id
+    ).order_by(TourAccess.created_at.desc()).all()
+    
+    return render_template('users/technicians.html', 
+                          tech_accesses=tech_accesses,
+                          tour_accesses=tour_accesses)
+
+
+@users_bp.route('/technicians/new', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def new_technician():
+    """Criar convite para novo tecnico"""
+    if request.method == 'POST':
+        invite_name = request.form.get('name', '').strip()
+        invite_phone = request.form.get('phone', '').strip()
+        expires_at = request.form.get('expires_at', '').strip()
+        
+        can_equipment = request.form.get('can_equipment') == 'on'
+        can_maintenance = request.form.get('can_maintenance') == 'on'
+        can_separation = request.form.get('can_separation') == 'on'
+        can_tours = request.form.get('can_tours') == 'on'
+        can_scanner = request.form.get('can_scanner') == 'on'
+        
+        access = TechnicianAccess(
+            access_token=TechnicianAccess.generate_token(),
+            invite_name=invite_name,
+            invite_phone=invite_phone,
+            can_equipment=can_equipment,
+            can_maintenance=can_maintenance,
+            can_separation=can_separation,
+            can_tours=can_tours,
+            can_scanner=can_scanner,
+            expires_at=datetime.strptime(expires_at, '%Y-%m-%d').date() if expires_at else None,
+            company_id=current_user.company_id,
+            created_by=current_user.id,
+            status='pending'
+        )
+        
+        db.session.add(access)
+        db.session.flush()
+        
+        qr_url = f"{request.host_url}auth/invite/{access.access_token}"
+        qr = qrcode.make(qr_url)
+        qr_dir = 'static/qr/access'
+        os.makedirs(qr_dir, exist_ok=True)
+        qr_path = f'{qr_dir}/tech_{access.id}.png'
+        qr.save(qr_path)
+        access.qr_code_url = '/' + qr_path
+        
+        db.session.commit()
+        
+        flash('Convite de tecnico criado! Compartilhe o QR Code.', 'success')
+        return redirect(url_for('users.view_technician', id=access.id))
+    
+    return render_template('users/technician_form.html')
+
+
+@users_bp.route('/technicians/<int:id>')
+@login_required
+@admin_required
+def view_technician(id):
+    """Ver QR Code do convite de tecnico"""
+    access = TechnicianAccess.query.filter_by(
+        id=id,
+        company_id=current_user.company_id
+    ).first_or_404()
+    
+    return render_template('users/technician_view.html', access=access)
+
+
+@users_bp.route('/technicians/<int:id>/revoke', methods=['POST'])
+@login_required
+@admin_required
+def revoke_technician(id):
+    """Revogar acesso de tecnico"""
+    access = TechnicianAccess.query.filter_by(
+        id=id,
+        company_id=current_user.company_id
+    ).first_or_404()
+    
+    access.status = 'revoked'
+    access.revoked_at = datetime.utcnow()
+    access.revoked_by = current_user.id
+    
+    if access.user:
+        access.user.is_active = False
+    
+    db.session.commit()
+    
+    flash('Acesso de tecnico revogado.', 'warning')
+    return redirect(url_for('users.technicians'))
+
+
+@users_bp.route('/tour-access/new', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def new_tour_access():
+    """Criar convite para acesso temporario de tour"""
+    tours = Tour.query.filter_by(
+        company_id=current_user.company_id,
+        is_active=True
+    ).filter(Tour.end_date >= date.today()).order_by(Tour.start_date).all()
+    
+    if request.method == 'POST':
+        tour_id = request.form.get('tour_id')
+        invite_name = request.form.get('name', '').strip()
+        invite_phone = request.form.get('phone', '').strip()
+        
+        tour = Tour.query.filter_by(
+            id=tour_id,
+            company_id=current_user.company_id
+        ).first()
+        
+        if not tour:
+            flash('Tour nao encontrada.', 'danger')
+            return redirect(url_for('users.new_tour_access'))
+        
+        access = TourAccess(
+            access_token=TourAccess.generate_token(),
+            tour_id=tour.id,
+            invite_name=invite_name,
+            invite_phone=invite_phone,
+            start_date=tour.start_date or date.today(),
+            end_date=tour.end_date or date.today(),
+            can_scanner=True,
+            can_checkpoints=True,
+            can_view_list=True,
+            company_id=current_user.company_id,
+            created_by=current_user.id,
+            status='pending'
+        )
+        
+        db.session.add(access)
+        db.session.flush()
+        
+        qr_url = f"{request.host_url}auth/invite/{access.access_token}"
+        qr = qrcode.make(qr_url)
+        qr_dir = 'static/qr/access'
+        os.makedirs(qr_dir, exist_ok=True)
+        qr_path = f'{qr_dir}/tour_{access.id}.png'
+        qr.save(qr_path)
+        access.qr_code_url = '/' + qr_path
+        
+        db.session.commit()
+        
+        flash('Acesso de tour criado! Compartilhe o QR Code.', 'success')
+        return redirect(url_for('users.view_tour_access_new', id=access.id))
+    
+    return render_template('users/tour_access_form.html', tours=tours)
+
+
+@users_bp.route('/tour-access/<int:id>')
+@login_required
+@admin_required
+def view_tour_access_new(id):
+    """Ver QR Code do acesso de tour"""
+    access = TourAccess.query.filter_by(
+        id=id,
+        company_id=current_user.company_id
+    ).first_or_404()
+    
+    return render_template('users/tour_access_view.html', access=access)
+
+
+@users_bp.route('/tour-access/<int:id>/revoke', methods=['POST'])
+@login_required
+@admin_required
+def revoke_tour_access(id):
+    """Revogar acesso de tour"""
+    access = TourAccess.query.filter_by(
+        id=id,
+        company_id=current_user.company_id
+    ).first_or_404()
+    
+    access.status = 'revoked'
+    access.revoked_at = datetime.utcnow()
+    access.revoked_by = current_user.id
+    
+    if access.user:
+        access.user.is_active = False
+    
+    db.session.commit()
+    
+    flash('Acesso de tour revogado.', 'warning')
+    return redirect(url_for('users.technicians'))

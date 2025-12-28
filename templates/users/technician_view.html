@@ -1,0 +1,183 @@
+{% extends 'base.html' %}
+
+{% block title %}QR Code Tecnico{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <a href="{{ url_for('users.technicians') }}" class="btn-back">
+        <i class="fas fa-arrow-left"></i>
+    </a>
+    <h1 class="page-title">QR Code de Acesso</h1>
+</div>
+
+<div class="qr-card">
+    <div class="qr-header">
+        <div class="qr-icon tech">
+            <i class="fas fa-wrench"></i>
+        </div>
+        <h2 class="qr-title">Tecnico</h2>
+        <span class="badge {{ access.status_badge }}">{{ access.status_label }}</span>
+    </div>
+
+    {% if access.invite_name %}
+    <div class="qr-name">{{ access.invite_name }}</div>
+    {% endif %}
+
+    <div class="qr-image-container">
+        {% if access.qr_code_url %}
+        <img src="{{ access.qr_code_url }}" alt="QR Code" class="qr-image">
+        {% else %}
+        <div class="qr-placeholder">
+            <i class="fas fa-qrcode"></i>
+            <span>QR nao gerado</span>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="qr-info">
+        <div class="qr-info-item">
+            <span class="label">Validade</span>
+            <span class="value">
+                {% if access.expires_at %}
+                {{ access.expires_at.strftime('%d/%m/%Y') }}
+                {% else %}
+                Permanente
+                {% endif %}
+            </span>
+        </div>
+        <div class="qr-info-item">
+            <span class="label">Criado em</span>
+            <span class="value">{{ access.created_at.strftime('%d/%m/%Y %H:%M') }}</span>
+        </div>
+    </div>
+
+    <div class="qr-permissions">
+        <h4>Permissoes</h4>
+        <div class="permissions-list">
+            {% if access.can_equipment %}
+            <span class="permission-badge"><i class="fas fa-box"></i> Equipamentos</span>
+            {% endif %}
+            {% if access.can_maintenance %}
+            <span class="permission-badge"><i class="fas fa-tools"></i> Manutencao</span>
+            {% endif %}
+            {% if access.can_separation %}
+            <span class="permission-badge"><i class="fas fa-clipboard-list"></i> Separacao</span>
+            {% endif %}
+            {% if access.can_tours %}
+            <span class="permission-badge"><i class="fas fa-route"></i> Tours</span>
+            {% endif %}
+            {% if access.can_scanner %}
+            <span class="permission-badge"><i class="fas fa-qrcode"></i> Scanner</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="qr-actions">
+        <button onclick="shareQR()" class="btn btn-primary">
+            <i class="fas fa-share-alt"></i> Compartilhar
+        </button>
+        <button onclick="printQR()" class="btn btn-outline">
+            <i class="fas fa-print"></i> Imprimir
+        </button>
+        {% if access.status != 'revoked' %}
+        <form action="{{ url_for('users.revoke_technician', id=access.id) }}" method="POST" style="display:inline">
+            <button type="submit" class="btn btn-danger" onclick="return confirm('Revogar acesso?')">
+                <i class="fas fa-ban"></i> Revogar
+            </button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.qr-card {
+    max-width: 400px;
+    margin: 0 auto;
+    background: #1a1a1a;
+    border-radius: 20px;
+    padding: 32px;
+    border: 1px solid #2a2a2a;
+    text-align: center;
+}
+.qr-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+.qr-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+}
+.qr-icon.tech { background: rgba(52,152,219,0.2); color: #3498db; }
+.qr-title { color: #f5f5f5; font-size: 24px; margin: 0; }
+.qr-name { font-size: 18px; color: #a0a0a0; margin-bottom: 20px; }
+.qr-image-container {
+    background: #fff;
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 24px;
+}
+.qr-image { width: 100%; max-width: 250px; }
+.qr-placeholder {
+    width: 250px;
+    height: 250px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #ccc;
+    font-size: 48px;
+    margin: 0 auto;
+}
+.qr-placeholder span { font-size: 14px; margin-top: 8px; }
+.qr-info {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+.qr-info-item { text-align: center; }
+.qr-info-item .label { display: block; font-size: 12px; color: #707070; text-transform: uppercase; }
+.qr-info-item .value { display: block; font-size: 14px; color: #f5f5f5; margin-top: 4px; }
+.qr-permissions { margin-bottom: 24px; }
+.qr-permissions h4 { font-size: 14px; color: #707070; margin-bottom: 12px; }
+.permissions-list { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.permission-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: rgba(52,152,219,0.1);
+    border: 1px solid rgba(52,152,219,0.3);
+    border-radius: 20px;
+    color: #3498db;
+    font-size: 12px;
+}
+.qr-actions { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+</style>
+
+<script>
+function shareQR() {
+    if (navigator.share) {
+        navigator.share({
+            title: 'Acesso TOUR - Tecnico',
+            text: 'Escaneie este QR Code para acessar o sistema',
+            url: window.location.href
+        });
+    } else {
+        navigator.clipboard.writeText(window.location.href);
+        alert('Link copiado!');
+    }
+}
+function printQR() {
+    window.print();
+}
+</script>
+{% endblock %}

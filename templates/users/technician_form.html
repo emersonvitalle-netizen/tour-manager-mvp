@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+
+{% block title %}Novo Tecnico{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <a href="{{ url_for('users.technicians') }}" class="btn-back">
+        <i class="fas fa-arrow-left"></i>
+    </a>
+    <h1 class="page-title">Novo Tecnico</h1>
+</div>
+
+<div class="form-container">
+    <form method="POST">
+        <div class="form-section">
+            <h3 class="section-title">Dados do Convite</h3>
+            <p class="section-subtitle">Preencha os dados iniciais. O tecnico completara o cadastro ao escanear o QR.</p>
+            
+            <div class="form-group">
+                <label class="form-label">Nome (opcional)</label>
+                <input type="text" name="name" class="form-input" placeholder="Nome do tecnico">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Telefone (opcional)</label>
+                <input type="tel" name="phone" class="form-input" placeholder="(00) 00000-0000">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Validade do Acesso</label>
+                <input type="date" name="expires_at" class="form-input">
+                <div class="form-hint">Deixe em branco para acesso permanente</div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3 class="section-title">Permissoes</h3>
+            <p class="section-subtitle">Selecione o que este tecnico pode acessar</p>
+            
+            <div class="permissions-grid">
+                <label class="permission-item">
+                    <input type="checkbox" name="can_equipment" checked>
+                    <span class="permission-check"><i class="fas fa-check"></i></span>
+                    <div class="permission-info">
+                        <i class="fas fa-box"></i>
+                        <span>Equipamentos</span>
+                    </div>
+                </label>
+                
+                <label class="permission-item">
+                    <input type="checkbox" name="can_maintenance" checked>
+                    <span class="permission-check"><i class="fas fa-check"></i></span>
+                    <div class="permission-info">
+                        <i class="fas fa-tools"></i>
+                        <span>Manutencao</span>
+                    </div>
+                </label>
+                
+                <label class="permission-item">
+                    <input type="checkbox" name="can_separation" checked>
+                    <span class="permission-check"><i class="fas fa-list-check"></i></span>
+                    <div class="permission-info">
+                        <i class="fas fa-clipboard-list"></i>
+                        <span>Separacao</span>
+                    </div>
+                </label>
+                
+                <label class="permission-item">
+                    <input type="checkbox" name="can_tours" checked>
+                    <span class="permission-check"><i class="fas fa-check"></i></span>
+                    <div class="permission-info">
+                        <i class="fas fa-route"></i>
+                        <span>Tours</span>
+                    </div>
+                </label>
+                
+                <label class="permission-item">
+                    <input type="checkbox" name="can_scanner" checked>
+                    <span class="permission-check"><i class="fas fa-check"></i></span>
+                    <div class="permission-info">
+                        <i class="fas fa-qrcode"></i>
+                        <span>Scanner</span>
+                    </div>
+                </label>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <a href="{{ url_for('users.technicians') }}" class="btn btn-outline">Cancelar</a>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-qrcode"></i> Gerar QR Code
+            </button>
+        </div>
+    </form>
+</div>
+
+<style>
+.form-container {
+    max-width: 600px;
+}
+.form-section {
+    background: #1a1a1a;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 20px;
+    border: 1px solid #2a2a2a;
+}
+.section-title {
+    font-size: 18px;
+    color: #f5f5f5;
+    margin-bottom: 8px;
+}
+.section-subtitle {
+    font-size: 14px;
+    color: #707070;
+    margin-bottom: 20px;
+}
+.permissions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+}
+.permission-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    background: #0a0a0a;
+    border-radius: 10px;
+    border: 2px solid #2a2a2a;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+.permission-item:hover {
+    border-color: #404040;
+}
+.permission-item input {
+    display: none;
+}
+.permission-item input:checked + .permission-check {
+    background: #3498db;
+    border-color: #3498db;
+}
+.permission-item input:checked ~ .permission-info {
+    color: #f5f5f5;
+}
+.permission-check {
+    width: 24px;
+    height: 24px;
+    border: 2px solid #404040;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 12px;
+}
+.permission-check i { opacity: 0; }
+.permission-item input:checked + .permission-check i { opacity: 1; }
+.permission-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    color: #707070;
+    font-size: 13px;
+}
+.permission-info i { font-size: 18px; }
+.form-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    padding-top: 16px;
+}
+</style>
+{% endblock %}

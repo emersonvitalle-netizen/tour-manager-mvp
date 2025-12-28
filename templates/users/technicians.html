@@ -1,0 +1,187 @@
+{% extends 'base.html' %}
+
+{% block title %}Gestao de Acessos{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Gestao de Acessos</h1>
+    <div class="header-actions">
+        <a href="{{ url_for('users.new_technician') }}" class="btn btn-primary">
+            <i class="fas fa-user-plus"></i> Novo Tecnico
+        </a>
+        <a href="{{ url_for('users.new_tour_access') }}" class="btn btn-success">
+            <i class="fas fa-route"></i> Acesso Tour
+        </a>
+    </div>
+</div>
+
+<div class="tabs">
+    <button class="tab active" onclick="showTab('technicians')">
+        <i class="fas fa-wrench"></i> Tecnicos
+    </button>
+    <button class="tab" onclick="showTab('tours')">
+        <i class="fas fa-route"></i> Acessos Tour
+    </button>
+</div>
+
+<div id="tab-technicians" class="tab-content active">
+    {% if tech_accesses %}
+    <div class="access-list">
+        {% for access in tech_accesses %}
+        <div class="access-card">
+            <div class="access-icon tech">
+                <i class="fas fa-wrench"></i>
+            </div>
+            <div class="access-info">
+                <div class="access-name">{{ access.invite_name or access.user.name if access.user else 'Aguardando cadastro' }}</div>
+                <div class="access-meta">
+                    {% if access.user %}
+                    <span><i class="fas fa-check-circle text-success"></i> Cadastrado</span>
+                    {% else %}
+                    <span><i class="fas fa-clock text-warning"></i> Pendente</span>
+                    {% endif %}
+                    {% if access.expires_at %}
+                    <span><i class="fas fa-calendar"></i> Expira: {{ access.expires_at.strftime('%d/%m/%Y') }}</span>
+                    {% else %}
+                    <span><i class="fas fa-infinity"></i> Permanente</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="access-status">
+                <span class="badge {{ access.status_badge }}">{{ access.status_label }}</span>
+            </div>
+            <div class="access-actions">
+                <a href="{{ url_for('users.view_technician', id=access.id) }}" class="btn btn-sm btn-outline">
+                    <i class="fas fa-qrcode"></i>
+                </a>
+                {% if access.status != 'revoked' %}
+                <form action="{{ url_for('users.revoke_technician', id=access.id) }}" method="POST" style="display:inline">
+                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Revogar acesso?')">
+                        <i class="fas fa-ban"></i>
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-users"></i>
+        <p>Nenhum tecnico cadastrado</p>
+        <a href="{{ url_for('users.new_technician') }}" class="btn btn-primary">Criar Convite</a>
+    </div>
+    {% endif %}
+</div>
+
+<div id="tab-tours" class="tab-content">
+    {% if tour_accesses %}
+    <div class="access-list">
+        {% for access in tour_accesses %}
+        <div class="access-card">
+            <div class="access-icon tour">
+                <i class="fas fa-route"></i>
+            </div>
+            <div class="access-info">
+                <div class="access-name">{{ access.invite_name or access.user.name if access.user else 'Aguardando cadastro' }}</div>
+                <div class="access-meta">
+                    <span><i class="fas fa-music"></i> {{ access.tour.name if access.tour else 'Tour' }}</span>
+                    <span><i class="fas fa-calendar"></i> {{ access.start_date.strftime('%d/%m') }} - {{ access.end_date.strftime('%d/%m/%Y') }}</span>
+                </div>
+            </div>
+            <div class="access-status">
+                <span class="badge {{ access.status_badge }}">{{ access.status_label }}</span>
+            </div>
+            <div class="access-actions">
+                <a href="{{ url_for('users.view_tour_access_new', id=access.id) }}" class="btn btn-sm btn-outline">
+                    <i class="fas fa-qrcode"></i>
+                </a>
+                {% if access.status != 'revoked' %}
+                <form action="{{ url_for('users.revoke_tour_access', id=access.id) }}" method="POST" style="display:inline">
+                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Revogar acesso?')">
+                        <i class="fas fa-ban"></i>
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-route"></i>
+        <p>Nenhum acesso de tour</p>
+        <a href="{{ url_for('users.new_tour_access') }}" class="btn btn-success">Criar Acesso</a>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    border-bottom: 1px solid #2a2a2a;
+    padding-bottom: 8px;
+}
+.tab {
+    padding: 12px 24px;
+    background: transparent;
+    border: none;
+    color: #707070;
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 8px 8px 0 0;
+    transition: all 0.3s;
+}
+.tab:hover { color: #a0a0a0; }
+.tab.active {
+    color: #d4af37;
+    background: rgba(212,175,55,0.1);
+    border-bottom: 2px solid #d4af37;
+}
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+.access-list { display: flex; flex-direction: column; gap: 12px; }
+.access-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: #1a1a1a;
+    border-radius: 12px;
+    padding: 16px;
+    border: 1px solid #2a2a2a;
+}
+.access-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+}
+.access-icon.tech { background: rgba(52,152,219,0.2); color: #3498db; }
+.access-icon.tour { background: rgba(46,204,113,0.2); color: #2ecc71; }
+.access-info { flex: 1; }
+.access-name { font-weight: 600; color: #f5f5f5; margin-bottom: 4px; }
+.access-meta { display: flex; gap: 16px; font-size: 13px; color: #707070; }
+.access-status { padding: 0 16px; }
+.access-actions { display: flex; gap: 8px; }
+.text-success { color: #2ecc71; }
+.text-warning { color: #f1c40f; }
+.badge-warning { background: rgba(241,196,15,0.2); color: #f1c40f; }
+.badge-success { background: rgba(46,204,113,0.2); color: #2ecc71; }
+.badge-secondary { background: rgba(112,112,112,0.2); color: #707070; }
+.badge-danger { background: rgba(231,76,60,0.2); color: #e74c3c; }
+</style>
+
+<script>
+function showTab(tabName) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    event.target.classList.add('active');
+    document.getElementById('tab-' + tabName).classList.add('active');
+}
+</script>
+{% endblock %}

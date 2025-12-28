@@ -146,7 +146,11 @@ bcrypt.init_app(app)
 login_manager.login_view = 'auth.login'
 login_manager.login_message = 'Faca login para acessar.'
 
+from utils.permissions import inject_permissions
+app.context_processor(inject_permissions)
+
 os.makedirs('static/uploads', exist_ok=True)
+os.makedirs('static/qr/access', exist_ok=True)
 os.makedirs('static/uploads/logos', exist_ok=True)
 os.makedirs('static/qr', exist_ok=True)
 
