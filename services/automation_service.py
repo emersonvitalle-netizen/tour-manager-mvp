@@ -264,17 +264,17 @@ class AutomationService:
     
     @staticmethod
     def create_contract_from_quote(quote_id, company_id, user_id):
-        from models.financial import Quote, Contract
-        quote = Quote.query.filter_by(id=quote_id, company_id=company_id).first()
-        if not quote:
+        from models.financial import Contract
+        from models.separation_list import SeparationList
+        
+        sep_list = SeparationList.query.filter_by(id=quote_id, company_id=company_id).first()
+        if not sep_list:
             return {'success': False, 'message': 'Orçamento não encontrado'}
         
         contract = Contract(
-            quote_id=quote.id,
-            client_id=quote.client_id,
             company_id=company_id,
-            title=f"Contrato - {quote.title}",
-            value=quote.total,
+            title=f"Contrato - {sep_list.name}",
+            value=sep_list.calculated_total or sep_list.total_value or 0,
             status='draft',
             created_by=user_id
         )
@@ -284,9 +284,11 @@ class AutomationService:
     
     @staticmethod
     def create_receivables_from_quote(quote_id, company_id, user_id, installments=1, first_due_date=None):
-        from models.financial import Quote, AccountReceivable
-        quote = Quote.query.filter_by(id=quote_id, company_id=company_id).first()
-        if not quote:
+        from models.financial import AccountReceivable
+        from models.separation_list import SeparationList
+        
+        sep_list = SeparationList.query.filter_by(id=quote_id, company_id=company_id).first()
+        if not sep_list:
             return {'success': False, 'message': 'Orçamento não encontrado'}
         
         if first_due_date is None:
@@ -294,8 +296,8 @@ class AutomationService:
         elif isinstance(first_due_date, str):
             first_due_date = date.fromisoformat(first_due_date)
         
-        total = float(quote.total or 0)
-        installment_value = total / installments
+        total = float(sep_list.calculated_total or sep_list.total_value or 0)
+        installment_value = total / installments if installments > 0 else total
         
         created = []
         for i in range(installments):
@@ -303,9 +305,7 @@ class AutomationService:
             
             receivable = AccountReceivable(
                 company_id=company_id,
-                client_id=quote.client_id,
-                quote_id=quote.id,
-                description=f"{quote.title} - Parcela {i+1}/{installments}",
+                description=f"{sep_list.name} - Parcela {i+1}/{installments}",
                 value=installment_value,
                 due_date=due_date,
                 status='pending',
@@ -454,17 +454,14 @@ class AutomationService:
                                     event_date=None, event_location=None, assigned_to=None):
         """Cria WorkList a partir do orçamento aprovado (sem preços)"""
         import secrets
-        from models.financial import Quote, QuoteItem
+        from models.separation_list import SeparationList
         from models.work_list import WorkList, WorkListItem
         
-        quote = Quote.query.filter_by(id=quote_id, company_id=company_id).first()
-        if not quote:
-            return {'success': False, 'message': 'Orçamento não encontrado ou não pertence à sua empresa'}
+        sep_list = SeparationList.query.filter_by(id=quote_id, company_id=company_id).first()
+        if not sep_list:
+            return {'success': False, 'message': 'Orçamento não encontrado'}
         
-        if quote.company_id != company_id:
-            return {'success': False, 'message': 'Acesso negado'}
-        
-        if quote.status != 'approved':
+        if sep_list.status != 'approved':
             return {'success': False, 'message': 'Orçamento precisa estar aprovado'}
         
         if event_date and isinstance(event_date, str):
@@ -474,12 +471,12 @@ class AutomationService:
         
         work_list = WorkList(
             company_id=company_id,
-            quote_id=quote.id,
-            name=f"Separação - {quote.title}",
-            description=f"Lista de separação para {quote.client_name}",
-            client_name=quote.client_name,
-            event_date=event_date,
-            event_location=event_location,
+            separation_list_id=sep_list.id,
+            name=f"Separação - {sep_list.name}",
+            description=f"Lista de separação para {sep_list.client_name or 'Cliente'}",
+            client_name=sep_list.client_name,
+            event_date=event_date or sep_list.event_date,
+            event_location=event_location or sep_list.event_location,
             share_token=share_token,
             status='pending',
             created_by=user_id,
@@ -488,7 +485,7 @@ class AutomationService:
         db.session.add(work_list)
         db.session.flush()
         
-        for item in quote.items:
+        for item in sep_list.items:
             work_item = WorkListItem(
                 work_list_id=work_list.id,
                 item_name=item.description,
