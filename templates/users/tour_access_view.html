@@ -1,0 +1,177 @@
+{% extends 'base.html' %}
+
+{% block title %}QR Code Tour{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <a href="{{ url_for('users.technicians') }}" class="btn-back">
+        <i class="fas fa-arrow-left"></i>
+    </a>
+    <h1 class="page-title">QR Code de Acesso</h1>
+</div>
+
+<div class="qr-card">
+    <div class="qr-header">
+        <div class="qr-icon tour">
+            <i class="fas fa-route"></i>
+        </div>
+        <h2 class="qr-title">Acesso Tour</h2>
+        <span class="badge {{ access.status_badge }}">{{ access.status_label }}</span>
+    </div>
+
+    {% if access.tour %}
+    <div class="tour-info">
+        <div class="tour-name">{{ access.tour.name }}</div>
+        {% if access.tour.artist %}
+        <div class="tour-artist"><i class="fas fa-microphone"></i> {{ access.tour.artist }}</div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% if access.invite_name %}
+    <div class="qr-name">{{ access.invite_name }}</div>
+    {% endif %}
+
+    <div class="qr-image-container">
+        {% if access.qr_code_url %}
+        <img src="{{ access.qr_code_url }}" alt="QR Code" class="qr-image">
+        {% else %}
+        <div class="qr-placeholder">
+            <i class="fas fa-qrcode"></i>
+            <span>QR nao gerado</span>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="qr-info">
+        <div class="qr-info-item">
+            <span class="label">Inicio</span>
+            <span class="value">{{ access.start_date.strftime('%d/%m/%Y') }}</span>
+        </div>
+        <div class="qr-info-item">
+            <span class="label">Termino</span>
+            <span class="value">{{ access.end_date.strftime('%d/%m/%Y') }}</span>
+        </div>
+    </div>
+
+    <div class="validity-notice">
+        <i class="fas fa-clock"></i>
+        <span>Expira automaticamente ao fim da tour</span>
+    </div>
+
+    <div class="qr-actions">
+        <button onclick="shareQR()" class="btn btn-success">
+            <i class="fas fa-share-alt"></i> Compartilhar
+        </button>
+        <button onclick="printQR()" class="btn btn-outline">
+            <i class="fas fa-print"></i> Imprimir
+        </button>
+        {% if access.status != 'revoked' %}
+        <form action="{{ url_for('users.revoke_tour_access', id=access.id) }}" method="POST" style="display:inline">
+            <button type="submit" class="btn btn-danger" onclick="return confirm('Revogar acesso?')">
+                <i class="fas fa-ban"></i> Revogar
+            </button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.qr-card {
+    max-width: 400px;
+    margin: 0 auto;
+    background: #1a1a1a;
+    border-radius: 20px;
+    padding: 32px;
+    border: 1px solid #2a2a2a;
+    text-align: center;
+}
+.qr-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+.qr-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+}
+.qr-icon.tour { background: rgba(46,204,113,0.2); color: #2ecc71; }
+.qr-title { color: #f5f5f5; font-size: 24px; margin: 0; }
+.tour-info {
+    background: rgba(46,204,113,0.1);
+    border: 1px solid rgba(46,204,113,0.3);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+}
+.tour-name { font-size: 18px; font-weight: 600; color: #2ecc71; }
+.tour-artist { font-size: 14px; color: #a0a0a0; margin-top: 4px; }
+.qr-name { font-size: 16px; color: #a0a0a0; margin-bottom: 20px; }
+.qr-image-container {
+    background: #fff;
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 24px;
+}
+.qr-image { width: 100%; max-width: 250px; }
+.qr-placeholder {
+    width: 250px;
+    height: 250px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #ccc;
+    font-size: 48px;
+    margin: 0 auto;
+}
+.qr-placeholder span { font-size: 14px; margin-top: 8px; }
+.qr-info {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+.qr-info-item { text-align: center; }
+.qr-info-item .label { display: block; font-size: 12px; color: #707070; text-transform: uppercase; }
+.qr-info-item .value { display: block; font-size: 14px; color: #f5f5f5; margin-top: 4px; }
+.validity-notice {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: rgba(241,196,15,0.1);
+    border: 1px solid rgba(241,196,15,0.3);
+    border-radius: 20px;
+    color: #f1c40f;
+    font-size: 13px;
+    margin-bottom: 24px;
+}
+.qr-actions { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+</style>
+
+<script>
+function shareQR() {
+    if (navigator.share) {
+        navigator.share({
+            title: 'Acesso TOUR',
+            text: 'Escaneie este QR Code para acessar a tour',
+            url: window.location.href
+        });
+    } else {
+        navigator.clipboard.writeText(window.location.href);
+        alert('Link copiado!');
+    }
+}
+function printQR() {
+    window.print();
+}
+</script>
+{% endblock %}

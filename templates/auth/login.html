@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - TOUR</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
     <style>
         * {
@@ -168,6 +169,27 @@
             color: #e74c3c;
         }
 
+        .alert-success {
+            background: rgba(46,204,113,0.2);
+            border-left: 4px solid #2ecc71;
+            color: #2ecc71;
+        }
+
+        .alert-info {
+            background: rgba(52,152,219,0.2);
+            border-left: 4px solid #3498db;
+            color: #3498db;
+        }
+
+        .user-types-label {
+            font-size: 0.75rem;
+            color: #666;
+            text-align: center;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
         .user-types {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -184,7 +206,19 @@
             padding: 12px 8px;
             border-radius: 8px;
             background: #1a1a1a;
-            border: 1px solid #2a2a2a;
+            border: 2px solid #2a2a2a;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .user-type:hover {
+            border-color: #404040;
+            transform: translateY(-2px);
+        }
+
+        .user-type.active {
+            border-color: #d4af37;
+            background: rgba(212,175,55,0.1);
         }
 
         .user-type-icon {
@@ -204,13 +238,71 @@
             letter-spacing: 0.5px;
         }
 
-        .user-types-label {
-            font-size: 0.75rem;
-            color: #666;
+        #admin-form, #scanner-section {
+            display: none;
+        }
+
+        #admin-form.active, #scanner-section.active {
+            display: block;
+        }
+
+        .scanner-container {
+            background: #0a0a0a;
+            border-radius: 12px;
+            padding: 20px;
             text-align: center;
-            margin-bottom: 10px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+        }
+
+        .scanner-title {
+            color: #f5f5f5;
+            font-size: 18px;
+            margin-bottom: 16px;
+        }
+
+        .scanner-subtitle {
+            color: #707070;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        #qr-reader {
+            width: 100%;
+            max-width: 300px;
+            margin: 0 auto;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        #qr-reader video {
+            border-radius: 12px;
+        }
+
+        .scanner-error {
+            color: #e74c3c;
+            font-size: 14px;
+            margin-top: 16px;
+        }
+
+        .scanner-success {
+            color: #2ecc71;
+            font-size: 14px;
+            margin-top: 16px;
+        }
+
+        .btn-back {
+            background: transparent;
+            border: 1px solid #404040;
+            color: #a0a0a0;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 16px;
+            transition: all 0.3s;
+        }
+
+        .btn-back:hover {
+            border-color: #d4af37;
+            color: #d4af37;
         }
 
         @media (max-width: 480px) {
@@ -257,49 +349,210 @@
         <div class="login-card">
             <div class="logo-section">
                 <div class="logo-title">TOUR</div>
-                <div class="logo-subtitle">Gestão de Equipamentos e Logística</div>
+                <div class="logo-subtitle">Gestao de Equipamentos e Logistica</div>
             </div>
 
             <div class="user-types-label">Acesso para</div>
             <div class="user-types">
-                <div class="user-type user-type-admin">
+                <div class="user-type user-type-admin" data-type="admin" onclick="selectUserType('admin')">
                     <div class="user-type-icon"><i class="fas fa-crown"></i></div>
                     <div class="user-type-name">Admin</div>
                 </div>
-                <div class="user-type user-type-tech">
+                <div class="user-type user-type-tech" data-type="tech" onclick="selectUserType('tech')">
                     <div class="user-type-icon"><i class="fas fa-wrench"></i></div>
-                    <div class="user-type-name">Técnico</div>
+                    <div class="user-type-name">Tecnico</div>
                 </div>
-                <div class="user-type user-type-tour">
+                <div class="user-type user-type-tour" data-type="tour" onclick="selectUserType('tour')">
                     <div class="user-type-icon"><i class="fas fa-qrcode"></i></div>
                     <div class="user-type-name">Tour</div>
                 </div>
             </div>
 
-            <form method="POST" action="{{ url_for('auth.login') }}">
-                <div class="form-group">
-                    <label class="form-label">Email</label>
-                    <input type="email" name="email" class="form-input" placeholder="seu@email.com" required autofocus>
+            <div id="admin-form">
+                <form method="POST" action="{{ url_for('auth.login') }}">
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <input type="email" name="email" class="form-input" placeholder="seu@email.com" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Senha</label>
+                        <input type="password" name="password" class="form-input" placeholder="********" required>
+                    </div>
+
+                    <button type="submit" class="btn-login">
+                        Entrar
+                    </button>
+                </form>
+
+                <div class="divider">
+                    <span>Nao tem conta?</span>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label">Senha</label>
-                    <input type="password" name="password" class="form-input" placeholder="••••••••" required>
+                <div class="register-link">
+                    <a href="{{ url_for('auth.register') }}">Criar conta</a>
                 </div>
-
-                <button type="submit" class="btn-login">
-                    Entrar
-                </button>
-            </form>
-
-            <div class="divider">
-                <span>Não tem conta?</span>
             </div>
 
-            <div class="register-link">
-                <a href="{{ url_for('auth.register') }}">Criar conta</a>
+            <div id="scanner-section">
+                <div class="scanner-container">
+                    <div class="scanner-title">
+                        <i class="fas fa-camera"></i> Escanear QR Code
+                    </div>
+                    <div class="scanner-subtitle" id="scanner-subtitle">
+                        Aponte a camera para o QR Code de acesso
+                    </div>
+                    <div id="qr-reader"></div>
+                    <div id="scanner-message"></div>
+                    <button class="btn-back" onclick="selectUserType(null)">
+                        <i class="fas fa-arrow-left"></i> Voltar
+                    </button>
+                </div>
             </div>
         </div>
     </div>
+
+    <script>
+        let html5QrCode = null;
+        let currentType = null;
+
+        function selectUserType(type) {
+            document.querySelectorAll('.user-type').forEach(el => el.classList.remove('active'));
+            
+            const adminForm = document.getElementById('admin-form');
+            const scannerSection = document.getElementById('scanner-section');
+            
+            if (html5QrCode) {
+                html5QrCode.stop().catch(err => console.log('Scanner stop error:', err));
+                html5QrCode = null;
+            }
+            
+            currentType = type;
+            
+            if (type === 'admin') {
+                document.querySelector('.user-type-admin').classList.add('active');
+                adminForm.classList.add('active');
+                scannerSection.classList.remove('active');
+            } else if (type === 'tech' || type === 'tour') {
+                document.querySelector(`.user-type-${type}`).classList.add('active');
+                adminForm.classList.remove('active');
+                scannerSection.classList.add('active');
+                
+                const subtitle = document.getElementById('scanner-subtitle');
+                if (type === 'tech') {
+                    subtitle.textContent = 'Escaneie seu QR Code de Tecnico';
+                } else {
+                    subtitle.textContent = 'Escaneie seu QR Code de Acesso a Tour';
+                }
+                
+                startScanner();
+            } else {
+                adminForm.classList.remove('active');
+                scannerSection.classList.remove('active');
+            }
+        }
+
+        function startScanner() {
+            const qrReader = document.getElementById('qr-reader');
+            const messageDiv = document.getElementById('scanner-message');
+            messageDiv.innerHTML = '';
+            
+            html5QrCode = new Html5Qrcode("qr-reader");
+            
+            const config = {
+                fps: 10,
+                qrbox: { width: 250, height: 250 },
+                aspectRatio: 1.0
+            };
+            
+            html5QrCode.start(
+                { facingMode: "environment" },
+                config,
+                onScanSuccess,
+                onScanError
+            ).catch(err => {
+                messageDiv.innerHTML = `
+                    <div class="scanner-error">
+                        <i class="fas fa-exclamation-circle"></i> 
+                        Nao foi possivel acessar a camera. Verifique as permissoes.
+                    </div>
+                `;
+                console.error('Scanner start error:', err);
+            });
+        }
+
+        function onScanSuccess(decodedText, decodedResult) {
+            const messageDiv = document.getElementById('scanner-message');
+            
+            if (html5QrCode) {
+                html5QrCode.stop().catch(err => console.log('Scanner stop error:', err));
+            }
+            
+            messageDiv.innerHTML = `
+                <div class="scanner-success">
+                    <i class="fas fa-spinner fa-spin"></i> Verificando acesso...
+                </div>
+            `;
+            
+            let token = decodedText;
+            if (decodedText.includes('/invite/')) {
+                token = decodedText.split('/invite/').pop();
+            } else if (decodedText.includes('/auth/')) {
+                token = decodedText.split('/').pop();
+            }
+            
+            fetch('{{ url_for("auth.login_qr") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ token: token })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    messageDiv.innerHTML = `
+                        <div class="scanner-success">
+                            <i class="fas fa-check-circle"></i> Acesso autorizado! Redirecionando...
+                        </div>
+                    `;
+                    setTimeout(() => {
+                        window.location.href = data.redirect;
+                    }, 1000);
+                } else if (data.redirect) {
+                    messageDiv.innerHTML = `
+                        <div class="scanner-success">
+                            <i class="fas fa-user-plus"></i> ${data.message || 'Redirecionando para cadastro...'}
+                        </div>
+                    `;
+                    setTimeout(() => {
+                        window.location.href = data.redirect;
+                    }, 1000);
+                } else {
+                    messageDiv.innerHTML = `
+                        <div class="scanner-error">
+                            <i class="fas fa-times-circle"></i> ${data.error || 'QR Code invalido'}
+                        </div>
+                    `;
+                    setTimeout(() => startScanner(), 2000);
+                }
+            })
+            .catch(err => {
+                messageDiv.innerHTML = `
+                    <div class="scanner-error">
+                        <i class="fas fa-times-circle"></i> Erro ao verificar acesso
+                    </div>
+                `;
+                console.error('Login QR error:', err);
+                setTimeout(() => startScanner(), 2000);
+            });
+        }
+
+        function onScanError(error) {
+            // Ignore scan errors (no QR detected)
+        }
+
+        selectUserType('admin');
+    </script>
 </body>
 </html>

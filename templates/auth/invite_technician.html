@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro Tecnico - TOUR</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #000;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            width: 100%;
+            max-width: 440px;
+        }
+        .card {
+            background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.8);
+            border: 1px solid #2a2a2a;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        .icon-circle {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+        }
+        .icon-circle i {
+            font-size: 36px;
+            color: #fff;
+        }
+        .title {
+            font-size: 24px;
+            color: #f5f5f5;
+            margin-bottom: 8px;
+        }
+        .subtitle {
+            font-size: 14px;
+            color: #707070;
+        }
+        .company-badge {
+            background: rgba(212,175,55,0.1);
+            border: 1px solid rgba(212,175,55,0.3);
+            border-radius: 8px;
+            padding: 12px 16px;
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        .company-badge-label {
+            font-size: 11px;
+            color: #707070;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .company-badge-name {
+            font-size: 16px;
+            color: #d4af37;
+            font-weight: 600;
+            margin-top: 4px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #e0e0e0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .form-input {
+            width: 100%;
+            padding: 14px 16px;
+            background: #0a0a0a;
+            border: 2px solid #2a2a2a;
+            border-radius: 10px;
+            color: #f5f5f5;
+            font-size: 15px;
+            transition: all 0.3s;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52,152,219,0.1);
+        }
+        .form-input::placeholder {
+            color: #505050;
+        }
+        .form-hint {
+            font-size: 12px;
+            color: #606060;
+            margin-top: 6px;
+        }
+        .permissions-section {
+            background: #0d0d0d;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+        .permissions-title {
+            font-size: 12px;
+            color: #707070;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+        .permission-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 0;
+            color: #a0a0a0;
+            font-size: 14px;
+        }
+        .permission-item i {
+            color: #2ecc71;
+            width: 20px;
+        }
+        .btn-submit {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(52,152,219,0.4);
+        }
+        @media (max-width: 480px) {
+            .card { padding: 28px 20px; }
+            .title { font-size: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="header">
+                <div class="icon-circle">
+                    <i class="fas fa-wrench"></i>
+                </div>
+                <h1 class="title">Bem-vindo, Tecnico!</h1>
+                <p class="subtitle">Complete seu cadastro para acessar o sistema</p>
+            </div>
+
+            <div class="company-badge">
+                <div class="company-badge-label">Voce foi convidado para</div>
+                <div class="company-badge-name">{{ access.company.name }}</div>
+            </div>
+
+            <form method="POST" action="{{ url_for('auth.complete_invite', token=token) }}">
+                <div class="form-group">
+                    <label class="form-label">Seu Nome</label>
+                    <input type="text" name="name" class="form-input" 
+                           placeholder="Digite seu nome completo" 
+                           value="{{ access.invite_name or '' }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Telefone</label>
+                    <input type="tel" name="phone" class="form-input" 
+                           placeholder="(00) 00000-0000"
+                           value="{{ access.invite_phone or '' }}">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">PIN de Acesso (opcional)</label>
+                    <input type="password" name="pin" class="form-input" 
+                           placeholder="4 digitos" maxlength="4" pattern="[0-9]{4}">
+                    <div class="form-hint">Crie um PIN de 4 digitos para acesso rapido</div>
+                </div>
+
+                <div class="permissions-section">
+                    <div class="permissions-title">Suas Permissoes</div>
+                    {% if access.can_equipment %}
+                    <div class="permission-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Gerenciar Equipamentos</span>
+                    </div>
+                    {% endif %}
+                    {% if access.can_maintenance %}
+                    <div class="permission-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Registrar Manutencao</span>
+                    </div>
+                    {% endif %}
+                    {% if access.can_separation %}
+                    <div class="permission-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Listas de Separacao</span>
+                    </div>
+                    {% endif %}
+                    {% if access.can_tours %}
+                    <div class="permission-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Acompanhar Tours</span>
+                    </div>
+                    {% endif %}
+                    {% if access.can_scanner %}
+                    <div class="permission-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Scanner de Equipamentos</span>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <button type="submit" class="btn-submit">
+                    <i class="fas fa-check"></i> Finalizar Cadastro
+                </button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
