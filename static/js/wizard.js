@@ -405,7 +405,7 @@ function startQuoteApprovalWizard(quoteId, quoteName, quoteTotal) {
                     <i class="bi bi-x-lg"></i> Não
                 </label>
             </div>`,
-        endpoint: (data) => data.generate_contract === 'yes' ? `/financial/contracts/from-quote/${quoteId}` : null
+        endpoint: (data) => data.generate_contract === 'yes' ? `/api/automation/quote/${quoteId}/contract` : null
     });
 
     wizard.addStep({
