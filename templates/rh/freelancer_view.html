@@ -1,0 +1,258 @@
+{% extends "base.html" %}
+
+{% block title %}{{ freelancer.name }} - RH{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-container {
+        padding: 0;
+        min-height: 100vh;
+        padding-bottom: 90px;
+        background-color: #0a0a0a;
+    }
+
+    .page-header {
+        background: linear-gradient(135deg, rgba(139,92,246,0.3) 0%, rgba(26,26,26,0.95) 100%);
+        padding: 20px 16px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        border-bottom: 1px solid #2a2a2a;
+    }
+
+    .back-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #d4a574;
+        text-decoration: none;
+    }
+
+    .page-title h1 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #f5f5f5;
+    }
+
+    .profile-card {
+        margin: 16px;
+        background: #1a1a1a;
+        border-radius: 16px;
+        padding: 24px;
+        border: 1px solid #2a2a2a;
+        text-align: center;
+    }
+
+    .profile-avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        font-weight: 700;
+        color: #fff;
+        margin: 0 auto 16px;
+    }
+
+    .profile-name {
+        color: #f5f5f5;
+        font-size: 1.4rem;
+        font-weight: 700;
+        margin-bottom: 4px;
+    }
+
+    .profile-role {
+        color: #8b5cf6;
+        font-size: 0.9rem;
+        margin-bottom: 8px;
+    }
+
+    .score-badge {
+        display: inline-block;
+        background: linear-gradient(135deg, #d4a574 0%, #b8860b 100%);
+        color: #000;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-weight: 700;
+        font-size: 0.85rem;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+        text-align: left;
+        margin-top: 20px;
+    }
+
+    .info-item {
+        background: #252525;
+        padding: 12px;
+        border-radius: 8px;
+    }
+
+    .info-label {
+        color: #888;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+    }
+
+    .info-value {
+        color: #f5f5f5;
+        font-size: 0.95rem;
+        font-weight: 600;
+    }
+
+    .rate-card {
+        background: linear-gradient(135deg, #6b21a8 0%, #4c1d95 100%);
+        text-align: center;
+    }
+
+    .rate-card .info-label {
+        color: rgba(255,255,255,0.7);
+    }
+
+    .rate-card .info-value {
+        font-size: 1.3rem;
+    }
+
+    .section-title {
+        padding: 16px 16px 8px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #666;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+    }
+
+    .assignment-card {
+        margin: 0 16px 12px;
+        background: #1a1a1a;
+        border-radius: 12px;
+        padding: 16px;
+        border: 1px solid #2a2a2a;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .assignment-info h4 {
+        color: #f5f5f5;
+        font-size: 0.9rem;
+        margin-bottom: 4px;
+    }
+
+    .assignment-info p {
+        color: #888;
+        font-size: 0.75rem;
+    }
+
+    .assignment-value {
+        text-align: right;
+    }
+
+    .assignment-value .amount {
+        color: #10b981;
+        font-weight: 700;
+    }
+
+    .assignment-value .status {
+        font-size: 0.7rem;
+        color: #888;
+    }
+
+    .btn-edit {
+        display: block;
+        margin: 16px;
+        background: #8b5cf6;
+        color: #fff;
+        text-align: center;
+        padding: 14px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 700;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <a href="{{ url_for('rh.freelancers') }}" class="back-btn">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <div class="page-title">
+            <h1>Freelancer</h1>
+        </div>
+    </div>
+
+    <div class="profile-card">
+        <div class="profile-avatar">
+            {{ freelancer.name[0].upper() if freelancer.name else 'F' }}
+        </div>
+        <div class="profile-name">{{ freelancer.name }}</div>
+        <div class="profile-role">{{ freelancer.role or 'Tecnico' }}</div>
+        <div class="score-badge">Score: {{ freelancer.overall_score }}/100</div>
+
+        <div class="info-grid">
+            <div class="info-item rate-card">
+                <div class="info-label">Diaria</div>
+                <div class="info-value">R$ {{ "%.0f"|format(freelancer.daily_rate or 0) }}</div>
+            </div>
+            
+            <div class="info-item rate-card">
+                <div class="info-label">Hora</div>
+                <div class="info-value">R$ {{ "%.0f"|format(freelancer.hourly_rate or 0) }}</div>
+            </div>
+            
+            <div class="info-item">
+                <div class="info-label">Email</div>
+                <div class="info-value">{{ freelancer.email or '-' }}</div>
+            </div>
+            
+            <div class="info-item">
+                <div class="info-label">Telefone</div>
+                <div class="info-value">{{ freelancer.phone or '-' }}</div>
+            </div>
+            
+            <div class="info-item">
+                <div class="info-label">CPF/CNPJ</div>
+                <div class="info-value">{{ freelancer.cpf_cnpj or '-' }}</div>
+            </div>
+            
+            <div class="info-item">
+                <div class="info-label">Total Jobs</div>
+                <div class="info-value">{{ freelancer.total_jobs }}</div>
+            </div>
+        </div>
+    </div>
+
+    {% if assignments %}
+    <h4 class="section-title">Ultimos Trabalhos</h4>
+    {% for a in assignments %}
+    <div class="assignment-card">
+        <div class="assignment-info">
+            <h4>{{ a.role }}</h4>
+            <p>{{ a.start_date.strftime('%d/%m/%Y') if a.start_date else '-' }}</p>
+        </div>
+        <div class="assignment-value">
+            <div class="amount">R$ {{ "%.0f"|format(a.total_amount or 0) }}</div>
+            <div class="status">{{ a.status }}</div>
+        </div>
+    </div>
+    {% endfor %}
+    {% endif %}
+
+    <a href="{{ url_for('rh.freelancers') }}" class="btn-edit">
+        <i class="fas fa-arrow-left"></i> Voltar para Lista
+    </a>
+</div>
+{% endblock %}

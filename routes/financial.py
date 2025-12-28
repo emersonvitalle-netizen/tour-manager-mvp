@@ -592,20 +592,47 @@ def despesas():
 @login_required
 @admin_required
 def folha_clt():
-    """Folha de pagamento CLT"""
+    """Folha de pagamento CLT - visualizacao (dados do RH)"""
     from models.rh import Employee, PayrollEntry
+    from dateutil.relativedelta import relativedelta
     
     funcionarios = Employee.query.filter_by(
         company_id=current_user.company_id,
-        employment_type='clt',
-        is_active=True
-    ).all()
+        status='active'
+    ).order_by(Employee.name).all()
     
     mes_atual = datetime.now().month
     ano_atual = datetime.now().year
     
+    total_salarios = sum(float(f.salary or 0) for f in funcionarios)
+    encargos_estimados = total_salarios * 0.68
+    custo_total = total_salarios + encargos_estimados
+    
+    funcionarios_data = []
+    for func in funcionarios:
+        prox_ferias = None
+        if func.admission_date:
+            anos_trabalhados = (date.today() - func.admission_date).days // 365
+            prox_aquisitivo = func.admission_date + relativedelta(years=anos_trabalhados + 1)
+            prox_ferias = prox_aquisitivo + relativedelta(months=11)
+        
+        custo_func = float(func.salary or 0) * 1.68
+        
+        funcionarios_data.append({
+            'id': func.id,
+            'name': func.name,
+            'position': func.position,
+            'salary': float(func.salary or 0),
+            'custo_total': custo_func,
+            'admission_date': func.admission_date,
+            'prox_ferias': prox_ferias
+        })
+    
     return render_template('financial/folha_clt.html', 
-                          funcionarios=funcionarios,
+                          funcionarios=funcionarios_data,
+                          total_salarios=total_salarios,
+                          encargos_estimados=encargos_estimados,
+                          custo_total=custo_total,
                           mes=mes_atual,
                           ano=ano_atual)
 
@@ -614,22 +641,49 @@ def folha_clt():
 @login_required
 @admin_required
 def freelancers():
-    """Pagamentos a freelancers"""
-    from models.rh import Employee, FreelancerPayment
+    """Pagamentos a freelancers - visualizacao (dados do RH)"""
+    from models.rh import Freelancer, FreelancerAssignment
     
-    freelancers_list = Employee.query.filter_by(
+    freelancers_list = Freelancer.query.filter_by(
         company_id=current_user.company_id,
-        employment_type='freelancer',
-        is_active=True
-    ).all()
+        status='active'
+    ).order_by(Freelancer.overall_score.desc()).all()
     
-    pagamentos_recentes = FreelancerPayment.query.filter_by(
-        company_id=current_user.company_id
-    ).order_by(FreelancerPayment.created_at.desc()).limit(10).all()
+    mes_atual = datetime.now().month
+    ano_atual = datetime.now().year
+    
+    freelancers_data = []
+    total_mes = 0
+    
+    for fl in freelancers_list:
+        eventos_mes = FreelancerAssignment.query.filter(
+            FreelancerAssignment.freelancer_id == fl.id,
+            func.strftime('%Y-%m', FreelancerAssignment.start_date) == f'{ano_atual}-{mes_atual:02d}'
+        ).count()
+        
+        valor_mes = db.session.query(func.sum(FreelancerAssignment.total_amount)).filter(
+            FreelancerAssignment.freelancer_id == fl.id,
+            func.strftime('%Y-%m', FreelancerAssignment.start_date) == f'{ano_atual}-{mes_atual:02d}'
+        ).scalar() or 0
+        
+        total_mes += float(valor_mes)
+        
+        freelancers_data.append({
+            'id': fl.id,
+            'name': fl.name,
+            'role': fl.role,
+            'daily_rate': float(fl.daily_rate or 0),
+            'hourly_rate': float(fl.hourly_rate or 0),
+            'eventos_mes': eventos_mes,
+            'valor_mes': float(valor_mes),
+            'score': fl.overall_score
+        })
     
     return render_template('financial/freelancers.html',
-                          freelancers=freelancers_list,
-                          pagamentos=pagamentos_recentes)
+                          freelancers=freelancers_data,
+                          total_mes=total_mes,
+                          mes=mes_atual,
+                          ano=ano_atual)
 
 
 @financial_bp.route('/contas-pagar')
