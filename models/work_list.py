@@ -12,7 +12,16 @@ class WorkList(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     separation_list_id = db.Column(db.Integer, nullable=True)  # Referência simples
     tour_id = db.Column(db.Integer, nullable=True)
+    quote_id = db.Column(db.Integer, nullable=True)  # Vínculo com orçamento
     name = db.Column(db.String(200), nullable=False)
+    
+    # Dados do evento (copiados do orçamento)
+    event_date = db.Column(db.Date, nullable=True)
+    event_location = db.Column(db.String(200), nullable=True)
+    client_name = db.Column(db.String(200), nullable=True)
+    
+    # Token para compartilhamento público (sem login)
+    share_token = db.Column(db.String(64), nullable=True, unique=True)
     description = db.Column(db.Text)
     status = db.Column(db.String(20), default='pending')
     

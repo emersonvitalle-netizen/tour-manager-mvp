@@ -351,6 +351,15 @@ function formatCurrency(value) {
     return parseFloat(value || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
+function calculateFreelancerTotal() {
+    const dailyRate = parseFloat(document.getElementById('dailyRateInput')?.value || 0);
+    const days = parseInt(document.getElementById('daysInput')?.value || 1);
+    const totalInput = document.getElementById('totalValueInput');
+    if (totalInput) {
+        totalInput.value = (dailyRate * days).toFixed(2);
+    }
+}
+
 function startEmployeeWizard(employeeId, employeeName, salary) {
     const salaryNum = parseFloat(salary) || 0;
     const wizard = new WizardController({
@@ -403,8 +412,8 @@ function startEmployeeWizard(employeeId, employeeName, salary) {
     wizard.start();
 }
 
-function startFreelancerPaymentWizard(freelancerId, freelancerName, eventName, value) {
-    const valueNum = parseFloat(value) || 0;
+function startFreelancerPaymentWizard(freelancerId, freelancerName, eventName, dailyRate) {
+    const dailyRateNum = parseFloat(dailyRate) || 0;
     const wizard = new WizardController({
         onComplete: (data) => {
             showToast('Pagamento registrado!', 'success');
@@ -421,9 +430,19 @@ function startFreelancerPaymentWizard(freelancerId, freelancerName, eventName, v
             <h5 class="text-center mb-2">${freelancerName}</h5>
             <p class="text-center text-muted mb-3">${eventName}</p>
             <div class="mb-3">
-                <label class="form-label">Valor</label>
-                <input type="number" name="value" class="form-control bg-dark text-white border-secondary" 
-                       value="${valueNum}" step="0.01">
+                <label class="form-label">Valor da Diária</label>
+                <input type="number" name="daily_rate" id="dailyRateInput" class="form-control bg-dark text-white border-secondary" 
+                       value="${dailyRateNum}" step="0.01" onchange="calculateFreelancerTotal()">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Quantidade de Diárias</label>
+                <input type="number" name="days" id="daysInput" class="form-control bg-dark text-white border-secondary" 
+                       value="1" min="1" onchange="calculateFreelancerTotal()">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Valor Total</label>
+                <input type="number" name="value" id="totalValueInput" class="form-control bg-dark text-white border-secondary" 
+                       value="${dailyRateNum}" step="0.01" readonly style="background: #2a2a2a !important;">
             </div>
             <div class="mb-3">
                 <label class="form-label">Data de Pagamento</label>
@@ -530,4 +549,54 @@ function showToast(message, type = 'success') {
     document.body.appendChild(toast);
     new bootstrap.Toast(toast).show();
     setTimeout(() => toast.remove(), 3000);
+}
+
+function startWorkListWizard(quoteId, quoteName, clientName) {
+    const wizard = new WizardController({
+        onComplete: (data) => {
+            if (data.share_token) {
+                const shareUrl = `${window.location.origin}/work-list/share/${data.share_token}`;
+                showToast('WorkList criada com sucesso!', 'success');
+                setTimeout(() => {
+                    if (confirm(`WorkList criada!\n\nDeseja copiar o link de compartilhamento?\n\n${shareUrl}`)) {
+                        navigator.clipboard.writeText(shareUrl);
+                        showToast('Link copiado!', 'success');
+                    }
+                    location.reload();
+                }, 500);
+            } else {
+                showToast('WorkList criada!', 'success');
+                setTimeout(() => location.reload(), 1500);
+            }
+        }
+    });
+
+    wizard.addStep({
+        title: 'Criar Lista de Separação',
+        content: () => `
+            <form id="wizardForm">
+                <div class="text-center mb-4">
+                    <i class="bi bi-list-check" style="font-size: 3rem; color: #6f42c1;"></i>
+                </div>
+                <h5 class="text-center mb-2">${quoteName}</h5>
+                <p class="text-center text-muted mb-4">Cliente: ${clientName || 'Não informado'}</p>
+                <p class="text-center mb-4">
+                    Será criada uma <strong>WorkList</strong> com os itens do orçamento (sem valores) 
+                    para separação física dos equipamentos.
+                </p>
+                <div class="mb-3">
+                    <label class="form-label">Data do Evento</label>
+                    <input type="date" name="event_date" class="form-control bg-dark text-white border-secondary">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Local do Evento</label>
+                    <input type="text" name="event_location" class="form-control bg-dark text-white border-secondary" 
+                           placeholder="Ex: Teatro Municipal, São Paulo">
+                </div>
+            </form>`,
+        endpoint: `/api/automation/quote/${quoteId}/worklist`
+    });
+
+    wizard.setData('quote_id', quoteId);
+    wizard.start();
 }
