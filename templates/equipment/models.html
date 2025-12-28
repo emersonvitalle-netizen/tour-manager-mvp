@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+
+{% block title %}Modelos de Equipamento{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-3 py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="text-white mb-1">Modelos de Equipamento</h4>
+            <p class="text-muted small mb-0">Fotos compartilhadas por todas as unidades do mesmo modelo</p>
+        </div>
+        <button class="btn btn-gold" data-bs-toggle="modal" data-bs-target="#addModelModal">
+            <i class="bi bi-plus-lg"></i> Novo Modelo
+        </button>
+    </div>
+
+    {% if models %}
+    <div class="row g-3">
+        {% for model in models %}
+        <div class="col-6 col-md-4 col-lg-3">
+            <div class="card bg-dark border-secondary h-100">
+                <div class="position-relative" style="height: 140px; overflow: hidden;">
+                    {% if model.photo_url %}
+                    <img src="{{ model.photo_url }}" class="w-100 h-100" style="object-fit: cover;" alt="{{ model.brand }} {{ model.model }}">
+                    {% else %}
+                    <div class="w-100 h-100 d-flex align-items-center justify-content-center" style="background: #1a1a1a;">
+                        <i class="bi bi-camera text-muted" style="font-size: 2.5rem;"></i>
+                    </div>
+                    {% endif %}
+                    <span class="badge bg-gold text-dark position-absolute top-0 end-0 m-2">
+                        {{ model.equipments.count() }} un.
+                    </span>
+                </div>
+                <div class="card-body p-2">
+                    <h6 class="text-white mb-0 small">{{ model.brand }}</h6>
+                    <p class="text-gold mb-2 small">{{ model.model }}</p>
+                    <div class="d-flex gap-1">
+                        <button class="btn btn-sm btn-outline-light flex-grow-1" 
+                                onclick="openEditModal({{ model.id }}, '{{ model.brand }}', '{{ model.model }}', '{{ model.photo_url or '' }}')">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-gold flex-grow-1" onclick="openPhotoModal({{ model.id }})">
+                            <i class="bi bi-camera"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <i class="bi bi-box-seam text-muted" style="font-size: 4rem;"></i>
+        <h5 class="text-white mt-3">Nenhum modelo cadastrado</h5>
+        <p class="text-muted">Crie modelos para compartilhar fotos entre equipamentos iguais</p>
+    </div>
+    {% endif %}
+</div>
+
+<div class="modal fade" id="addModelModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark border-gold">
+            <form action="{{ url_for('equipment.add_model') }}" method="POST" enctype="multipart/form-data">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title text-white">Novo Modelo</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">MARCA</label>
+                        <input type="text" name="brand" class="form-control bg-black text-white border-secondary" required placeholder="Ex: JBL, Shure, QSC">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">MODELO</label>
+                        <input type="text" name="model" class="form-control bg-black text-white border-secondary" required placeholder="Ex: PRX 815, SM58, KLA12">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">TIPO DE EQUIPAMENTO</label>
+                        <select name="type_id" class="form-select bg-black text-white border-secondary">
+                            <option value="">Selecione (opcional)</option>
+                            {% for cat in categories %}
+                            <optgroup label="{{ cat.name }}">
+                                {% for t in cat.equipment_types %}
+                                <option value="{{ t.id }}">{{ t.name }}</option>
+                                {% endfor %}
+                            </optgroup>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">FOTO DO MODELO</label>
+                        <input type="file" name="photo" class="form-control bg-black text-white border-secondary" accept="image/*">
+                        <small class="text-muted">Esta foto será usada por todos os equipamentos deste modelo</small>
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-gold">Salvar Modelo</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editModelModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark border-gold">
+            <form id="editModelForm" method="POST" enctype="multipart/form-data">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title text-white">Editar Modelo</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">MARCA</label>
+                        <input type="text" name="brand" id="editBrand" class="form-control bg-black text-white border-secondary" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">MODELO</label>
+                        <input type="text" name="model" id="editModel" class="form-control bg-black text-white border-secondary" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">NOVA FOTO (opcional)</label>
+                        <input type="file" name="photo" class="form-control bg-black text-white border-secondary" accept="image/*">
+                    </div>
+                    <div id="currentPhotoPreview" class="mb-3"></div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-gold">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="photoModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark border-gold">
+            <form id="photoForm" method="POST" enctype="multipart/form-data">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title text-white">Atualizar Foto</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">SELECIONE A NOVA FOTO</label>
+                        <input type="file" name="photo" class="form-control bg-black text-white border-secondary" accept="image/*" required>
+                    </div>
+                    <p class="text-warning small"><i class="bi bi-info-circle"></i> A foto será atualizada em todos os equipamentos deste modelo</p>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-gold">Atualizar Foto</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function openEditModal(id, brand, model, photo) {
+    document.getElementById('editModelForm').action = '/equipment/models/' + id + '/edit';
+    document.getElementById('editBrand').value = brand;
+    document.getElementById('editModel').value = model;
+    
+    const preview = document.getElementById('currentPhotoPreview');
+    if (photo) {
+        preview.innerHTML = '<img src="' + photo + '" class="img-fluid rounded" style="max-height: 150px;">';
+    } else {
+        preview.innerHTML = '';
+    }
+    
+    new bootstrap.Modal(document.getElementById('editModelModal')).show();
+}
+
+function openPhotoModal(id) {
+    document.getElementById('photoForm').action = '/equipment/models/' + id + '/photo';
+    new bootstrap.Modal(document.getElementById('photoModal')).show();
+}
+</script>
+
+<style>
+.btn-gold { background: #d4a574; color: #000; border: none; }
+.btn-gold:hover { background: #c49464; color: #000; }
+.btn-outline-gold { border-color: #d4a574; color: #d4a574; }
+.btn-outline-gold:hover { background: #d4a574; color: #000; }
+.bg-gold { background: #d4a574; }
+.text-gold { color: #d4a574; }
+.border-gold { border-color: #d4a574 !important; }
+</style>
+{% endblock %}
