@@ -238,7 +238,10 @@ class WizardController {
             return;
         }
 
-        await step.onLeave(this.data);
+        const leaveResult = await step.onLeave(this.data);
+        if (leaveResult === false) {
+            return;
+        }
 
         if (step.endpoint) {
             try {
@@ -414,7 +417,7 @@ function startQuoteApprovalWizard(quoteId, quoteName, quoteTotal) {
                         body: JSON.stringify(data)
                     });
                     const result = await response.json();
-                    if (result.success && result.data.contract_id) {
+                    if (result.success && result.data && result.data.contract_id) {
                         sessionStorage.setItem('wizardState', JSON.stringify({
                             quoteId: quoteId,
                             quoteName: quoteName,
@@ -422,13 +425,18 @@ function startQuoteApprovalWizard(quoteId, quoteName, quoteTotal) {
                             currentStep: 'contas_receber',
                             contractId: result.data.contract_id
                         }));
+                        const overlay = document.getElementById('wizardModal');
+                        if (overlay) overlay.remove();
                         window.location.href = `/financial/contracts/${result.data.contract_id}?continue_wizard=1`;
                         return false;
+                    } else {
+                        console.error('Contrato criado mas sem ID:', result);
                     }
                 } catch (e) {
                     console.error('Erro ao criar contrato:', e);
                 }
             }
+            return true;
         }
     });
 
