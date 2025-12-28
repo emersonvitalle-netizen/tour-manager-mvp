@@ -405,7 +405,31 @@ function startQuoteApprovalWizard(quoteId, quoteName, quoteTotal) {
                     <i class="bi bi-x-lg"></i> Não
                 </label>
             </div>`,
-        endpoint: (data) => data.generate_contract === 'yes' ? `/api/automation/quote/${quoteId}/contract` : null
+        onLeave: async (data) => {
+            if (data.generate_contract === 'yes') {
+                try {
+                    const response = await fetch(`/api/automation/quote/${quoteId}/contract`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                    const result = await response.json();
+                    if (result.success && result.data.contract_id) {
+                        sessionStorage.setItem('wizardState', JSON.stringify({
+                            quoteId: quoteId,
+                            quoteName: quoteName,
+                            quoteTotal: quoteTotal,
+                            currentStep: 'contas_receber',
+                            contractId: result.data.contract_id
+                        }));
+                        window.location.href = `/financial/contracts/${result.data.contract_id}?continue_wizard=1`;
+                        return false;
+                    }
+                } catch (e) {
+                    console.error('Erro ao criar contrato:', e);
+                }
+            }
+        }
     });
 
     wizard.addStep({

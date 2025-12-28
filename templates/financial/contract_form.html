@@ -141,6 +141,18 @@
             </button>
             {% endif %}
         </div>
+
+        {% if request.args.get('continue_wizard') %}
+        <div class="card mb-4" style="background: linear-gradient(135deg, #d4a574 0%, #c49464 100%); border: none;">
+            <div class="card-body text-center py-4">
+                <h5 class="text-dark mb-3">Contrato Criado!</h5>
+                <p class="text-dark mb-3">Edite os detalhes acima, compartilhe com o cliente e depois continue a automação.</p>
+                <button type="button" class="btn btn-dark btn-lg" onclick="continueWizard()">
+                    <i class="bi bi-arrow-right-circle"></i> Continuar Automação
+                </button>
+            </div>
+        </div>
+        {% endif %}
     </form>
 </div>
 
@@ -171,6 +183,7 @@
     </div>
 </div>
 
+<script src="{{ url_for('static', filename='js/wizard.js') }}"></script>
 <script>
 function shareContract() {
     new bootstrap.Modal(document.getElementById('shareModal')).show();
@@ -184,6 +197,89 @@ function deleteContract() {
             if (r.ok) window.location.href = '{{ url_for("financial.contracts") }}';
         });
     }
+}
+
+function continueWizard() {
+    const stateStr = sessionStorage.getItem('wizardState');
+    if (!stateStr) {
+        alert('Estado do wizard não encontrado. Redirecionando para orçamentos.');
+        window.location.href = '/orcamento';
+        return;
+    }
+    
+    const state = JSON.parse(stateStr);
+    sessionStorage.removeItem('wizardState');
+    
+    const wizard = new WizardController({
+        onComplete: (data) => {
+            showToast('Fluxo concluído com sucesso!', 'success');
+            setTimeout(() => window.location.href = '/orcamento', 1500);
+        }
+    });
+
+    wizard.addStep({
+        title: 'Gerar Contas a Receber?',
+        content: (data) => `
+            <div class="text-center mb-4">
+                <i class="bi bi-cash-stack" style="font-size: 3rem; color: #28a745;"></i>
+            </div>
+            <p class="text-center mb-3">Configurar parcelas do recebimento:</p>
+            <div class="mb-3">
+                <label class="form-label">Número de Parcelas</label>
+                <select name="installments" class="form-select bg-dark text-white border-secondary">
+                    <option value="1">À vista</option>
+                    <option value="2">2x</option>
+                    <option value="3">3x</option>
+                    <option value="4">4x</option>
+                    <option value="6">6x</option>
+                    <option value="12">12x</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Primeiro Vencimento</label>
+                <input type="date" name="first_due_date" class="form-control bg-dark text-white border-secondary" 
+                       value="${new Date().toISOString().split('T')[0]}">
+            </div>`,
+        endpoint: `/financial/contas-receber/from-quote/${state.quoteId}`
+    });
+
+    wizard.addStep({
+        title: 'Vincular a Evento?',
+        content: () => `
+            <div class="text-center mb-4">
+                <i class="bi bi-calendar-event" style="font-size: 3rem; color: #17a2b8;"></i>
+            </div>
+            <p class="text-center mb-3">Deseja vincular a um evento/tour existente?</p>
+            <div class="mb-3">
+                <select name="tour_id" class="form-select bg-dark text-white border-secondary">
+                    <option value="">Não vincular</option>
+                </select>
+            </div>`,
+        onEnter: async (data) => {
+            try {
+                const response = await fetch('/tour/api/list');
+                const tours = await response.json();
+                const select = document.querySelector('select[name="tour_id"]');
+                tours.forEach(tour => {
+                    select.insertAdjacentHTML('beforeend', 
+                        `<option value="${tour.id}">${tour.name} - ${tour.artist}</option>`);
+                });
+            } catch (e) {}
+        }
+    });
+
+    wizard.setData('quote_id', state.quoteId);
+    wizard.setData('contract_id', state.contractId);
+    wizard.start();
+}
+
+function showToast(message, type) {
+    const toast = document.createElement('div');
+    toast.className = `alert alert-${type === 'success' ? 'success' : 'danger'} position-fixed`;
+    toast.style.cssText = 'top: 20px; right: 20px; z-index: 10000; animation: fadeIn 0.3s;';
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
 }
 </script>
 {% endif %}
