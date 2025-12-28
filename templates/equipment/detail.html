@@ -436,53 +436,30 @@
         {% if equipment.status in ['maintenance', 'in_repair'] and current_user.role == 'admin' %}
         <div class="maintenance-section">
             <div class="maintenance-box warning">
-                <h3 class="section-title">🔧 Ações de Manutenção</h3>
-
-                {% if equipment.status == 'maintenance' %}
-                <details style="margin-bottom: var(--spacing-md);">
-                    <summary style="cursor: pointer; font-weight: var(--font-weight-semibold); margin-bottom: var(--spacing-sm);">
-                        Encaminhar para Conserto Externo
-                    </summary>
-                    <form method="POST" action="{{ url_for('equipment.forward_to_external', id=equipment.id) }}" style="margin-top: var(--spacing-md);">
-                        <div class="form-group">
-                            <input type="text" name="external_company" placeholder="Nome da empresa/técnico" class="form-control" required>
-                        </div>
-                        <div class="form-group">
-                            <input type="text" name="external_contact" placeholder="Contato (opcional)" class="form-control">
-                        </div>
-                        <button type="submit" class="btn btn-danger" style="width: 100%;">Encaminhar</button>
-                    </form>
-                </details>
-                {% endif %}
-
-                <details>
-                    <summary style="cursor: pointer; font-weight: var(--font-weight-semibold);">
-                        Concluir Manutenção
-                    </summary>
-                    <form method="POST" action="{{ url_for('equipment.complete_maintenance', id=equipment.id) }}" style="margin-top: var(--spacing-md);">
-                        <div class="form-group">
-                            <textarea name="solution_description" placeholder="Descrição da solução" rows="3" class="form-control"></textarea>
-                        </div>
-                        <div class="form-group">
-                            <input type="number" name="cost" placeholder="Custo (R$)" step="0.01" class="form-control">
-                        </div>
-                        <button type="submit" class="btn btn-success" style="width: 100%;">Concluir e Liberar</button>
-                    </form>
-                </details>
+                <h3 class="section-title">Acoes de Manutencao</h3>
+                <div style="display: flex; flex-direction: column; gap: var(--spacing-md);">
+                    {% if equipment.status == 'maintenance' %}
+                    <button type="button" class="btn btn-success" onclick="startQuickRepairWizard()" style="width: 100%;">
+                        Conserto Rapido
+                    </button>
+                    <button type="button" class="btn btn-danger" onclick="startExternalRepairWizard()" style="width: 100%;">
+                        Encaminhar Conserto Externo
+                    </button>
+                    {% elif equipment.status == 'in_repair' %}
+                    <button type="button" class="btn btn-success" onclick="startActivateEquipmentWizard()" style="width: 100%;">
+                        Ativar Equipamento
+                    </button>
+                    {% endif %}
+                </div>
             </div>
         </div>
         {% elif equipment.status == 'available' and current_user.role == 'admin' %}
         <div class="maintenance-section">
             <div class="maintenance-box success">
-                <h3 class="section-title">Enviar para Manutenção</h3>
-                <form method="POST" action="{{ url_for('equipment.send_to_maintenance', id=equipment.id) }}">
-                    <div class="form-group">
-                        <textarea name="problem_description" placeholder="Descrição do problema" rows="3" class="form-control" required></textarea>
-                    </div>
-                    <button type="submit" class="btn btn-warning" style="width: 100%;">
-                        Enviar para Manutenção
-                    </button>
-                </form>
+                <h3 class="section-title">Manutencao</h3>
+                <button type="button" class="btn btn-warning" onclick="startMaintenanceWizard()" style="width: 100%;">
+                    Enviar para Manutencao
+                </button>
             </div>
         </div>
         {% endif %}
@@ -554,6 +531,8 @@
 </div>
 
 <script>
+const equipmentId = {{ equipment.id }};
+
 function toggleForm(formId) {
     const form = document.getElementById(formId);
     if (form.classList.contains('show')) {
@@ -570,7 +549,7 @@ async function removeTag(tagType) {
     }
     
     try {
-        const response = await fetch('/scanner/remove/{{ equipment.id }}/' + tagType, {
+        const response = await fetch('/scanner/remove/' + equipmentId + '/' + tagType, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' }
         });
@@ -585,6 +564,187 @@ async function removeTag(tagType) {
     } catch (error) {
         alert('Erro ao comunicar com servidor');
     }
+}
+
+function startMaintenanceWizard() {
+    const wizard = new WizardController({
+        onComplete: () => window.location.reload()
+    });
+    
+    wizard.addStep({
+        title: 'Enviar para Manutencao',
+        content: `
+            <div class="wizard-form">
+                <label style="color: #d4a574; margin-bottom: 8px; display: block;">Qual o problema?</label>
+                <textarea id="problemDescription" rows="4" 
+                    style="width: 100%; background: #252525; border: 1px solid #333; border-radius: 8px; color: #fff; padding: 12px; font-size: 1rem;"
+                    placeholder="Descreva o problema do equipamento..."></textarea>
+            </div>
+        `,
+        validate: () => {
+            const problem = document.getElementById('problemDescription').value.trim();
+            if (!problem) {
+                alert('Descreva o problema!');
+                return false;
+            }
+            wizard.data.problem_description = problem;
+            return true;
+        }
+    });
+    
+    wizard.addStep({
+        title: 'Confirmacao',
+        content: (data) => `
+            <div style="text-align: center; padding: 20px;">
+                <div style="font-size: 3rem; margin-bottom: 16px;">🔧</div>
+                <p style="color: #fff; margin-bottom: 16px;">Problema registrado:</p>
+                <p style="color: #a0a0a0; font-style: italic;">"${data.problem_description}"</p>
+                <p style="color: #ffc107; margin-top: 20px;">O equipamento sera marcado como "Em Manutencao"</p>
+            </div>
+        `,
+        endpoint: '/equipment/' + equipmentId + '/send-to-maintenance'
+    });
+    
+    wizard.start();
+}
+
+function startQuickRepairWizard() {
+    const wizard = new WizardController({
+        onComplete: () => window.location.reload()
+    });
+    
+    wizard.addStep({
+        title: 'Conserto Rapido',
+        content: `
+            <div class="wizard-form">
+                <label style="color: #d4a574; margin-bottom: 8px; display: block;">Descricao da solucao</label>
+                <textarea id="solutionDescription" rows="3" 
+                    style="width: 100%; background: #252525; border: 1px solid #333; border-radius: 8px; color: #fff; padding: 12px; font-size: 1rem; margin-bottom: 16px;"
+                    placeholder="O que foi feito para resolver?"></textarea>
+                
+                <label style="color: #d4a574; margin-bottom: 8px; display: block;">Custo do conserto (R$)</label>
+                <input type="number" id="repairCost" step="0.01" min="0"
+                    style="width: 100%; background: #252525; border: 1px solid #333; border-radius: 8px; color: #fff; padding: 12px; font-size: 1rem;"
+                    placeholder="0.00">
+            </div>
+        `,
+        validate: () => {
+            wizard.data.solution_description = document.getElementById('solutionDescription').value.trim();
+            wizard.data.cost = document.getElementById('repairCost').value || '0';
+            wizard.data.type = 'quick';
+            return true;
+        }
+    });
+    
+    wizard.addStep({
+        title: 'Confirmacao',
+        content: (data) => `
+            <div style="text-align: center; padding: 20px;">
+                <div style="font-size: 3rem; margin-bottom: 16px;">✅</div>
+                <p style="color: #fff; margin-bottom: 8px;">Conserto rapido concluido!</p>
+                ${data.solution_description ? `<p style="color: #a0a0a0; font-style: italic;">"${data.solution_description}"</p>` : ''}
+                ${parseFloat(data.cost) > 0 ? `<p style="color: #10b981; margin-top: 16px; font-size: 1.2rem;">Custo: R$ ${parseFloat(data.cost).toFixed(2)}</p><p style="color: #888; font-size: 0.85rem;">Sera registrado nas despesas</p>` : ''}
+                <p style="color: #10b981; margin-top: 20px;">O equipamento sera ativado</p>
+            </div>
+        `,
+        endpoint: '/equipment/' + equipmentId + '/complete-maintenance'
+    });
+    
+    wizard.start();
+}
+
+function startExternalRepairWizard() {
+    const wizard = new WizardController({
+        onComplete: () => window.location.reload()
+    });
+    
+    wizard.addStep({
+        title: 'Conserto Externo',
+        content: `
+            <div class="wizard-form">
+                <label style="color: #d4a574; margin-bottom: 8px; display: block;">Empresa ou Tecnico</label>
+                <input type="text" id="externalCompany"
+                    style="width: 100%; background: #252525; border: 1px solid #333; border-radius: 8px; color: #fff; padding: 12px; font-size: 1rem; margin-bottom: 16px;"
+                    placeholder="Nome da empresa ou tecnico">
+                
+                <label style="color: #d4a574; margin-bottom: 8px; display: block;">Telefone de contato</label>
+                <input type="text" id="externalContact"
+                    style="width: 100%; background: #252525; border: 1px solid #333; border-radius: 8px; color: #fff; padding: 12px; font-size: 1rem;"
+                    placeholder="(00) 00000-0000">
+            </div>
+        `,
+        validate: () => {
+            const company = document.getElementById('externalCompany').value.trim();
+            if (!company) {
+                alert('Informe a empresa ou tecnico!');
+                return false;
+            }
+            wizard.data.external_company = company;
+            wizard.data.external_contact = document.getElementById('externalContact').value.trim();
+            return true;
+        }
+    });
+    
+    wizard.addStep({
+        title: 'Confirmacao',
+        content: (data) => `
+            <div style="text-align: center; padding: 20px;">
+                <div style="font-size: 3rem; margin-bottom: 16px;">🔴</div>
+                <p style="color: #fff; margin-bottom: 8px;">Encaminhando para:</p>
+                <p style="color: #d4a574; font-size: 1.2rem; font-weight: bold;">${data.external_company}</p>
+                ${data.external_contact ? `<p style="color: #a0a0a0;">Tel: ${data.external_contact}</p>` : ''}
+                <p style="color: #dc3545; margin-top: 20px;">O equipamento sera marcado como "Conserto Externo"</p>
+            </div>
+        `,
+        endpoint: '/equipment/' + equipmentId + '/forward-to-external'
+    });
+    
+    wizard.start();
+}
+
+function startActivateEquipmentWizard() {
+    const wizard = new WizardController({
+        onComplete: () => window.location.reload()
+    });
+    
+    wizard.addStep({
+        title: 'Ativar Equipamento',
+        content: `
+            <div class="wizard-form">
+                <label style="color: #d4a574; margin-bottom: 8px; display: block;">Descricao do servico realizado</label>
+                <textarea id="solutionDescription" rows="3" 
+                    style="width: 100%; background: #252525; border: 1px solid #333; border-radius: 8px; color: #fff; padding: 12px; font-size: 1rem; margin-bottom: 16px;"
+                    placeholder="O que foi feito no conserto externo?"></textarea>
+                
+                <label style="color: #d4a574; margin-bottom: 8px; display: block;">Valor do conserto (R$)</label>
+                <input type="number" id="repairCost" step="0.01" min="0"
+                    style="width: 100%; background: #252525; border: 1px solid #333; border-radius: 8px; color: #fff; padding: 12px; font-size: 1rem;"
+                    placeholder="0.00">
+            </div>
+        `,
+        validate: () => {
+            wizard.data.solution_description = document.getElementById('solutionDescription').value.trim();
+            wizard.data.cost = document.getElementById('repairCost').value || '0';
+            wizard.data.type = 'external';
+            return true;
+        }
+    });
+    
+    wizard.addStep({
+        title: 'Confirmacao',
+        content: (data) => `
+            <div style="text-align: center; padding: 20px;">
+                <div style="font-size: 3rem; margin-bottom: 16px;">✅</div>
+                <p style="color: #fff; margin-bottom: 8px;">Conserto externo concluido!</p>
+                ${data.solution_description ? `<p style="color: #a0a0a0; font-style: italic;">"${data.solution_description}"</p>` : ''}
+                ${parseFloat(data.cost) > 0 ? `<p style="color: #10b981; margin-top: 16px; font-size: 1.2rem;">Custo: R$ ${parseFloat(data.cost).toFixed(2)}</p><p style="color: #888; font-size: 0.85rem;">Sera registrado nas despesas</p>` : ''}
+                <p style="color: #10b981; margin-top: 20px;">O equipamento sera ativado e disponivel</p>
+            </div>
+        `,
+        endpoint: '/equipment/' + equipmentId + '/complete-maintenance'
+    });
+    
+    wizard.start();
 }
 </script>
 {% endblock %}
