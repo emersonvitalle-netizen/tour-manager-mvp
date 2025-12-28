@@ -178,25 +178,26 @@
             <i class="fas fa-arrow-left"></i>
         </a>
         <div class="page-title">
-            <h1><i class="fas fa-user-tie"></i> Folha de Pagamento CLT</h1>
+            <h1><i class="fas fa-user-tie"></i> Folha CLT</h1>
+            <small style="color:#888;">Visualizacao - Editar no RH</small>
         </div>
     </div>
 
     <div class="summary-card">
-        <div class="summary-label">Folha de {{ ['Janeiro', 'Fevereiro', 'Marco', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'][mes-1] }}/{{ ano }}</div>
-        <div class="summary-value">R$ 18.500</div>
+        <div class="summary-label">Custo Total Mensal - {{ ['Janeiro', 'Fevereiro', 'Marco', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'][mes-1] }}/{{ ano }}</div>
+        <div class="summary-value">R$ {{ "%.2f"|format(custo_total) }}</div>
         <div class="summary-grid">
             <div class="summary-item">
-                <div class="label">INSS</div>
-                <div class="value">R$ 1.850</div>
+                <div class="label">SALARIOS</div>
+                <div class="value">R$ {{ "%.0f"|format(total_salarios) }}</div>
             </div>
             <div class="summary-item">
-                <div class="label">FGTS</div>
-                <div class="value">R$ 1.480</div>
+                <div class="label">ENCARGOS (~68%)</div>
+                <div class="value">R$ {{ "%.0f"|format(encargos_estimados) }}</div>
             </div>
             <div class="summary-item">
-                <div class="label">IRRF</div>
-                <div class="value">R$ 920</div>
+                <div class="label">FUNCIONARIOS</div>
+                <div class="value">{{ funcionarios|length }}</div>
             </div>
         </div>
     </div>
@@ -204,91 +205,48 @@
     <div class="list-section">
         {% if funcionarios %}
             {% for func in funcionarios %}
-            <div class="funcionario-card">
+            <a href="{{ url_for('rh.view_employee', id=func.id) }}" class="funcionario-card" style="display:block; text-decoration:none;">
                 <div class="funcionario-header">
                     <div>
                         <div class="funcionario-name">{{ func.name }}</div>
                         <div class="funcionario-cargo">{{ func.position or 'Tecnico' }}</div>
                     </div>
                     <div class="funcionario-liquido">
-                        <div class="value">R$ {{ "%.2f"|format((func.base_salary or 0) * 0.85) }}</div>
-                        <div class="label">Liquido</div>
+                        <div class="value">R$ {{ "%.2f"|format(func.custo_total) }}</div>
+                        <div class="label">Custo Total</div>
                     </div>
                 </div>
                 <div class="deducoes-grid">
                     <div class="deducao-item">
-                        <div class="label">Bruto</div>
-                        <div class="value">{{ "%.0f"|format(func.base_salary or 0) }}</div>
+                        <div class="label">Salario</div>
+                        <div class="value">{{ "%.0f"|format(func.salary) }}</div>
                     </div>
                     <div class="deducao-item">
-                        <div class="label">INSS</div>
-                        <div class="value">{{ "%.0f"|format((func.base_salary or 0) * 0.11) }}</div>
+                        <div class="label">Admissao</div>
+                        <div class="value">{{ func.admission_date.strftime('%m/%Y') if func.admission_date else '-' }}</div>
                     </div>
                     <div class="deducao-item">
-                        <div class="label">IRRF</div>
-                        <div class="value">{{ "%.0f"|format((func.base_salary or 0) * 0.075) }}</div>
+                        <div class="label">Prox. Ferias</div>
+                        <div class="value">{{ func.prox_ferias.strftime('%m/%Y') if func.prox_ferias else '-' }}</div>
                     </div>
                 </div>
-                <button class="btn-holerite">Ver Holerite</button>
-            </div>
+            </a>
             {% endfor %}
         {% else %}
-            <div class="funcionario-card">
-                <div class="funcionario-header">
-                    <div>
-                        <div class="funcionario-name">Joao Silva</div>
-                        <div class="funcionario-cargo">Tecnico Audio</div>
-                    </div>
-                    <div class="funcionario-liquido">
-                        <div class="value">R$ 3.825</div>
-                        <div class="label">Liquido</div>
-                    </div>
-                </div>
-                <div class="deducoes-grid">
-                    <div class="deducao-item">
-                        <div class="label">Bruto</div>
-                        <div class="value">4.500</div>
-                    </div>
-                    <div class="deducao-item">
-                        <div class="label">INSS</div>
-                        <div class="value">495</div>
-                    </div>
-                    <div class="deducao-item">
-                        <div class="label">IRRF</div>
-                        <div class="value">337</div>
-                    </div>
-                </div>
-                <button class="btn-holerite">Ver Holerite</button>
-            </div>
-
-            <div class="funcionario-card">
-                <div class="funcionario-header">
-                    <div>
-                        <div class="funcionario-name">Maria Santos</div>
-                        <div class="funcionario-cargo">Tecnica Luz</div>
-                    </div>
-                    <div class="funcionario-liquido">
-                        <div class="value">R$ 3.590</div>
-                        <div class="label">Liquido</div>
-                    </div>
-                </div>
-                <div class="deducoes-grid">
-                    <div class="deducao-item">
-                        <div class="label">Bruto</div>
-                        <div class="value">4.200</div>
-                    </div>
-                    <div class="deducao-item">
-                        <div class="label">INSS</div>
-                        <div class="value">462</div>
-                    </div>
-                    <div class="deducao-item">
-                        <div class="label">IRRF</div>
-                        <div class="value">315</div>
-                    </div>
-                </div>
-                <button class="btn-holerite">Ver Holerite</button>
+            <div class="empty-state">
+                <i class="fas fa-user-tie"></i>
+                <p>Nenhum funcionario CLT cadastrado</p>
+                <a href="{{ url_for('rh.new_employee') }}" class="btn-holerite" style="display:inline-block; margin-top:16px; text-decoration:none;">
+                    <i class="fas fa-plus"></i> Cadastrar no RH
+                </a>
             </div>
         {% endif %}
+    </div>
+    
+    <div style="padding:0 16px 24px;">
+        <a href="{{ url_for('rh.employees') }}" class="btn-holerite" style="display:block; text-align:center; text-decoration:none;">
+            <i class="fas fa-external-link-alt"></i> Gerenciar no RH
+        </a>
     </div>
 </div>
 {% endblock %}

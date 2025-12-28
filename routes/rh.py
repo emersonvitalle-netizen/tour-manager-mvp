@@ -166,6 +166,19 @@ def edit_employee(id):
     return render_template('rh/employee_form.html', employee=employee)
 
 
+@rh_bp.route('/employees/<int:id>')
+@login_required
+@admin_required
+def view_employee(id):
+    """Visualizar funcionario"""
+    employee = Employee.query.filter_by(
+        id=id,
+        company_id=current_user.company_id
+    ).first_or_404()
+    
+    return render_template('rh/employee_view.html', employee=employee)
+
+
 @rh_bp.route('/freelancers')
 @login_required
 @admin_required
@@ -213,6 +226,25 @@ def new_freelancer():
             flash(f'Erro ao cadastrar freelancer: {str(e)}', 'danger')
     
     return render_template('rh/freelancer_form.html', freelancer=None)
+
+
+@rh_bp.route('/freelancers/<int:id>')
+@login_required
+@admin_required
+def view_freelancer(id):
+    """Visualizar freelancer"""
+    freelancer = Freelancer.query.filter_by(
+        id=id,
+        company_id=current_user.company_id
+    ).first_or_404()
+    
+    assignments = FreelancerAssignment.query.filter_by(
+        freelancer_id=freelancer.id
+    ).order_by(FreelancerAssignment.start_date.desc()).limit(10).all()
+    
+    return render_template('rh/freelancer_view.html', 
+                          freelancer=freelancer,
+                          assignments=assignments)
 
 
 @rh_bp.route('/payroll')
