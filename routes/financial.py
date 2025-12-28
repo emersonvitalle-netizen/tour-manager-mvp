@@ -300,6 +300,140 @@ def approve_quote(id):
     return redirect(url_for('financial.view_quote', id=quote.id))
 
 
+# ============================================
+# CONTRATOS
+# ============================================
+
+@financial_bp.route('/contracts')
+@login_required
+@admin_required
+def contracts():
+    """Lista de contratos"""
+    status = request.args.get('status')
+    
+    query = Contract.query.filter_by(
+        company_id=current_user.company_id,
+        is_active=True
+    )
+    
+    if status:
+        query = query.filter_by(status=status)
+    
+    contracts = query.order_by(Contract.created_at.desc()).all()
+    return render_template('financial/contracts.html', contracts=contracts)
+
+
+@financial_bp.route('/contracts/new', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def contract_new():
+    """Criar novo contrato"""
+    if request.method == 'POST':
+        contract = Contract(
+            code=generate_code('CTR'),
+            client_name=request.form.get('client_name', '').strip(),
+            client_document=request.form.get('client_document', '').strip(),
+            client_email=request.form.get('client_email', '').strip(),
+            client_phone=request.form.get('client_phone', '').strip(),
+            client_address=request.form.get('client_address', '').strip(),
+            title=request.form.get('title', '').strip(),
+            start_date=datetime.strptime(request.form.get('start_date'), '%Y-%m-%d').date(),
+            end_date=datetime.strptime(request.form.get('end_date'), '%Y-%m-%d').date(),
+            total_value=Decimal(request.form.get('total_value', '0')),
+            deposit_value=Decimal(request.form.get('deposit_value', '0') or '0'),
+            status=request.form.get('status', 'draft'),
+            service_description=request.form.get('service_description', ''),
+            payment_terms=request.form.get('payment_terms', ''),
+            additional_terms=request.form.get('additional_terms', ''),
+            created_by=current_user.id,
+            company_id=current_user.company_id
+        )
+        db.session.add(contract)
+        db.session.commit()
+        
+        flash('Contrato criado com sucesso!', 'success')
+        return redirect(url_for('financial.contract_edit', contract_id=contract.id))
+    
+    return render_template('financial/contract_form.html', contract=None)
+
+
+@financial_bp.route('/contracts/<int:contract_id>', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def contract_edit(contract_id):
+    """Editar contrato"""
+    contract = Contract.query.filter_by(
+        id=contract_id,
+        company_id=current_user.company_id
+    ).first_or_404()
+    
+    if request.method == 'POST':
+        contract.client_name = request.form.get('client_name', '').strip()
+        contract.client_document = request.form.get('client_document', '').strip()
+        contract.client_email = request.form.get('client_email', '').strip()
+        contract.client_phone = request.form.get('client_phone', '').strip()
+        contract.client_address = request.form.get('client_address', '').strip()
+        contract.title = request.form.get('title', '').strip()
+        contract.start_date = datetime.strptime(request.form.get('start_date'), '%Y-%m-%d').date()
+        contract.end_date = datetime.strptime(request.form.get('end_date'), '%Y-%m-%d').date()
+        contract.total_value = Decimal(request.form.get('total_value', '0'))
+        contract.deposit_value = Decimal(request.form.get('deposit_value', '0') or '0')
+        contract.status = request.form.get('status', 'draft')
+        contract.service_description = request.form.get('service_description', '')
+        contract.payment_terms = request.form.get('payment_terms', '')
+        contract.additional_terms = request.form.get('additional_terms', '')
+        
+        db.session.commit()
+        flash('Contrato atualizado!', 'success')
+        return redirect(url_for('financial.contract_edit', contract_id=contract.id))
+    
+    return render_template('financial/contract_form.html', contract=contract)
+
+
+@financial_bp.route('/contracts/<int:contract_id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def contract_delete(contract_id):
+    """Excluir contrato (soft delete)"""
+    contract = Contract.query.filter_by(
+        id=contract_id,
+        company_id=current_user.company_id
+    ).first_or_404()
+    
+    contract.is_active = False
+    db.session.commit()
+    
+    flash('Contrato excluído.', 'warning')
+    return redirect(url_for('financial.contracts'))
+
+
+@financial_bp.route('/api/contracts/<int:contract_id>')
+@login_required
+@admin_required
+def api_contract_get(contract_id):
+    """API: Obter dados do contrato para wizard"""
+    contract = Contract.query.filter_by(
+        id=contract_id,
+        company_id=current_user.company_id
+    ).first_or_404()
+    
+    return jsonify({
+        'success': True,
+        'contract': {
+            'id': contract.id,
+            'code': contract.code,
+            'client_name': contract.client_name,
+            'client_email': contract.client_email,
+            'title': contract.title,
+            'total_value': float(contract.total_value or 0),
+            'start_date': contract.start_date.isoformat() if contract.start_date else None,
+            'end_date': contract.end_date.isoformat() if contract.end_date else None,
+            'status': contract.status,
+            'edit_url': url_for('financial.contract_edit', contract_id=contract.id)
+        }
+    })
+
+
 @financial_bp.route('/invoices')
 @login_required
 @admin_required

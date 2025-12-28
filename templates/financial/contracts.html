@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}Contratos - TOUR Manager{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="mb-0" style="color: #d4a574;">Contratos</h4>
+        <a href="{{ url_for('financial.contract_new') }}" class="btn btn-primary">
+            + Novo Contrato
+        </a>
+    </div>
+
+    <div class="btn-group mb-3" role="group">
+        <a href="{{ url_for('financial.contracts') }}" 
+           class="btn btn-sm {{ 'btn-primary' if not request.args.get('status') else 'btn-outline-secondary' }}">
+            Todos
+        </a>
+        <a href="{{ url_for('financial.contracts', status='draft') }}" 
+           class="btn btn-sm {{ 'btn-primary' if request.args.get('status') == 'draft' else 'btn-outline-secondary' }}">
+            Rascunho
+        </a>
+        <a href="{{ url_for('financial.contracts', status='active') }}" 
+           class="btn btn-sm {{ 'btn-primary' if request.args.get('status') == 'active' else 'btn-outline-secondary' }}">
+            Ativos
+        </a>
+        <a href="{{ url_for('financial.contracts', status='completed') }}" 
+           class="btn btn-sm {{ 'btn-primary' if request.args.get('status') == 'completed' else 'btn-outline-secondary' }}">
+            Finalizados
+        </a>
+    </div>
+
+    {% if contracts %}
+    <div class="list-group">
+        {% for contract in contracts %}
+        <a href="{{ url_for('financial.contract_edit', contract_id=contract.id) }}" 
+           class="list-group-item list-group-item-action" 
+           style="background: #1a1a1a; border-color: #2a2a2a;">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h6 class="mb-1" style="color: #fff;">{{ contract.title }}</h6>
+                    <small style="color: #a0a0a0;">
+                        {{ contract.code }} | {{ contract.client_name }}
+                    </small>
+                </div>
+                <div class="text-end">
+                    <span class="badge 
+                        {% if contract.status == 'draft' %}bg-secondary
+                        {% elif contract.status == 'active' %}bg-success
+                        {% elif contract.status == 'completed' %}bg-primary
+                        {% else %}bg-warning{% endif %}">
+                        {% if contract.status == 'draft' %}Rascunho
+                        {% elif contract.status == 'active' %}Ativo
+                        {% elif contract.status == 'completed' %}Finalizado
+                        {% else %}{{ contract.status }}{% endif %}
+                    </span>
+                    <div class="mt-1" style="color: #d4a574; font-weight: 600;">
+                        R$ {{ "%.2f"|format(contract.total_value or 0) }}
+                    </div>
+                </div>
+            </div>
+            <small style="color: #666;">
+                {{ contract.start_date.strftime('%d/%m/%Y') if contract.start_date else '' }} 
+                - {{ contract.end_date.strftime('%d/%m/%Y') if contract.end_date else '' }}
+            </small>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-5" style="color: #a0a0a0;">
+        <p>Nenhum contrato encontrado</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

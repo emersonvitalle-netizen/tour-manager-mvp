@@ -117,6 +117,10 @@ class Contract(db.Model):
     terms = db.Column(db.Text)
     notes = db.Column(db.Text)
     
+    service_description = db.Column(db.Text)
+    payment_terms = db.Column(db.Text)
+    additional_terms = db.Column(db.Text)
+    
     signed_at = db.Column(db.DateTime)
     signed_by_client = db.Column(db.String(200))
     
