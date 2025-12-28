@@ -505,11 +505,12 @@ class AutomationService:
         
         db.session.commit()
         
+        items_list = list(sep_list.items)
         return {
             'success': True, 
             'data': {
                 'work_list_id': work_list.id,
-                'items_count': len(sep_list.items),
+                'items_count': len(items_list),
                 'share_token': share_token
             }
         }

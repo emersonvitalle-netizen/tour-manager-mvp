@@ -704,16 +704,16 @@ function startWorkListWizard(quoteId, quoteName, clientName) {
         onComplete: (data) => {
             if (data.share_token) {
                 const shareUrl = `${window.location.origin}/work-list/share/${data.share_token}`;
-                showToast('WorkList criada com sucesso!', 'success');
+                showToast('Lista de Separação criada!', 'success');
                 setTimeout(() => {
-                    if (confirm(`WorkList criada!\n\nDeseja copiar o link de compartilhamento?\n\n${shareUrl}`)) {
+                    if (confirm(`Lista criada!\n\nDeseja copiar o link de compartilhamento?\n\n${shareUrl}`)) {
                         navigator.clipboard.writeText(shareUrl);
                         showToast('Link copiado!', 'success');
                     }
                     location.reload();
                 }, 500);
             } else {
-                showToast('WorkList criada!', 'success');
+                showToast('Lista de Separação criada!', 'success');
                 setTimeout(() => location.reload(), 1500);
             }
         }
@@ -722,26 +722,19 @@ function startWorkListWizard(quoteId, quoteName, clientName) {
     wizard.addStep({
         title: 'Criar Lista de Separação',
         content: () => `
-            <form id="wizardForm">
-                <div class="text-center mb-4">
-                    <i class="bi bi-list-check" style="font-size: 3rem; color: #6f42c1;"></i>
-                </div>
-                <h5 class="text-center mb-2">${quoteName}</h5>
-                <p class="text-center text-muted mb-4">Cliente: ${clientName || 'Não informado'}</p>
-                <p class="text-center mb-4">
-                    Será criada uma <strong>WorkList</strong> com os itens do orçamento (sem valores) 
-                    para separação física dos equipamentos.
-                </p>
-                <div class="mb-3">
-                    <label class="form-label">Data do Evento</label>
-                    <input type="date" name="event_date" class="form-control bg-dark text-white border-secondary">
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Local do Evento</label>
-                    <input type="text" name="event_location" class="form-control bg-dark text-white border-secondary" 
-                           placeholder="Ex: Teatro Municipal, São Paulo">
-                </div>
-            </form>`,
+            <div class="text-center mb-4">
+                <i class="bi bi-list-check" style="font-size: 3rem; color: #6f42c1;"></i>
+            </div>
+            <h5 class="text-center mb-2">${quoteName}</h5>
+            <p class="text-center text-muted mb-3">Cliente: ${clientName || 'Não informado'}</p>
+            <div class="alert alert-info text-center" style="background: #1e3a5f; border-color: #2d5a87; color: #a8d4f7;">
+                <i class="bi bi-info-circle"></i>
+                Os dados de <strong>data</strong> e <strong>local</strong> do evento serão obtidos automaticamente do orçamento.
+            </div>
+            <p class="text-center">
+                Será criada uma lista com os itens do orçamento (sem valores) 
+                para separação física dos equipamentos.
+            </p>`,
         endpoint: `/api/automation/quote/${quoteId}/worklist`
     });
 
