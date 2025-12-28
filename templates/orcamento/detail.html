@@ -289,8 +289,16 @@
 
     {% if sep_list.status == 'pending' %}
     <div class="action-buttons">
-        <button type="button" class="btn btn-approve" onclick="document.getElementById('approveModal').classList.add('show')">Aprovar</button>
+        <button type="button" class="btn btn-approve" onclick="startQuoteApprovalWizard({{ sep_list.id }}, '{{ sep_list.name|e }}', '{{ "%.2f"|format(sep_list.total_value or sep_list.items|list|sum(attribute="total_price") or 0)|replace(".", ",") }}')">
+            <i class="bi bi-magic"></i> Aprovar com Wizard
+        </button>
         <button type="button" class="btn btn-reject" onclick="document.getElementById('rejectModal').classList.add('show')">Rejeitar</button>
+    </div>
+    {% elif sep_list.status == 'approved' %}
+    <div class="action-buttons">
+        <button type="button" class="btn" style="background: #28a745; color: #fff;" onclick="startPostApprovalWizard({{ sep_list.id }}, '{{ sep_list.name|e }}', '{{ "%.2f"|format(sep_list.total_value or sep_list.items|list|sum(attribute="total_price") or 0)|replace(".", ",") }}')">
+            <i class="bi bi-arrow-right-circle"></i> Continuar Fluxo (Contrato / Recebíveis)
+        </button>
     </div>
     {% endif %}
 
