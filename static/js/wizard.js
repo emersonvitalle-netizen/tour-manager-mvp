@@ -60,7 +60,11 @@ class WizardController {
         if (progressEl) {
             const progress = ((this.currentStep + 1) / this.steps.length) * 100;
             progressEl.style.width = `${progress}%`;
-            progressEl.textContent = `${this.currentStep + 1}/${this.steps.length}`;
+        }
+        
+        const progressTextEl = document.getElementById('wizardProgressText');
+        if (progressTextEl) {
+            progressTextEl.textContent = `${this.currentStep + 1}/${this.steps.length}`;
         }
 
         if (prevBtn) prevBtn.style.display = this.currentStep > 0 ? 'block' : 'none';
@@ -74,29 +78,138 @@ class WizardController {
 
     _createModal() {
         const modalHtml = `
-        <div class="modal fade" id="${this.modalId}" tabindex="-1" data-bs-backdrop="static">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content" style="background: #1a1a1a; border: 1px solid #333;">
-                    <div class="modal-header" style="border-bottom: 1px solid #333;">
-                        <h5 class="modal-title" id="wizardTitle" style="color: #d4a574;"></h5>
-                        <button type="button" class="btn-close btn-close-white" id="wizardClose"></button>
-                    </div>
-                    <div class="progress" style="height: 4px; background: #333;">
-                        <div class="progress-bar" id="wizardProgress" style="background: #d4a574;"></div>
-                    </div>
-                    <div class="modal-body" id="wizardBody" style="color: #fff; min-height: 150px;">
-                    </div>
-                    <div class="modal-footer" style="border-top: 1px solid #333;">
-                        <button type="button" class="btn btn-outline-secondary" id="wizardPrev" style="display: none;">
-                            <i class="bi bi-arrow-left"></i> Voltar
-                        </button>
-                        <button type="button" class="btn" id="wizardNext" style="background: #d4a574; color: #000;">
-                            Próximo <i class="bi bi-arrow-right"></i>
-                        </button>
-                    </div>
+        <div class="wizard-overlay" id="${this.modalId}">
+            <div class="wizard-modal">
+                <div class="wizard-header">
+                    <div class="wizard-title" id="wizardTitle"></div>
+                    <div class="wizard-progress-text" id="wizardProgressText">1/1</div>
+                </div>
+                <div class="wizard-progress-bar">
+                    <div class="wizard-progress-fill" id="wizardProgress"></div>
+                </div>
+                <div class="wizard-body" id="wizardBody"></div>
+                <div class="wizard-buttons">
+                    <button type="button" class="wizard-btn wizard-btn-secondary" id="wizardPrev" style="display: none;">Voltar</button>
+                    <button type="button" class="wizard-btn wizard-btn-cancel" id="wizardClose">Cancelar</button>
+                    <button type="button" class="wizard-btn wizard-btn-primary" id="wizardNext">Próximo</button>
                 </div>
             </div>
-        </div>`;
+        </div>
+        <style>
+            .wizard-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.85);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 9999;
+            }
+            .wizard-modal {
+                background: linear-gradient(180deg, #1e1e1e 0%, #141414 100%);
+                border: 2px solid #d4a574;
+                border-radius: 16px;
+                padding: 24px;
+                width: 90%;
+                max-width: 420px;
+                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            }
+            .wizard-header {
+                text-align: center;
+                margin-bottom: 16px;
+            }
+            .wizard-title {
+                font-size: 1.3rem;
+                font-weight: 600;
+                color: #f5f5f5;
+                margin-bottom: 4px;
+            }
+            .wizard-progress-text {
+                font-size: 0.85rem;
+                color: #888;
+            }
+            .wizard-progress-bar {
+                height: 4px;
+                background: #333;
+                border-radius: 2px;
+                margin-bottom: 20px;
+                overflow: hidden;
+            }
+            .wizard-progress-fill {
+                height: 100%;
+                background: #d4a574;
+                transition: width 0.3s ease;
+            }
+            .wizard-body {
+                color: #fff;
+                min-height: 100px;
+            }
+            .wizard-body .form-label {
+                font-size: 0.85rem;
+                color: #aaa;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                margin-bottom: 8px;
+                display: block;
+            }
+            .wizard-body .form-control {
+                background: #0a0a0a;
+                border: 1px solid #333;
+                border-radius: 8px;
+                color: #fff;
+                padding: 12px 16px;
+                font-size: 1rem;
+            }
+            .wizard-body .form-control:focus {
+                border-color: #d4a574;
+                box-shadow: 0 0 0 2px rgba(212, 165, 116, 0.2);
+                outline: none;
+            }
+            .wizard-body .mb-3 {
+                margin-bottom: 16px;
+            }
+            .wizard-buttons {
+                display: flex;
+                gap: 12px;
+                margin-top: 24px;
+            }
+            .wizard-btn {
+                flex: 1;
+                padding: 14px 20px;
+                border-radius: 8px;
+                font-weight: 600;
+                font-size: 0.95rem;
+                cursor: pointer;
+                border: none;
+                transition: all 0.2s ease;
+            }
+            .wizard-btn-primary {
+                background: #d4a574;
+                color: #000;
+            }
+            .wizard-btn-primary:hover {
+                background: #c49464;
+            }
+            .wizard-btn-secondary {
+                background: #333;
+                color: #fff;
+            }
+            .wizard-btn-secondary:hover {
+                background: #444;
+            }
+            .wizard-btn-cancel {
+                background: transparent;
+                border: 1px solid #444;
+                color: #888;
+            }
+            .wizard-btn-cancel:hover {
+                background: #222;
+                color: #fff;
+            }
+        </style>`;
         document.body.insertAdjacentHTML('beforeend', modalHtml);
     }
 
@@ -210,14 +323,17 @@ class WizardController {
     }
 
     _showModal() {
-        const modal = new bootstrap.Modal(document.getElementById(this.modalId));
-        modal.show();
+        const overlay = document.getElementById(this.modalId);
+        if (overlay) {
+            overlay.style.display = 'flex';
+        }
     }
 
     _hideModal() {
-        const modalEl = document.getElementById(this.modalId);
-        const modal = bootstrap.Modal.getInstance(modalEl);
-        if (modal) modal.hide();
+        const overlay = document.getElementById(this.modalId);
+        if (overlay) {
+            overlay.remove();
+        }
     }
 
     _complete() {
