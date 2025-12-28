@@ -171,6 +171,7 @@ from routes.api_rfid import api_rfid_bp
 from routes.leads import leads_bp
 from routes.rh import rh_bp
 from routes.maintenance import maintenance_bp
+from routes.automation_api import automation_api
 
 app.register_blueprint(auth_bp)
 app.register_blueprint(equipment_bp)
@@ -187,6 +188,7 @@ app.register_blueprint(api_rfid_bp)
 app.register_blueprint(leads_bp)
 app.register_blueprint(rh_bp)
 app.register_blueprint(maintenance_bp)
+app.register_blueprint(automation_api)
 
 @app.route('/')
 def index():
