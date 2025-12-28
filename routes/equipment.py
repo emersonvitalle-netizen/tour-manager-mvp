@@ -389,7 +389,9 @@ def update_serial(id):
 @login_required
 def send_to_maintenance(id):
     if current_user.role != 'admin':
-        flash('Apenas administradores podem enviar para manutenÃ§Ã£o.', 'danger')
+        if request.is_json:
+            return jsonify({'success': False, 'error': 'Acesso negado'}), 403
+        flash('Apenas administradores podem enviar para manutencao.', 'danger')
         return redirect(url_for('equipment.detail_equipment', id=id))
 
     equipment = Equipment.query.filter_by(
@@ -397,9 +399,15 @@ def send_to_maintenance(id):
         company_id=current_user.company_id
     ).first_or_404()
 
-    problem = request.form.get('problem_description', '').strip()
+    if request.is_json:
+        data = request.get_json()
+        problem = data.get('problem_description', '').strip()
+    else:
+        problem = request.form.get('problem_description', '').strip()
 
     if not problem:
+        if request.is_json:
+            return jsonify({'success': False, 'error': 'Descreva o problema'}), 400
         flash('Descreva o problema!', 'danger')
         return redirect(url_for('equipment.detail_equipment', id=id))
 
@@ -418,13 +426,21 @@ def send_to_maintenance(id):
     db.session.add(maintenance)
     db.session.commit()
 
-    flash('Equipamento enviado para manutenÃ§Ã£o!', 'success')
+    if request.is_json:
+        return jsonify({
+            'success': True, 
+            'message': 'Equipamento enviado para manutencao',
+            'maintenance_id': maintenance.id
+        })
+    flash('Equipamento enviado para manutencao!', 'success')
     return redirect(url_for('equipment.detail_equipment', id=id))
 
 @equipment_bp.route('/<int:id>/forward-to-external', methods=['POST'])
 @login_required
 def forward_to_external(id):
     if current_user.role != 'admin':
+        if request.is_json:
+            return jsonify({'success': False, 'error': 'Acesso negado'}), 403
         flash('Apenas administradores podem encaminhar para conserto externo.', 'danger')
         return redirect(url_for('equipment.detail_equipment', id=id))
 
@@ -433,11 +449,18 @@ def forward_to_external(id):
         company_id=current_user.company_id
     ).first_or_404()
 
-    external_company = request.form.get('external_company', '').strip()
-    external_contact = request.form.get('external_contact', '').strip()
+    if request.is_json:
+        data = request.get_json()
+        external_company = data.get('external_company', '').strip()
+        external_contact = data.get('external_contact', '').strip()
+    else:
+        external_company = request.form.get('external_company', '').strip()
+        external_contact = request.form.get('external_contact', '').strip()
 
     if not external_company:
-        flash('Informe a empresa/tÃ©cnico!', 'danger')
+        if request.is_json:
+            return jsonify({'success': False, 'error': 'Informe a empresa/tecnico'}), 400
+        flash('Informe a empresa/tecnico!', 'danger')
         return redirect(url_for('equipment.detail_equipment', id=id))
 
     maintenance = Maintenance.query.filter_by(
@@ -446,24 +469,37 @@ def forward_to_external(id):
     ).order_by(Maintenance.started_at.desc()).first()
 
     if not maintenance:
-        flash('Nenhuma manutenÃ§Ã£o ativa encontrada!', 'danger')
+        if request.is_json:
+            return jsonify({'success': False, 'error': 'Nenhuma manutencao ativa'}), 400
+        flash('Nenhuma manutencao ativa encontrada!', 'danger')
         return redirect(url_for('equipment.detail_equipment', id=id))
 
     maintenance.external_company = external_company
     maintenance.external_contact = external_contact if external_contact else None
     maintenance.status = 'external_repair'
-    equipment.status = 'external_repair'
+    equipment.status = 'in_repair'
 
     db.session.commit()
 
+    if request.is_json:
+        return jsonify({
+            'success': True,
+            'message': 'Equipamento enviado para conserto externo'
+        })
     flash('Equipamento enviado para conserto externo!', 'success')
     return redirect(url_for('equipment.detail_equipment', id=id))
 
 @equipment_bp.route('/<int:id>/complete-maintenance', methods=['POST'])
 @login_required
 def complete_maintenance(id):
+    from models.rh import AccountPayable
+    from datetime import date
+    from decimal import Decimal
+    
     if current_user.role != 'admin':
-        flash('Apenas administradores podem concluir manutenÃ§Ã£o.', 'danger')
+        if request.is_json:
+            return jsonify({'success': False, 'error': 'Acesso negado'}), 403
+        flash('Apenas administradores podem concluir manutencao.', 'danger')
         return redirect(url_for('equipment.detail_equipment', id=id))
 
     equipment = Equipment.query.filter_by(
@@ -471,8 +507,15 @@ def complete_maintenance(id):
         company_id=current_user.company_id
     ).first_or_404()
 
-    solution = request.form.get('solution_description', '').strip()
-    cost_str = request.form.get('cost', '0').strip()
+    if request.is_json:
+        data = request.get_json()
+        solution = data.get('solution_description', '').strip()
+        cost_str = str(data.get('cost', '0')).replace(',', '.')
+        maintenance_type = data.get('type', 'quick')
+    else:
+        solution = request.form.get('solution_description', '').strip()
+        cost_str = request.form.get('cost', '0').strip().replace(',', '.')
+        maintenance_type = 'quick'
 
     maintenance = Maintenance.query.filter(
         Maintenance.equipment_id == id,
@@ -480,20 +523,47 @@ def complete_maintenance(id):
     ).order_by(Maintenance.started_at.desc()).first()
 
     if not maintenance:
-        flash('Nenhuma manutenÃ§Ã£o ativa encontrada!', 'danger')
+        if request.is_json:
+            return jsonify({'success': False, 'error': 'Nenhuma manutencao ativa'}), 400
+        flash('Nenhuma manutencao ativa encontrada!', 'danger')
         return redirect(url_for('equipment.detail_equipment', id=id))
 
     maintenance.solution_description = solution if solution else None
     maintenance.status = 'completed'
-    maintenance.cost = float(cost_str) if cost_str else 0.0
+    try:
+        cost = Decimal(cost_str) if cost_str else Decimal('0')
+    except:
+        cost = Decimal('0')
+    maintenance.cost = float(cost)
     maintenance.completed_at = datetime.now()
     maintenance.completed_by = current_user.id
 
     equipment.status = 'available'
+    
+    if cost > 0:
+        expense = AccountPayable(
+            company_id=current_user.company_id,
+            description=f'Manutencao {equipment.code} - {equipment.name}',
+            category='equipamento',
+            amount=cost,
+            due_date=date.today(),
+            status='paid',
+            paid_amount=cost,
+            paid_at=datetime.now(),
+            payment_method='dinheiro',
+            created_by=current_user.id
+        )
+        db.session.add(expense)
 
     db.session.commit()
 
-    flash('ManutenÃ§Ã£o concluÃ­da! Equipamento liberado.', 'success')
+    if request.is_json:
+        return jsonify({
+            'success': True,
+            'message': 'Manutencao concluida! Equipamento liberado.',
+            'cost_registered': cost > 0
+        })
+    flash('Manutencao concluida! Equipamento liberado.', 'success')
     return redirect(url_for('equipment.detail_equipment', id=id))
 
 @equipment_bp.route('/print-qr')
