@@ -172,16 +172,51 @@ def new_equipment():
         purchase_date_str = request.form.get('purchase_date', '').strip()
         purchase_date = datetime.strptime(purchase_date_str, '%Y-%m-%d').date() if purchase_date_str else None
 
-        # Processar foto compartilhada (antes do loop)
+        # Sistema automatico de foto compartilhada por marca+modelo
         photo_url = None
-        if 'photo' in request.files:
+        selected_model_id = None
+        
+        if brand and model:
+            existing_model = EquipmentModel.query.filter_by(
+                company_id=current_user.company_id,
+                brand=brand,
+                model=model,
+                is_active=True
+            ).first()
+            
+            if existing_model and existing_model.photo_url:
+                photo_url = existing_model.photo_url
+                selected_model_id = existing_model.id
+            elif 'photo' in request.files:
+                file = request.files['photo']
+                if file and file.filename and allowed_file(file.filename):
+                    filename = secure_filename(f"{brand}_{model}_{file.filename}")
+                    upload_folder = os.path.join('static', 'uploads', 'models')
+                    os.makedirs(upload_folder, exist_ok=True)
+                    filepath = os.path.join(upload_folder, filename)
+                    file.save(filepath)
+                    photo_url = f"/{filepath}"
+                    
+                    if not existing_model:
+                        new_model = EquipmentModel(
+                            company_id=current_user.company_id,
+                            brand=brand,
+                            model=model,
+                            photo_url=photo_url,
+                            is_active=True
+                        )
+                        db.session.add(new_model)
+                        db.session.flush()
+                        selected_model_id = new_model.id
+                    else:
+                        existing_model.photo_url = photo_url
+                        selected_model_id = existing_model.id
+        elif 'photo' in request.files:
             file = request.files['photo']
             if file and file.filename and allowed_file(file.filename):
-                # Gerar prefixo para nome do arquivo
                 temp_prefix = custom_prefix if custom_prefix else ''.join([c for c in name if c.isupper()])[:3]
                 if not temp_prefix:
                     temp_prefix = name[:3].upper()
-
                 filename = secure_filename(f"{temp_prefix}_shared_{file.filename}")
                 filepath = os.path.join('static', 'uploads', filename)
                 os.makedirs('static/uploads', exist_ok=True)
