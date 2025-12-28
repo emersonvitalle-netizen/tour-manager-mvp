@@ -362,7 +362,7 @@
         {% endif %}
 
         {% if user_permissions.can_separation %}
-        <a href="{{ url_for('work_list.index') }}" class="module-card card-separacao">
+        <a href="{{ url_for('work_list.list_work_lists') }}" class="module-card card-separacao">
             <div class="card-icon"><i class="fas fa-clipboard-list"></i></div>
             <h3>SEPARACAO</h3>
             <p>Listas de Trabalho</p>
@@ -379,7 +379,7 @@
     </div>
 
     {% if user_permissions.can_scanner %}
-    <div class="scanner-fab" onclick="window.location.href='{{ url_for('scanner.index') }}'">
+    <div class="scanner-fab" onclick="window.location.href='{{ url_for('scanner.nfc') }}'">
         <i class="fas fa-qrcode"></i>
     </div>
     {% endif %}
