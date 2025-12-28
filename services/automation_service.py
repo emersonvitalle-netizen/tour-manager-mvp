@@ -266,15 +266,23 @@ class AutomationService:
     def create_contract_from_quote(quote_id, company_id, user_id):
         from models.financial import Contract
         from models.separation_list import SeparationList
+        from datetime import date
         
         sep_list = SeparationList.query.filter_by(id=quote_id, company_id=company_id).first()
         if not sep_list:
             return {'success': False, 'message': 'Orçamento não encontrado'}
         
+        existing = Contract.query.filter_by(company_id=company_id).count()
+        code = f"CTR-{company_id}-{date.today().year}-{existing + 1:04d}"
+        
         contract = Contract(
+            code=code,
             company_id=company_id,
+            client_name=sep_list.client_name or 'Cliente',
             title=f"Contrato - {sep_list.name}",
-            value=sep_list.calculated_total or sep_list.total_value or 0,
+            total_value=sep_list.calculated_total or sep_list.total_value or 0,
+            start_date=sep_list.event_date or date.today(),
+            end_date=sep_list.event_date or date.today(),
             status='draft',
             created_by=user_id
         )
@@ -488,7 +496,7 @@ class AutomationService:
         for item in sep_list.items:
             work_item = WorkListItem(
                 work_list_id=work_list.id,
-                item_name=item.description,
+                item_name=item.item_name or item.item_description or 'Item',
                 quantity=item.quantity,
                 separated=False
             )
