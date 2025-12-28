@@ -112,6 +112,8 @@ def list_equipment():
 @equipment_bp.route('/<int:id>')
 @login_required
 def detail_equipment(id):
+    from models.tour import TourEquipment, Show, Tour
+    
     equipment = Equipment.query.filter_by(
         id=id,
         company_id=current_user.company_id
@@ -120,10 +122,23 @@ def detail_equipment(id):
     maintenances = Maintenance.query.filter_by(
         equipment_id=id
     ).order_by(Maintenance.created_at.desc()).all()
+    
+    usage_history = db.session.query(
+        TourEquipment, Tour, Show
+    ).join(
+        Tour, TourEquipment.tour_id == Tour.id
+    ).outerjoin(
+        Show, Show.tour_id == Tour.id
+    ).filter(
+        TourEquipment.equipment_id == id
+    ).order_by(
+        TourEquipment.allocated_at.desc()
+    ).limit(30).all()
 
     return render_template('equipment/detail.html', 
                          equipment=equipment,
-                         maintenances=maintenances)
+                         maintenances=maintenances,
+                         usage_history=usage_history)
 
 @equipment_bp.route('/new', methods=['GET', 'POST'])
 @login_required
