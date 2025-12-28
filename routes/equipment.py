@@ -148,6 +148,8 @@ def new_equipment():
         return redirect(url_for('equipment.index'))
 
     if request.method == 'POST':
+        from models.equipment_model import EquipmentModel
+        
         name = request.form.get('name')
         quantity = int(request.form.get('quantity', 1))
         custom_prefix = request.form.get('custom_prefix', '').strip().upper()
@@ -155,6 +157,8 @@ def new_equipment():
         category_id = request.form.get('category_id')
         type_id = request.form.get('type_id')
         custom_type_name = request.form.get('custom_type_name', '').strip()
+        
+        equipment_model_id = request.form.get('equipment_model_id')
 
         brand = request.form.get('brand', '').strip()
         model = request.form.get('model', '').strip()
@@ -233,13 +237,14 @@ def new_equipment():
                 prefix=prefix,
                 category_id=int(category_id) if category_id else None,
                 type_id=final_type_id,
+                model_id=int(equipment_model_id) if equipment_model_id else None,
                 brand=brand if brand else None,
                 model=model if model else None,
                 serial_number=serial_number if serial_number else None,
                 notes=notes if notes else None,
                 value=value,
                 purchase_date=purchase_date,
-                primary_photo_url=photo_url,
+                primary_photo_url=photo_url if not equipment_model_id else None,
                 status='available',
                 company_id=current_user.company_id,
                 created_by=current_user.id,
@@ -258,6 +263,8 @@ def new_equipment():
         flash(f'{quantity} equipamento(s) cadastrado(s): {", ".join(created)}', 'success')
         return redirect(url_for('equipment.index'))
 
+    from models.equipment_model import EquipmentModel
+    
     prefilled_category_id = request.args.get('category_id', type=int)
     prefilled_category = None
 
@@ -271,10 +278,16 @@ def new_equipment():
         company_id=current_user.company_id,
         is_active=True
     ).order_by(Category.name).all()
+    
+    equipment_models = EquipmentModel.query.filter_by(
+        company_id=current_user.company_id,
+        is_active=True
+    ).order_by(EquipmentModel.brand, EquipmentModel.model).all()
 
     return render_template('equipment/new.html', 
                           categories=categories,
-                          prefilled_category=prefilled_category)
+                          prefilled_category=prefilled_category,
+                          equipment_models=equipment_models)
 
 @equipment_bp.route('/get-types/<int:category_id>')
 @login_required

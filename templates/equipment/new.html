@@ -49,18 +49,37 @@
                    placeholder="EX: MESA DE SOM BEHRINGER X32">
         </div>
 
-        <div style="margin-bottom: 20px;">
-            <label style="display: block; margin-bottom: 8px; font-weight: bold; color: #333; font-size: 14px; text-transform: uppercase;">MARCA</label>
-            <input type="text" name="brand"
-                   style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 16px; text-transform: uppercase;"
-                   placeholder="EX: BEHRINGER, SHURE, MARTIN">
+        <div style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; border: 2px dashed #d4a574;">
+            <label style="display: block; margin-bottom: 8px; font-weight: bold; color: #333; font-size: 14px; text-transform: uppercase;">MODELO CADASTRADO (FOTO COMPARTILHADA)</label>
+            <select name="equipment_model_id" id="model-select" onchange="onModelSelect()"
+                    style="width: 100%; padding: 12px; border: 1px solid #d4a574; border-radius: 5px; font-size: 16px; background: white;">
+                <option value="">NENHUM - INFORMAR MARCA/MODELO MANUALMENTE</option>
+                {% for m in equipment_models %}
+                <option value="{{ m.id }}" data-brand="{{ m.brand }}" data-model="{{ m.model }}" data-photo="{{ m.photo_url or '' }}">
+                    {{ m.brand }} {{ m.model }}
+                </option>
+                {% endfor %}
+            </select>
+            <small style="color: #666; font-size: 12px;">SELECIONE UM MODELO PARA USAR A FOTO COMPARTILHADA (ECONOMIZA ESPACO)</small>
+            <div id="model-preview" style="margin-top: 10px; display: none;">
+                <img id="model-photo-preview" src="" style="max-height: 80px; border-radius: 5px;">
+            </div>
         </div>
 
-        <div style="margin-bottom: 20px;">
-            <label style="display: block; margin-bottom: 8px; font-weight: bold; color: #333; font-size: 14px; text-transform: uppercase;">MODELO</label>
-            <input type="text" name="model"
-                   style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 16px; text-transform: uppercase;"
-                   placeholder="EX: X32, SM58, MAC QUANTUM">
+        <div id="manual-brand-model">
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px; font-weight: bold; color: #333; font-size: 14px; text-transform: uppercase;">MARCA</label>
+                <input type="text" name="brand" id="brand-input"
+                       style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 16px; text-transform: uppercase;"
+                       placeholder="EX: BEHRINGER, SHURE, MARTIN">
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px; font-weight: bold; color: #333; font-size: 14px; text-transform: uppercase;">MODELO</label>
+                <input type="text" name="model" id="model-input"
+                       style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 16px; text-transform: uppercase;"
+                       placeholder="EX: X32, SM58, MAC QUANTUM">
+            </div>
         </div>
 
         <div style="margin-bottom: 20px;">
@@ -186,6 +205,35 @@ function checkCustomType() {
         customField.style.display = 'none';
         customInput.required = false;
         typeSelect.setAttribute('required', 'required');
+    }
+}
+
+function onModelSelect() {
+    const select = document.getElementById('model-select');
+    const option = select.options[select.selectedIndex];
+    const manualDiv = document.getElementById('manual-brand-model');
+    const photoDiv = document.getElementById('photo-upload-div');
+    const preview = document.getElementById('model-preview');
+    const previewImg = document.getElementById('model-photo-preview');
+    
+    if (select.value) {
+        document.getElementById('brand-input').value = option.dataset.brand || '';
+        document.getElementById('model-input').value = option.dataset.model || '';
+        manualDiv.style.opacity = '0.5';
+        manualDiv.querySelectorAll('input').forEach(i => i.readOnly = true);
+        
+        if (option.dataset.photo) {
+            preview.style.display = 'block';
+            previewImg.src = option.dataset.photo;
+        } else {
+            preview.style.display = 'none';
+        }
+    } else {
+        document.getElementById('brand-input').value = '';
+        document.getElementById('model-input').value = '';
+        manualDiv.style.opacity = '1';
+        manualDiv.querySelectorAll('input').forEach(i => i.readOnly = false);
+        preview.style.display = 'none';
     }
 }
 </script>
