@@ -1,4 +1,4 @@
-"""Rotas do módulo financeiro - apenas admin"""
+"""Rotas do mÃ³dulo financeiro - apenas admin"""
 from flask import Blueprint, render_template, redirect, url_for, request, flash, jsonify
 from flask_login import login_required, current_user
 from extensions import db
@@ -24,7 +24,7 @@ def admin_required(f):
 
 
 def generate_code(prefix: str) -> str:
-    """Gera código sequencial para documentos (inclui company_id para unicidade global)"""
+    """Gera cÃ³digo sequencial para documentos (inclui company_id para unicidade global)"""
     year = datetime.now().year
     company_id = current_user.company_id
     code_prefix = f'{prefix}-{company_id}-{year}'
@@ -60,56 +60,186 @@ def generate_code(prefix: str) -> str:
 @login_required
 @admin_required
 def index():
-    """Dashboard financeiro"""
+    """Dashboard financeiro com dados REAIS"""
+    from models.rh import AccountReceivable, AccountPayable, PayrollEntry, FreelancerPayment
+
+    company_id = current_user.company_id
+    hoje = date.today()
+    mes_atual = hoje.replace(day=1)
+    mes_fim = (mes_atual + timedelta(days=32)).replace(day=1)
+
+    # ========== FATURAMENTO MÊS ==========
+    faturamento_mes = float(db.session.query(func.sum(AccountReceivable.received_amount)).filter(
+        AccountReceivable.company_id == company_id,
+        AccountReceivable.status == 'received',
+        func.date(AccountReceivable.received_at) >= mes_atual,
+        func.date(AccountReceivable.received_at) < mes_fim
+    ).scalar() or 0)
+
+    # ========== DESPESAS MÊS ==========
+    despesas_folha = float(db.session.query(func.sum(PayrollEntry.net_salary)).filter(
+        PayrollEntry.company_id == company_id,
+        PayrollEntry.reference_month == hoje.month,
+        PayrollEntry.reference_year == hoje.year
+    ).scalar() or 0)
+
+    despesas_contas = float(db.session.query(func.sum(AccountPayable.paid_amount)).filter(
+        AccountPayable.company_id == company_id,
+        AccountPayable.status == 'paid',
+        func.date(AccountPayable.paid_at) >= mes_atual,
+        func.date(AccountPayable.paid_at) < mes_fim
+    ).scalar() or 0)
+
+    despesas_freelancers = float(db.session.query(func.sum(FreelancerPayment.amount)).filter(
+        FreelancerPayment.company_id == company_id,
+        FreelancerPayment.status == 'paid',
+        func.date(FreelancerPayment.paid_at) >= mes_atual,
+        func.date(FreelancerPayment.paid_at) < mes_fim
+    ).scalar() or 0)
+
+    despesas_mes = despesas_folha + despesas_contas + despesas_freelancers
+
+    # ========== LUCRO E MARGEM ==========
+    lucro_mes = faturamento_mes - despesas_mes
+    margem = round((lucro_mes / faturamento_mes * 100), 1) if faturamento_mes > 0 else 0
+
+    # ========== CONTAS A VENCER (7 DIAS) ==========
+    sete_dias = hoje + timedelta(days=7)
+
+    contas_vencer = AccountPayable.query.filter(
+        AccountPayable.company_id == company_id,
+        AccountPayable.status == 'pending',
+        AccountPayable.due_date >= hoje,
+        AccountPayable.due_date <= sete_dias
+    ).order_by(AccountPayable.due_date).all()
+
+    pending_accounts = []
+    for conta in contas_vencer:
+        dias_restantes = (conta.due_date - hoje).days
+
+        if dias_restantes <= 2:
+            badge = 'URGENTE'
+            badge_class = 'urgent'
+        elif dias_restantes <= 5:
+            badge = 'ATENÇÃO'
+            badge_class = 'warning'
+        else:
+            badge = 'OK'
+            badge_class = 'ok'
+
+        pending_accounts.append({
+            'description': conta.description,
+            'amount': float(conta.amount),
+            'due_date': conta.due_date,
+            'days_left': dias_restantes,
+            'badge': badge,
+            'badge_class': badge_class
+        })
+
+    # ========== FLUXO DE CAIXA (6 MESES) ==========
+    fluxo_labels = []
+    fluxo_receitas = []
+    fluxo_despesas = []
+
+    for i in range(5, -1, -1):
+        mes = (mes_atual - timedelta(days=30*i)).replace(day=1)
+        mes_prox = (mes + timedelta(days=32)).replace(day=1)
+        fluxo_labels.append(mes.strftime('%b/%y'))
+
+        rec = float(db.session.query(func.sum(AccountReceivable.received_amount)).filter(
+            AccountReceivable.company_id == company_id,
+            AccountReceivable.status == 'received',
+            func.date(AccountReceivable.received_at) >= mes,
+            func.date(AccountReceivable.received_at) < mes_prox
+        ).scalar() or 0)
+        fluxo_receitas.append(rec)
+
+        desp_f = float(db.session.query(func.sum(PayrollEntry.net_salary)).filter(
+            PayrollEntry.company_id == company_id,
+            PayrollEntry.reference_month == mes.month,
+            PayrollEntry.reference_year == mes.year
+        ).scalar() or 0)
+
+        desp_c = float(db.session.query(func.sum(AccountPayable.paid_amount)).filter(
+            AccountPayable.company_id == company_id,
+            AccountPayable.status == 'paid',
+            func.date(AccountPayable.paid_at) >= mes,
+            func.date(AccountPayable.paid_at) < mes_prox
+        ).scalar() or 0)
+
+        desp_fl = float(db.session.query(func.sum(FreelancerPayment.amount)).filter(
+            FreelancerPayment.company_id == company_id,
+            FreelancerPayment.status == 'paid',
+            func.date(FreelancerPayment.paid_at) >= mes,
+            func.date(FreelancerPayment.paid_at) < mes_prox
+        ).scalar() or 0)
+
+        fluxo_despesas.append(desp_f + desp_c + desp_fl)
+
+    # ========== MÉTRICAS AUXILIARES ==========
     quotes_pending = Quote.query.filter_by(
-        company_id=current_user.company_id,
+        company_id=company_id,
         status='sent',
         is_active=True
     ).count()
 
     invoices_pending = Invoice.query.filter_by(
-        company_id=current_user.company_id,
+        company_id=company_id,
         status='pending',
         is_active=True
     ).count()
 
     invoices_overdue = Invoice.query.filter(
-        Invoice.company_id == current_user.company_id,
+        Invoice.company_id == company_id,
         Invoice.status == 'pending',
-        Invoice.due_date < date.today(),
+        Invoice.due_date < hoje,
         Invoice.is_active == True
     ).count()
 
     contracts_active = Contract.query.filter_by(
-        company_id=current_user.company_id,
+        company_id=company_id,
         status='active',
         is_active=True
     ).count()
 
     recent_quotes = Quote.query.filter_by(
-        company_id=current_user.company_id,
+        company_id=company_id,
         is_active=True
     ).order_by(Quote.created_at.desc()).limit(5).all()
 
     recent_invoices = Invoice.query.filter_by(
-        company_id=current_user.company_id,
+        company_id=company_id,
         is_active=True
     ).order_by(Invoice.created_at.desc()).limit(5).all()
 
     return render_template('financial/index.html',
+                          # KPIs principais
+                          faturamento_mes=faturamento_mes,
+                          despesas_mes=despesas_mes,
+                          lucro_mes=lucro_mes,
+                          margem=margem,
+                          # Contas a vencer
+                          pending_accounts=pending_accounts,
+                          # Fluxo de caixa
+                          fluxo_labels=fluxo_labels,
+                          fluxo_receitas=fluxo_receitas,
+                          fluxo_despesas=fluxo_despesas,
+                          # Métricas auxiliares
                           quotes_pending=quotes_pending,
                           invoices_pending=invoices_pending,
                           invoices_overdue=invoices_overdue,
                           contracts_active=contracts_active,
                           recent_quotes=recent_quotes,
-                          recent_invoices=recent_invoices)
+                          recent_invoices=recent_invoices,
+                          # Helper para template
+                          date=date)
 
 
 @financial_bp.route('/quotes')
 @login_required
 @admin_required
 def quotes():
-    """Lista de orçamentos"""
+    """Lista de orÃ§amentos"""
     status = request.args.get('status', 'all')
 
     query = Quote.query.filter_by(
@@ -129,7 +259,7 @@ def quotes():
 @login_required
 @admin_required
 def new_quote():
-    """Criar novo orçamento"""
+    """Criar novo orÃ§amento"""
     if request.method == 'POST':
         quote = Quote(
             code=generate_code('ORC'),
@@ -155,7 +285,7 @@ def new_quote():
         db.session.add(quote)
         db.session.commit()
 
-        flash('Orçamento criado! Adicione os itens.', 'success')
+        flash('OrÃ§amento criado! Adicione os itens.', 'success')
         return redirect(url_for('financial.edit_quote', id=quote.id))
 
     tours = Tour.query.filter_by(
@@ -170,7 +300,7 @@ def new_quote():
 @login_required
 @admin_required
 def view_quote(id):
-    """Visualizar orçamento"""
+    """Visualizar orÃ§amento"""
     quote = Quote.query.filter_by(
         id=id,
         company_id=current_user.company_id
@@ -183,7 +313,7 @@ def view_quote(id):
 @login_required
 @admin_required
 def edit_quote(id):
-    """Editar orçamento"""
+    """Editar orÃ§amento"""
     quote = Quote.query.filter_by(
         id=id,
         company_id=current_user.company_id
@@ -208,7 +338,7 @@ def edit_quote(id):
         recalculate_quote_totals(quote)
 
         db.session.commit()
-        flash('Orçamento atualizado!', 'success')
+        flash('OrÃ§amento atualizado!', 'success')
         return redirect(url_for('financial.view_quote', id=quote.id))
 
     tours = Tour.query.filter_by(
@@ -223,7 +353,7 @@ def edit_quote(id):
 @login_required
 @admin_required
 def add_quote_item(id):
-    """Adicionar item ao orçamento"""
+    """Adicionar item ao orÃ§amento"""
     quote = Quote.query.filter_by(
         id=id,
         company_id=current_user.company_id
@@ -249,7 +379,7 @@ def add_quote_item(id):
 @login_required
 @admin_required
 def delete_quote_item(id, item_id):
-    """Remover item do orçamento"""
+    """Remover item do orÃ§amento"""
     quote = Quote.query.filter_by(
         id=id,
         company_id=current_user.company_id
@@ -268,7 +398,7 @@ def delete_quote_item(id, item_id):
 @login_required
 @admin_required
 def send_quote(id):
-    """Marcar orçamento como enviado"""
+    """Marcar orÃ§amento como enviado"""
     quote = Quote.query.filter_by(
         id=id,
         company_id=current_user.company_id
@@ -277,7 +407,7 @@ def send_quote(id):
     quote.status = 'sent'
     db.session.commit()
 
-    flash('Orçamento marcado como enviado!', 'success')
+    flash('OrÃ§amento marcado como enviado!', 'success')
     return redirect(url_for('financial.view_quote', id=quote.id))
 
 
@@ -285,7 +415,7 @@ def send_quote(id):
 @login_required
 @admin_required
 def approve_quote(id):
-    """Aprovar orçamento"""
+    """Aprovar orÃ§amento"""
     quote = Quote.query.filter_by(
         id=id,
         company_id=current_user.company_id
@@ -296,7 +426,7 @@ def approve_quote(id):
     quote.approved_by = current_user.id
     db.session.commit()
 
-    flash('Orçamento aprovado!', 'success')
+    flash('OrÃ§amento aprovado!', 'success')
     return redirect(url_for('financial.view_quote', id=quote.id))
 
 
@@ -403,7 +533,7 @@ def contract_delete(contract_id):
     contract.is_active = False
     db.session.commit()
 
-    flash('Contrato excluído.', 'warning')
+    flash('Contrato excluÃ­do.', 'warning')
     return redirect(url_for('financial.contracts'))
 
 
@@ -549,7 +679,7 @@ def register_payment(id):
 
 
 def recalculate_quote_totals(quote):
-    """Recalcula totais do orçamento"""
+    """Recalcula totais do orÃ§amento"""
     subtotal = sum(item.total for item in quote.items)
     quote.subtotal = subtotal
     quote.discount_value = subtotal * (quote.discount_percent or 0) / 100
@@ -734,7 +864,7 @@ def contas_pagar():
         func.strftime('%Y-%m', AccountPayable.due_date) == current_month
     ).scalar() or 0
 
-    # ✅ LISTA EXPANDIDA DE CATEGORIAS (24 categorias)
+    # âœ… LISTA EXPANDIDA DE CATEGORIAS (24 categorias)
     categorias = [
         'folha_clt', 'freelancers', 'manutencao',
         'aluguel', 'energia', 'agua', 'telefone', 'internet',
@@ -810,7 +940,7 @@ def nova_conta_pagar():
             db.session.rollback()
             flash(f'Erro ao salvar: {str(e)}', 'danger')
 
-    # ✅ LISTA EXPANDIDA DE CATEGORIAS (24 categorias)
+    # âœ… LISTA EXPANDIDA DE CATEGORIAS (24 categorias)
     categorias = [
         'folha_clt', 'freelancers', 'manutencao',
         'aluguel', 'energia', 'agua', 'telefone', 'internet',
@@ -859,7 +989,7 @@ def editar_conta_pagar(id):
             db.session.rollback()
             flash(f'Erro ao salvar: {str(e)}', 'danger')
 
-    # ✅ LISTA EXPANDIDA DE CATEGORIAS (24 categorias)
+    # âœ… LISTA EXPANDIDA DE CATEGORIAS (24 categorias)
     categorias = [
         'folha_clt', 'freelancers', 'manutencao',
         'aluguel', 'energia', 'agua', 'telefone', 'internet',
@@ -1304,3 +1434,167 @@ def excluir_cliente(id):
 
     flash('Cliente removido.', 'warning')
     return redirect(url_for('financial.clientes'))
+
+
+@financial_bp.route('/api/fluxo-caixa')
+@login_required
+@admin_required
+def api_fluxo_caixa():
+    """API para fluxo de caixa com período customizado"""
+    from models.rh import AccountReceivable, AccountPayable, PayrollEntry, FreelancerPayment
+
+    company_id = current_user.company_id
+    periodo = request.args.get('periodo', 'mensal')
+
+    labels = []
+    receitas = []
+    despesas = []
+    hoje = date.today()
+
+    if periodo == 'diario':
+        # Últimos 30 dias
+        for i in range(29, -1, -1):
+            dia = hoje - timedelta(days=i)
+            dia_prox = dia + timedelta(days=1)
+            labels.append(dia.strftime('%d/%m'))
+
+            rec = float(db.session.query(func.sum(AccountReceivable.received_amount)).filter(
+                AccountReceivable.company_id == company_id,
+                AccountReceivable.status == 'received',
+                func.date(AccountReceivable.received_at) >= dia,
+                func.date(AccountReceivable.received_at) < dia_prox
+            ).scalar() or 0)
+            receitas.append(rec)
+
+            desp_c = float(db.session.query(func.sum(AccountPayable.paid_amount)).filter(
+                AccountPayable.company_id == company_id,
+                AccountPayable.status == 'paid',
+                func.date(AccountPayable.paid_at) >= dia,
+                func.date(AccountPayable.paid_at) < dia_prox
+            ).scalar() or 0)
+
+            desp_fl = float(db.session.query(func.sum(FreelancerPayment.amount)).filter(
+                FreelancerPayment.company_id == company_id,
+                FreelancerPayment.status == 'paid',
+                func.date(FreelancerPayment.paid_at) >= dia,
+                func.date(FreelancerPayment.paid_at) < dia_prox
+            ).scalar() or 0)
+
+            despesas.append(desp_c + desp_fl)
+
+    elif periodo == 'semanal':
+        # Últimas 12 semanas
+        for i in range(11, -1, -1):
+            semana_inicio = hoje - timedelta(days=hoje.weekday()) - timedelta(weeks=i)
+            semana_fim = semana_inicio + timedelta(days=7)
+            labels.append(f"{semana_inicio.strftime('%d/%m')} - {semana_fim.strftime('%d/%m')}")
+
+            rec = float(db.session.query(func.sum(AccountReceivable.received_amount)).filter(
+                AccountReceivable.company_id == company_id,
+                AccountReceivable.status == 'received',
+                func.date(AccountReceivable.received_at) >= semana_inicio,
+                func.date(AccountReceivable.received_at) < semana_fim
+            ).scalar() or 0)
+            receitas.append(rec)
+
+            desp_c = float(db.session.query(func.sum(AccountPayable.paid_amount)).filter(
+                AccountPayable.company_id == company_id,
+                AccountPayable.status == 'paid',
+                func.date(AccountPayable.paid_at) >= semana_inicio,
+                func.date(AccountPayable.paid_at) < semana_fim
+            ).scalar() or 0)
+
+            desp_fl = float(db.session.query(func.sum(FreelancerPayment.amount)).filter(
+                FreelancerPayment.company_id == company_id,
+                FreelancerPayment.status == 'paid',
+                func.date(FreelancerPayment.paid_at) >= semana_inicio,
+                func.date(FreelancerPayment.paid_at) < semana_fim
+            ).scalar() or 0)
+
+            despesas.append(desp_c + desp_fl)
+
+    elif periodo == 'mensal':
+        # Últimos 12 meses
+        mes_atual = hoje.replace(day=1)
+        for i in range(11, -1, -1):
+            mes = (mes_atual - timedelta(days=30*i)).replace(day=1)
+            mes_prox = (mes + timedelta(days=32)).replace(day=1)
+            labels.append(mes.strftime('%b/%y'))
+
+            rec = float(db.session.query(func.sum(AccountReceivable.received_amount)).filter(
+                AccountReceivable.company_id == company_id,
+                AccountReceivable.status == 'received',
+                func.date(AccountReceivable.received_at) >= mes,
+                func.date(AccountReceivable.received_at) < mes_prox
+            ).scalar() or 0)
+            receitas.append(rec)
+
+            desp_f = float(db.session.query(func.sum(PayrollEntry.net_salary)).filter(
+                PayrollEntry.company_id == company_id,
+                PayrollEntry.reference_month == mes.month,
+                PayrollEntry.reference_year == mes.year
+            ).scalar() or 0)
+
+            desp_c = float(db.session.query(func.sum(AccountPayable.paid_amount)).filter(
+                AccountPayable.company_id == company_id,
+                AccountPayable.status == 'paid',
+                func.date(AccountPayable.paid_at) >= mes,
+                func.date(AccountPayable.paid_at) < mes_prox
+            ).scalar() or 0)
+
+            desp_fl = float(db.session.query(func.sum(FreelancerPayment.amount)).filter(
+                FreelancerPayment.company_id == company_id,
+                FreelancerPayment.status == 'paid',
+                func.date(FreelancerPayment.paid_at) >= mes,
+                func.date(FreelancerPayment.paid_at) < mes_prox
+            ).scalar() or 0)
+
+            despesas.append(desp_f + desp_c + desp_fl)
+
+    elif periodo == 'anual':
+        # Últimos 5 anos
+        ano_atual = hoje.year
+        for i in range(4, -1, -1):
+            ano = ano_atual - i
+            ano_inicio = date(ano, 1, 1)
+            ano_fim = date(ano + 1, 1, 1)
+            labels.append(str(ano))
+
+            rec = float(db.session.query(func.sum(AccountReceivable.received_amount)).filter(
+                AccountReceivable.company_id == company_id,
+                AccountReceivable.status == 'received',
+                func.date(AccountReceivable.received_at) >= ano_inicio,
+                func.date(AccountReceivable.received_at) < ano_fim
+            ).scalar() or 0)
+            receitas.append(rec)
+
+            desp_f = 0
+            for mes_num in range(1, 13):
+                desp_f += float(db.session.query(func.sum(PayrollEntry.net_salary)).filter(
+                    PayrollEntry.company_id == company_id,
+                    PayrollEntry.reference_month == mes_num,
+                    PayrollEntry.reference_year == ano
+                ).scalar() or 0)
+
+            desp_c = float(db.session.query(func.sum(AccountPayable.paid_amount)).filter(
+                AccountPayable.company_id == company_id,
+                AccountPayable.status == 'paid',
+                func.date(AccountPayable.paid_at) >= ano_inicio,
+                func.date(AccountPayable.paid_at) < ano_fim
+            ).scalar() or 0)
+
+            desp_fl = float(db.session.query(func.sum(FreelancerPayment.amount)).filter(
+                FreelancerPayment.company_id == company_id,
+                FreelancerPayment.status == 'paid',
+                func.date(FreelancerPayment.paid_at) >= ano_inicio,
+                func.date(FreelancerPayment.paid_at) < ano_fim
+            ).scalar() or 0)
+
+            despesas.append(desp_f + desp_c + desp_fl)
+
+    return jsonify({
+        'periodo': periodo,
+        'labels': labels,
+        'receitas': receitas,
+        'despesas': despesas
+    })
