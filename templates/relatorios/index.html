@@ -1,38 +1,34 @@
-{% extends “base.html” %}
+{% extends "base.html" %}
 
 {% block title %}Relatórios Visuais{% endblock %}
 
 {% block extra_css %}
-
 <style>
+    * { box-sizing: border-box; }
+
     .page-container {
         padding: 0;
         min-height: 100vh;
-        padding-bottom: calc(var(--bottom-nav-height) + var(--spacing-md));
-        background: var(--black-deep);
+        padding-bottom: calc(var(--bottom-nav-height, 60px) + 16px);
+        background: #0a0a0a;
     }
 
     .page-header {
         background: linear-gradient(135deg, rgba(212, 165, 116, 0.3) 0%, rgba(26, 26, 26, 0.95) 100%);
-        padding: var(--spacing-lg) var(--spacing-md);
+        padding: 20px 16px;
         border-bottom: 1px solid #2a2a2a;
     }
 
     .header-content {
         display: flex;
         align-items: center;
-        gap: var(--spacing-md);
+        gap: 16px;
     }
 
     .back-button {
-        color: var(--gold);
+        color: #d4a574;
         font-size: 1.5rem;
         text-decoration: none;
-        transition: transform 0.2s ease;
-    }
-
-    .back-button:hover {
-        transform: translateX(-4px);
     }
 
     .header-title {
@@ -40,37 +36,28 @@
         font-weight: 700;
         color: #f5f5f5;
         text-transform: uppercase;
-        letter-spacing: 1px;
     }
 
-    /* Tabs */
     .tabs-container {
         display: flex;
         background: #1a1a1a;
         border-bottom: 2px solid #2a2a2a;
         overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
     }
 
     .tab {
         flex: 1;
-        min-width: 120px;
-        padding: 14px 16px;
+        min-width: 100px;
+        padding: 14px 12px;
         background: transparent;
         border: none;
         color: #888;
-        font-size: 0.85rem;
+        font-size: 0.8rem;
         font-weight: 600;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
         cursor: pointer;
-        transition: all 0.3s ease;
         border-bottom: 3px solid transparent;
-    }
-
-    .tab:hover {
-        color: #d4a574;
-        background: rgba(212, 165, 116, 0.05);
+        white-space: nowrap;
     }
 
     .tab.active {
@@ -79,59 +66,42 @@
         background: rgba(212, 165, 116, 0.1);
     }
 
-    /* Métricas */
     .metrics-grid {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
-        gap: 12px;
+        gap: 10px;
         padding: 16px;
     }
 
     @media (min-width: 768px) {
-        .metrics-grid {
-            grid-template-columns: repeat(3, 1fr);
-        }
+        .metrics-grid { grid-template-columns: repeat(3, 1fr); }
     }
 
     @media (min-width: 1024px) {
-        .metrics-grid {
-            grid-template-columns: repeat(6, 1fr);
-        }
+        .metrics-grid { grid-template-columns: repeat(6, 1fr); }
     }
 
     .metric-card {
         background: #1a1a1a;
         border: 1px solid #2a2a2a;
         border-radius: 12px;
-        padding: 16px;
+        padding: 14px;
         text-align: center;
     }
 
     .metric-label {
-        font-size: 0.75rem;
+        font-size: 0.7rem;
         color: #888;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
-        margin-bottom: 8px;
+        margin-bottom: 6px;
     }
 
     .metric-value {
-        font-size: 1.8rem;
+        font-size: 1.6rem;
         font-weight: 700;
         color: #f5f5f5;
-        margin-bottom: 4px;
     }
 
-    .metric-change {
-        font-size: 0.7rem;
-        color: #2ecc71;
-    }
-
-    .metric-change.negative {
-        color: #e74c3c;
-    }
-
-    /* KPI Grid */
     .kpi-grid {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
@@ -139,180 +109,97 @@
         padding: 0 16px 16px;
     }
 
+    @media (min-width: 480px) {
+        .kpi-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+
     @media (min-width: 768px) {
-        .kpi-grid {
-            grid-template-columns: repeat(4, 1fr);
-        }
+        .kpi-grid { grid-template-columns: repeat(4, 1fr); }
     }
 
     @media (min-width: 1024px) {
-        .kpi-grid {
-            grid-template-columns: repeat(7, 1fr);
-        }
+        .kpi-grid { grid-template-columns: repeat(7, 1fr); }
     }
 
     .kpi-card {
         background: linear-gradient(135deg, #1a1a1a 0%, #252525 100%);
         border: 1px solid #2a2a2a;
         border-radius: 10px;
-        padding: 12px;
+        padding: 12px 8px;
         text-align: center;
     }
 
-    .kpi-icon {
-        font-size: 1.5rem;
-        margin-bottom: 6px;
-    }
+    .kpi-icon { font-size: 1.4rem; margin-bottom: 4px; }
+    .kpi-value { font-size: 1.2rem; font-weight: 700; color: #f5f5f5; }
+    .kpi-label { font-size: 0.65rem; color: #888; text-transform: uppercase; }
 
-    .kpi-value {
-        font-size: 1.3rem;
-        font-weight: 700;
-        color: #f5f5f5;
-        margin-bottom: 2px;
-    }
+    .tab-content { display: none; padding: 16px; }
+    .tab-content.active { display: block; }
 
-    .kpi-label {
-        font-size: 0.7rem;
-        color: #888;
-        text-transform: uppercase;
-    }
-
-    /* Tab Content */
-    .tab-content {
-        display: none;
-        padding: 16px;
-    }
-
-    .tab-content.active {
-        display: block;
-        animation: fadeIn 0.3s ease;
-    }
-
-    @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-    }
-
-    /* Chart Cards */
     .charts-grid {
         display: grid;
         gap: 16px;
+        grid-template-columns: 1fr;
+    }
+
+    @media (min-width: 1024px) {
+        .charts-grid { grid-template-columns: repeat(2, 1fr); }
+        .chart-card.large { grid-column: span 2; }
     }
 
     .chart-card {
         background: #1a1a1a;
         border: 1px solid #2a2a2a;
         border-radius: 12px;
-        padding: 20px;
-    }
-
-    .chart-card.large {
-        grid-column: span 2;
-    }
-
-    @media (max-width: 767px) {
-        .chart-card.large {
-            grid-column: span 1;
-        }
+        padding: 16px;
     }
 
     .chart-title {
-        font-size: 1rem;
+        font-size: 0.9rem;
         font-weight: 700;
         color: #f5f5f5;
-        margin-bottom: 16px;
+        margin-bottom: 12px;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
     }
 
     .chart-wrapper {
         position: relative;
-        height: 300px;
-    }
-
-    .chart-wrapper.small {
+        width: 100%;
         height: 250px;
     }
 
-    /* Alertas */
-    .alertas-section {
-        padding: 0 16px 16px;
+    @media (min-width: 768px) {
+        .chart-wrapper { height: 300px; }
     }
+
+    .alertas-section { padding: 0 16px 16px; }
 
     .alerta-item {
         background: #1a1a1a;
         border-left: 4px solid #d4a574;
         border-radius: 8px;
-        padding: 12px 16px;
+        padding: 12px;
         margin-bottom: 10px;
         display: flex;
-        align-items: flex-start;
         gap: 12px;
-    }
-
-    .alerta-item.danger {
-        border-left-color: #e74c3c;
-    }
-
-    .alerta-item.warning {
-        border-left-color: #f39c12;
-    }
-
-    .alerta-item.info {
-        border-left-color: #3498db;
-    }
-
-    .alerta-item.success {
-        border-left-color: #2ecc71;
-    }
-
-    .alerta-icon {
-        font-size: 1.2rem;
-        flex-shrink: 0;
-        margin-top: 2px;
-    }
-
-    .alerta-content {
-        flex: 1;
-    }
-
-    .alerta-titulo {
         font-size: 0.85rem;
-        font-weight: 700;
-        color: #f5f5f5;
-        margin-bottom: 4px;
     }
 
-    .alerta-mensagem {
-        font-size: 0.8rem;
-        color: #aaa;
-        line-height: 1.4;
-    }
+    .alerta-item.danger { border-left-color: #e74c3c; }
+    .alerta-item.warning { border-left-color: #f39c12; }
+    .alerta-item.info { border-left-color: #3498db; }
+    .alerta-item.success { border-left-color: #2ecc71; }
 
-    /* Loading */
-    .loading {
-        text-align: center;
-        padding: 40px;
-        color: #888;
-    }
+    .alerta-icon { font-size: 1.2rem; flex-shrink: 0; }
+    .alerta-titulo { font-weight: 700; color: #f5f5f5; margin-bottom: 4px; }
+    .alerta-mensagem { color: #aaa; line-height: 1.3; }
 
-    .loading i {
-        font-size: 2rem;
-        animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
+    .loading { text-align: center; padding: 40px; color: #888; }
 </style>
-
 {% endblock %}
 
 {% block content %}
-
 <div class="page-container">
-    <!-- Header -->
     <div class="page-header">
         <div class="header-content">
             <a href="{{ url_for('dashboard') }}" class="back-button">
@@ -324,179 +211,151 @@
         </div>
     </div>
 
-```
-<!-- Tabs -->
-<div class="tabs-container">
-    <button class="tab active" onclick="switchTab('financeiro')">
-        <i class="fas fa-dollar-sign"></i> Financeiro
-    </button>
-    <button class="tab" onclick="switchTab('equipamentos')">
-        <i class="fas fa-box"></i> Equipamentos
-    </button>
-    <button class="tab" onclick="switchTab('manutencao')">
-        <i class="fas fa-wrench"></i> Manutenção
-    </button>
-    <button class="tab" onclick="switchTab('operacional')">
-        <i class="fas fa-chart-line"></i> Operacional
-    </button>
-</div>
-
-<!-- Loading -->
-<div id="loading" class="loading">
-    <i class="fas fa-spinner"></i>
-    <p>Carregando dados...</p>
-</div>
-
-<!-- Métricas Gerais -->
-<div id="metrics-section" style="display: none;">
-    <div class="metrics-grid">
-        <div class="metric-card">
-            <div class="metric-label">Receita Mês</div>
-            <div class="metric-value" id="metric-receita">R$ 0</div>
-            <div class="metric-change">+18.2%</div>
-        </div>
-        <div class="metric-card">
-            <div class="metric-label">Total Equipamentos</div>
-            <div class="metric-value" id="metric-equipamentos">0</div>
-            <div class="metric-change">+32 novos</div>
-        </div>
-        <div class="metric-card">
-            <div class="metric-label">Manutenções Mês</div>
-            <div class="metric-value" id="metric-manutencoes">0</div>
-            <div class="metric-change">-5 vs mês ant.</div>
-        </div>
-        <div class="metric-card">
-            <div class="metric-label">Gasto Manutenção</div>
-            <div class="metric-value" id="metric-custo-manutencao">R$ 0</div>
-            <div class="metric-change negative">-12%</div>
-        </div>
-        <div class="metric-card">
-            <div class="metric-label">Taxa Utilização</div>
-            <div class="metric-value" id="metric-utilizacao">0%</div>
-            <div class="metric-change">+8.5%</div>
-        </div>
-        <div class="metric-card">
-            <div class="metric-label">Margem Lucro</div>
-            <div class="metric-value" id="metric-margem">0%</div>
-            <div class="metric-change">+5.3%</div>
-        </div>
+    <div class="tabs-container">
+        <button class="tab active" onclick="switchTab('financeiro')">
+            <i class="fas fa-dollar-sign"></i> Financeiro
+        </button>
+        <button class="tab" onclick="switchTab('equipamentos')">
+            <i class="fas fa-box"></i> Equipamentos
+        </button>
+        <button class="tab" onclick="switchTab('manutencao')">
+            <i class="fas fa-wrench"></i> Manutenção
+        </button>
+        <button class="tab" onclick="switchTab('operacional')">
+            <i class="fas fa-chart-line"></i> Operacional
+        </button>
     </div>
-</div>
 
-<!-- KPI Equipamentos -->
-<div id="kpi-section" style="display: none;">
-    <div class="kpi-grid" id="kpi-equipamentos"></div>
-</div>
-
-<!-- Tab: Financeiro -->
-<div id="tab-financeiro" class="tab-content active">
-    <div class="charts-grid">
-        <div class="chart-card large">
-            <h3 class="chart-title">Receitas vs Despesas (12 meses)</h3>
-            <div class="chart-wrapper">
-                <canvas id="chart-receitas-despesas"></canvas>
-            </div>
-        </div>
-
-        <div class="chart-card">
-            <h3 class="chart-title">Despesas por Categoria</h3>
-            <div class="chart-wrapper small">
-                <canvas id="chart-despesas-categoria"></canvas>
-            </div>
-        </div>
-
-        <div class="chart-card">
-            <h3 class="chart-title">Margem de Lucro (6 meses)</h3>
-            <div class="chart-wrapper small">
-                <canvas id="chart-margem"></canvas>
-            </div>
-        </div>
+    <div id="loading" class="loading">
+        <i class="fas fa-spinner fa-spin"></i>
+        <p>Carregando dados...</p>
     </div>
-</div>
 
-<!-- Tab: Equipamentos -->
-<div id="tab-equipamentos" class="tab-content">
-    <div class="charts-grid">
-        <div class="chart-card large">
-            <h3 class="chart-title">Crescimento por Categoria (12 meses)</h3>
-            <div class="chart-wrapper">
-                <canvas id="chart-crescimento"></canvas>
+    <div id="metrics-section" style="display: none;">
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-label">Receita Mês</div>
+                <div class="metric-value" id="metric-receita">R$ 0</div>
             </div>
-        </div>
-
-        <div class="chart-card">
-            <h3 class="chart-title">Valor do Patrimônio</h3>
-            <div class="chart-wrapper small">
-                <canvas id="chart-patrimonio"></canvas>
+            <div class="metric-card">
+                <div class="metric-label">Total Equipamentos</div>
+                <div class="metric-value" id="metric-equipamentos">0</div>
             </div>
-        </div>
-
-        <div class="chart-card">
-            <h3 class="chart-title">Taxa de Utilização</h3>
-            <div class="chart-wrapper small">
-                <canvas id="chart-utilizacao"></canvas>
+            <div class="metric-card">
+                <div class="metric-label">Manutenções Mês</div>
+                <div class="metric-value" id="metric-manutencoes">0</div>
             </div>
-        </div>
-    </div>
-</div>
-
-<!-- Tab: Manutenção -->
-<div id="tab-manutencao" class="tab-content">
-    <div class="charts-grid">
-        <div class="chart-card large">
-            <h3 class="chart-title">Gastos com Manutenção (12 meses)</h3>
-            <div class="chart-wrapper">
-                <canvas id="chart-gastos-manutencao"></canvas>
+            <div class="metric-card">
+                <div class="metric-label">Gasto Manutenção</div>
+                <div class="metric-value" id="metric-custo-manutencao">R$ 0</div>
             </div>
-        </div>
-
-        <div class="chart-card">
-            <h3 class="chart-title">Manutenções por Tipo</h3>
-            <div class="chart-wrapper small">
-                <canvas id="chart-tipos-manutencao"></canvas>
+            <div class="metric-card">
+                <div class="metric-label">Taxa Utilização</div>
+                <div class="metric-value" id="metric-utilizacao">0%</div>
             </div>
-        </div>
-
-        <div class="chart-card">
-            <h3 class="chart-title">Top 10 Equipamentos</h3>
-            <div class="chart-wrapper small">
-                <canvas id="chart-top-equipamentos"></canvas>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Tab: Operacional -->
-<div id="tab-operacional" class="tab-content">
-    <div class="charts-grid">
-        <div class="chart-card large">
-            <h3 class="chart-title">Aquisições de Equipamentos 2024</h3>
-            <div class="chart-wrapper">
-                <canvas id="chart-aquisicoes"></canvas>
+            <div class="metric-card">
+                <div class="metric-label">Margem Lucro</div>
+                <div class="metric-value" id="metric-margem">0%</div>
             </div>
         </div>
     </div>
 
-    <!-- Alertas -->
-    <div class="alertas-section">
-        <h3 class="chart-title" style="padding: 16px 0;">⚠️ Alertas e Notificações</h3>
-        <div id="alertas-container"></div>
+    <div id="kpi-section" style="display: none;">
+        <div class="kpi-grid" id="kpi-equipamentos"></div>
     </div>
-</div>
-```
 
+    <div id="tab-financeiro" class="tab-content active">
+        <div class="charts-grid">
+            <div class="chart-card large">
+                <h3 class="chart-title">Receitas vs Despesas (12 meses)</h3>
+                <div class="chart-wrapper">
+                    <canvas id="chart-receitas-despesas"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <h3 class="chart-title">Despesas por Categoria</h3>
+                <div class="chart-wrapper">
+                    <canvas id="chart-despesas-categoria"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <h3 class="chart-title">Margem de Lucro (6 meses)</h3>
+                <div class="chart-wrapper">
+                    <canvas id="chart-margem"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="tab-equipamentos" class="tab-content">
+        <div class="charts-grid">
+            <div class="chart-card large">
+                <h3 class="chart-title">Crescimento por Categoria (12 meses)</h3>
+                <div class="chart-wrapper">
+                    <canvas id="chart-crescimento"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <h3 class="chart-title">Valor do Patrimônio</h3>
+                <div class="chart-wrapper">
+                    <canvas id="chart-patrimonio"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <h3 class="chart-title">Taxa de Utilização</h3>
+                <div class="chart-wrapper">
+                    <canvas id="chart-utilizacao"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="tab-manutencao" class="tab-content">
+        <div class="charts-grid">
+            <div class="chart-card large">
+                <h3 class="chart-title">Gastos com Manutenção (12 meses)</h3>
+                <div class="chart-wrapper">
+                    <canvas id="chart-gastos-manutencao"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <h3 class="chart-title">Manutenções por Tipo</h3>
+                <div class="chart-wrapper">
+                    <canvas id="chart-tipos-manutencao"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <h3 class="chart-title">Top 10 Equipamentos</h3>
+                <div class="chart-wrapper">
+                    <canvas id="chart-top-equipamentos"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="tab-operacional" class="tab-content">
+        <div class="charts-grid">
+            <div class="chart-card large">
+                <h3 class="chart-title">Aquisições de Equipamentos 2024</h3>
+                <div class="chart-wrapper">
+                    <canvas id="chart-aquisicoes"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="alertas-section">
+            <h3 class="chart-title" style="padding: 16px 0;">⚠️ Alertas e Notificações</h3>
+            <div id="alertas-container"></div>
+        </div>
+    </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
-
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-
 <script>
 let dadosGlobais = null;
 let charts = {};
 
-// Cores
 const colors = {
     gold: '#d4a574',
     success: '#2ecc71',
@@ -507,28 +366,23 @@ const colors = {
     cyan: '#1abc9c'
 };
 
-// Chart.js defaults
 Chart.defaults.color = '#888';
 Chart.defaults.borderColor = '#2a2a2a';
 Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto';
 
-// Switch tabs
 function switchTab(tabName) {
-    // Update tabs
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     event.target.closest('.tab').classList.add('active');
-
-    // Update content
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
     document.getElementById('tab-' + tabName).classList.add('active');
 }
 
-// Formatar moeda
 function formatMoney(value) {
+    if (value === 0) return 'R$ 0';
+    if (value < 1000) return 'R$ ' + value.toFixed(0);
     return 'R$ ' + (value / 1000).toFixed(0) + 'k';
 }
 
-// Carregar dados
 async function carregarDados() {
     try {
         const response = await fetch('{{ url_for("relatorios.api_dados") }}');
@@ -543,12 +397,11 @@ async function carregarDados() {
         criarGraficos();
         carregarAlertas();
     } catch (error) {
-        console.error('Erro ao carregar dados:', error);
+        console.error('Erro:', error);
         document.getElementById('loading').innerHTML = '<p style="color: #e74c3c;">Erro ao carregar dados</p>';
     }
 }
 
-// Atualizar métricas
 function atualizarMetricas() {
     const m = dadosGlobais.metricas;
     document.getElementById('metric-receita').textContent = formatMoney(m.receita_mes);
@@ -559,7 +412,6 @@ function atualizarMetricas() {
     document.getElementById('metric-margem').textContent = m.margem_lucro.toFixed(1) + '%';
 }
 
-// Criar KPIs
 function criarKPIs() {
     const container = document.getElementById('kpi-equipamentos');
     const cats = dadosGlobais.equipamentos.por_categoria;
@@ -575,21 +427,20 @@ function criarKPIs() {
         `;
     }
 
-    // Adicionar status
     html += `
         <div class="kpi-card">
             <div class="kpi-icon">✅</div>
-            <div class="kpi-value">452</div>
+            <div class="kpi-value">${dadosGlobais.equipamentos.disponiveis}</div>
             <div class="kpi-label">Disponíveis</div>
         </div>
         <div class="kpi-card">
             <div class="kpi-icon">🚚</div>
-            <div class="kpi-value">27</div>
+            <div class="kpi-value">${dadosGlobais.equipamentos.em_tour}</div>
             <div class="kpi-label">Em Tour</div>
         </div>
         <div class="kpi-card">
             <div class="kpi-icon">⚠️</div>
-            <div class="kpi-value">8</div>
+            <div class="kpi-value">${dadosGlobais.equipamentos.em_manutencao}</div>
             <div class="kpi-label">Manutenção</div>
         </div>
     `;
@@ -597,12 +448,28 @@ function criarKPIs() {
     container.innerHTML = html;
 }
 
-// Criar gráficos
 function criarGraficos() {
     const f = dadosGlobais.financeiro;
     const e = dadosGlobais.equipamentos;
     const m = dadosGlobais.manutencao;
     const a = dadosGlobais.aquisicoes;
+
+    // Configuração comum para TODOS os gráficos
+    const commonOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                ticks: {
+                    callback: function(value) {
+                        if (value === 0) return 'R$ 0';
+                        if (value < 1000) return 'R$ ' + value.toFixed(0);
+                        return formatMoney(value);
+                    }
+                }
+            }
+        }
+    };
 
     // 1. Receitas vs Despesas
     charts.receitasDespesas = new Chart(document.getElementById('chart-receitas-despesas'), {
@@ -628,16 +495,7 @@ function criarGraficos() {
                 }
             ]
         },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { position: 'top' }
-            },
-            scales: {
-                y: { ticks: { callback: v => formatMoney(v) } }
-            }
-        }
+        options: { ...commonOptions, plugins: { legend: { position: 'top' } } }
     });
 
     // 2. Despesas por Categoria
@@ -650,13 +508,7 @@ function criarGraficos() {
                 backgroundColor: [colors.purple, colors.cyan, colors.warning, colors.info]
             }]
         },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { position: 'bottom' }
-            }
-        }
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
     });
 
     // 3. Margem de Lucro
@@ -673,16 +525,12 @@ function criarGraficos() {
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false }
-            },
-            scales: {
-                y: { ticks: { callback: v => v + '%' } }
-            }
+            plugins: { legend: { display: false } },
+            scales: { y: { ticks: { callback: v => v + '%' } } }
         }
     });
 
-    // 4. Crescimento por Categoria
+    // 4. Crescimento
     const crescimentoDatasets = [];
     const coresCat = [colors.gold, colors.success, colors.info, colors.purple];
     let i = 0;
@@ -699,20 +547,16 @@ function criarGraficos() {
 
     charts.crescimento = new Chart(document.getElementById('chart-crescimento'), {
         type: 'line',
-        data: {
-            labels: f.meses_labels,
-            datasets: crescimentoDatasets
-        },
+        data: { labels: f.meses_labels, datasets: crescimentoDatasets },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: {
-                legend: { position: 'top' }
-            }
+            plugins: { legend: { position: 'top' } },
+            scales: { y: { ticks: { stepSize: 1 } } }
         }
     });
 
-    // 5. Valor do Patrimônio
+    // 5. Patrimônio
     charts.patrimonio = new Chart(document.getElementById('chart-patrimonio'), {
         type: 'polarArea',
         data: {
@@ -722,35 +566,25 @@ function criarGraficos() {
                 backgroundColor: [colors.gold, colors.success, colors.info, colors.purple]
             }]
         },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { position: 'bottom' }
-            }
-        }
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
     });
 
-    // 6. Taxa de Utilização
+    // 6. Taxa Utilização (simplificado - dados reais)
     charts.utilizacao = new Chart(document.getElementById('chart-utilizacao'), {
         type: 'bar',
         data: {
             labels: f.margem_labels,
             datasets: Object.keys(e.por_categoria).map((nome, idx) => ({
                 label: nome,
-                data: [60, 65, 58, 72, 68, 70],
+                data: Array(6).fill(dadosGlobais.metricas.taxa_utilizacao),
                 backgroundColor: coresCat[idx]
             }))
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: {
-                legend: { position: 'top' }
-            },
-            scales: {
-                y: { ticks: { callback: v => v + '%' } }
-            }
+            plugins: { legend: { position: 'top' } },
+            scales: { y: { ticks: { callback: v => v + '%' } } }
         }
     });
 
@@ -765,19 +599,10 @@ function criarGraficos() {
                 backgroundColor: colors.warning
             }]
         },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false }
-            },
-            scales: {
-                y: { ticks: { callback: v => formatMoney(v) } }
-            }
-        }
+        options: { ...commonOptions, plugins: { legend: { display: false } } }
     });
 
-    // 8. Tipos de Manutenção
+    // 8. Tipos Manutenção
     charts.tiposManutencao = new Chart(document.getElementById('chart-tipos-manutencao'), {
         type: 'doughnut',
         data: {
@@ -787,13 +612,7 @@ function criarGraficos() {
                 backgroundColor: [colors.success, colors.warning, colors.info, colors.danger]
             }]
         },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { position: 'bottom' }
-            }
-        }
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
     });
 
     // 9. Top Equipamentos
@@ -811,9 +630,7 @@ function criarGraficos() {
             indexAxis: 'y',
             responsive: true,
             maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false }
-            }
+            plugins: { legend: { display: false } }
         }
     });
 
@@ -828,20 +645,10 @@ function criarGraficos() {
                 backgroundColor: [colors.gold, colors.success, colors.info, colors.purple]
             }]
         },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false }
-            },
-            scales: {
-                y: { ticks: { callback: v => formatMoney(v) } }
-            }
-        }
+        options: { ...commonOptions, plugins: { legend: { display: false } } }
     });
 }
 
-// Carregar alertas
 function carregarAlertas() {
     const container = document.getElementById('alertas-container');
     let html = '';
@@ -861,8 +668,6 @@ function carregarAlertas() {
     container.innerHTML = html;
 }
 
-// Carregar ao iniciar
 carregarDados();
 </script>
-
 {% endblock %}

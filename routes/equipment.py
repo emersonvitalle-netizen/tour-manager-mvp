@@ -113,7 +113,7 @@ def list_equipment():
 @login_required
 def detail_equipment(id):
     from models.tour import TourEquipment, Show, Tour
-    
+
     equipment = Equipment.query.filter_by(
         id=id,
         company_id=current_user.company_id
@@ -122,7 +122,7 @@ def detail_equipment(id):
     maintenances = Maintenance.query.filter_by(
         equipment_id=id
     ).order_by(Maintenance.created_at.desc()).all()
-    
+
     usage_history = db.session.query(
         TourEquipment, Tour, Show
     ).join(
@@ -149,7 +149,7 @@ def new_equipment():
 
     if request.method == 'POST':
         from models.equipment_model import EquipmentModel
-        
+
         name = request.form.get('name')
         quantity = int(request.form.get('quantity', 1))
         custom_prefix = request.form.get('custom_prefix', '').strip().upper()
@@ -157,7 +157,7 @@ def new_equipment():
         category_id = request.form.get('category_id')
         type_id = request.form.get('type_id')
         custom_type_name = request.form.get('custom_type_name', '').strip()
-        
+
         equipment_model_id = request.form.get('equipment_model_id')
 
         brand = request.form.get('brand', '').strip()
@@ -175,7 +175,7 @@ def new_equipment():
         # Sistema automatico de foto compartilhada por marca+modelo
         photo_url = None
         selected_model_id = None
-        
+
         if brand and model:
             existing_model = EquipmentModel.query.filter_by(
                 company_id=current_user.company_id,
@@ -183,7 +183,7 @@ def new_equipment():
                 model=model,
                 is_active=True
             ).first()
-            
+
             if existing_model and existing_model.photo_url:
                 photo_url = existing_model.photo_url
                 selected_model_id = existing_model.id
@@ -196,7 +196,7 @@ def new_equipment():
                     filepath = os.path.join(upload_folder, filename)
                     file.save(filepath)
                     photo_url = f"/{filepath}"
-                    
+
                     if not existing_model:
                         new_model = EquipmentModel(
                             company_id=current_user.company_id,
@@ -299,7 +299,7 @@ def new_equipment():
         return redirect(url_for('equipment.index'))
 
     from models.equipment_model import EquipmentModel
-    
+
     prefilled_category_id = request.args.get('category_id', type=int)
     prefilled_category = None
 
@@ -313,7 +313,7 @@ def new_equipment():
         company_id=current_user.company_id,
         is_active=True
     ).order_by(Category.name).all()
-    
+
     equipment_models = EquipmentModel.query.filter_by(
         company_id=current_user.company_id,
         is_active=True
@@ -417,7 +417,7 @@ def upload_photo(id):
 @login_required
 def update_serial(id):
     if current_user.role != 'admin':
-        flash('Apenas administradores podem atualizar o nÃºmero de sÃ©rie.', 'danger')
+        flash('Apenas administradores podem atualizar o número de série.', 'danger')
         return redirect(url_for('equipment.detail_equipment', id=id))
 
     equipment = Equipment.query.filter_by(
@@ -429,7 +429,7 @@ def update_serial(id):
     if serial:
         equipment.serial_number = serial
         db.session.commit()
-        flash('NÃºmero de sÃ©rie atualizado!', 'success')
+        flash('Número de série atualizado!', 'success')
 
     return redirect(url_for('equipment.detail_equipment', id=id))
 
@@ -543,7 +543,7 @@ def complete_maintenance(id):
     from models.rh import AccountPayable
     from datetime import date
     from decimal import Decimal
-    
+
     if current_user.role != 'admin':
         if request.is_json:
             return jsonify({'success': False, 'error': 'Acesso negado'}), 403
@@ -582,12 +582,15 @@ def complete_maintenance(id):
         cost = Decimal(cost_str) if cost_str else Decimal('0')
     except:
         cost = Decimal('0')
-    maintenance.cost = float(cost)
+
+    # CORRIGIDO: Gravar em total_cost ao invés de cost
+    maintenance.total_cost = float(cost)
     maintenance.completed_at = datetime.now()
     maintenance.completed_by = current_user.id
 
     equipment.status = 'available'
-    
+
+    # Registrar despesa no financeiro
     if cost > 0:
         expense = AccountPayable(
             company_id=current_user.company_id,
@@ -647,52 +650,52 @@ def scan_status():
 @login_required
 def models():
     from models.equipment_model import EquipmentModel
-    
+
     models = EquipmentModel.query.filter_by(
         company_id=current_user.company_id,
         is_active=True
     ).order_by(EquipmentModel.brand, EquipmentModel.model).all()
-    
+
     categories = Category.query.filter_by(
         company_id=current_user.company_id
     ).all()
-    
+
     return render_template('equipment/models.html', models=models, categories=categories)
 
 @equipment_bp.route('/models/add', methods=['POST'])
 @login_required
 def add_model():
     from models.equipment_model import EquipmentModel
-    
+
     if current_user.role != 'admin':
         flash('Apenas administradores podem criar modelos.', 'danger')
         return redirect(url_for('equipment.models'))
-    
+
     brand = request.form.get('brand', '').strip()
     model = request.form.get('model', '').strip()
     type_id = request.form.get('type_id')
-    
+
     if not brand or not model:
         flash('Marca e modelo são obrigatórios.', 'danger')
         return redirect(url_for('equipment.models'))
-    
+
     existing = EquipmentModel.query.filter_by(
         company_id=current_user.company_id,
         brand=brand,
         model=model
     ).first()
-    
+
     if existing:
         flash('Este modelo já existe.', 'warning')
         return redirect(url_for('equipment.models'))
-    
+
     new_model = EquipmentModel(
         company_id=current_user.company_id,
         brand=brand,
         model=model,
         type_id=int(type_id) if type_id else None
     )
-    
+
     if 'photo' in request.files:
         photo = request.files['photo']
         if photo and photo.filename and allowed_file(photo.filename):
@@ -702,10 +705,10 @@ def add_model():
             photo_path = os.path.join(upload_folder, filename)
             photo.save(photo_path)
             new_model.photo_url = '/' + photo_path
-    
+
     db.session.add(new_model)
     db.session.commit()
-    
+
     flash(f'Modelo {brand} {model} criado!', 'success')
     return redirect(url_for('equipment.models'))
 
@@ -713,19 +716,19 @@ def add_model():
 @login_required
 def edit_model(id):
     from models.equipment_model import EquipmentModel
-    
+
     if current_user.role != 'admin':
         flash('Apenas administradores podem editar modelos.', 'danger')
         return redirect(url_for('equipment.models'))
-    
+
     model = EquipmentModel.query.filter_by(
         id=id,
         company_id=current_user.company_id
     ).first_or_404()
-    
+
     model.brand = request.form.get('brand', model.brand).strip()
     model.model = request.form.get('model', model.model).strip()
-    
+
     if 'photo' in request.files:
         photo = request.files['photo']
         if photo and photo.filename and allowed_file(photo.filename):
@@ -735,7 +738,7 @@ def edit_model(id):
             photo_path = os.path.join(upload_folder, filename)
             photo.save(photo_path)
             model.photo_url = '/' + photo_path
-    
+
     db.session.commit()
     flash('Modelo atualizado!', 'success')
     return redirect(url_for('equipment.models'))
@@ -744,20 +747,20 @@ def edit_model(id):
 @login_required
 def update_model_photo(id):
     from models.equipment_model import EquipmentModel
-    
+
     if current_user.role != 'admin':
         flash('Apenas administradores podem atualizar fotos.', 'danger')
         return redirect(url_for('equipment.models'))
-    
+
     model = EquipmentModel.query.filter_by(
         id=id,
         company_id=current_user.company_id
     ).first_or_404()
-    
+
     if 'photo' not in request.files:
         flash('Nenhuma foto enviada.', 'warning')
         return redirect(url_for('equipment.models'))
-    
+
     photo = request.files['photo']
     if photo and photo.filename and allowed_file(photo.filename):
         filename = secure_filename(f"{model.brand}_{model.model}_{photo.filename}")
@@ -770,5 +773,5 @@ def update_model_photo(id):
         flash('Foto atualizada para todos os equipamentos deste modelo!', 'success')
     else:
         flash('Formato de arquivo não suportado.', 'danger')
-    
+
     return redirect(url_for('equipment.models'))
