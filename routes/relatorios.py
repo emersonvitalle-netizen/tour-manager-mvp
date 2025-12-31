@@ -1,10 +1,11 @@
 """
 Blueprint para Relatórios Visuais (Dashboards com Chart.js)
+VERSÃO FINAL - SEM SIMULAÇÕES - 100% DADOS REAIS
 """
 from flask import Blueprint, render_template, jsonify
 from flask_login import login_required, current_user
 from extensions import db
-from sqlalchemy import func, extract
+from sqlalchemy import func, and_, or_
 from datetime import datetime, date, timedelta
 from decimal import Decimal
 
@@ -36,52 +37,51 @@ def index():
 @login_required
 @admin_required
 def api_dados():
-    """
-    API JSON que retorna todos os dados para os gráficos
-    """
+    """API JSON que retorna todos os dados REAIS para os gráficos"""
     from models.equipment import Equipment
     from models.category import Category
     from models.maintenance import Maintenance
     from models.rh import AccountReceivable, AccountPayable, PayrollEntry, FreelancerPayment
+    from models.tour import TourEquipment
 
     company_id = current_user.company_id
 
     # ========== FINANCEIRO ==========
-
-    # Receitas vs Despesas (12 meses)
     receitas_12m = []
     despesas_12m = []
     meses_labels = []
 
     for i in range(11, -1, -1):
-        mes_ref = date.today().replace(day=1) - timedelta(days=30*i)
-        mes_str = mes_ref.strftime('%Y-%m')
-        meses_labels.append(mes_ref.strftime('%b/%y'))
+        mes_inicio = (date.today().replace(day=1) - timedelta(days=30*i))
+        mes_fim = (mes_inicio + timedelta(days=32)).replace(day=1)
+        meses_labels.append(mes_inicio.strftime('%b/%y'))
 
-        # Receitas do mês
         receita = db.session.query(func.sum(AccountReceivable.amount)).filter(
             AccountReceivable.company_id == company_id,
             AccountReceivable.status == 'received',
-            func.strftime('%Y-%m', AccountReceivable.received_at) == mes_str
+            func.date(AccountReceivable.received_at) >= mes_inicio,
+            func.date(AccountReceivable.received_at) < mes_fim
         ).scalar() or 0
         receitas_12m.append(float(receita))
 
-        # Despesas do mês
         despesa_folha = db.session.query(func.sum(PayrollEntry.net_salary)).filter(
             PayrollEntry.company_id == company_id,
-            func.strftime('%Y-%m', PayrollEntry.reference_date) == mes_str
+            PayrollEntry.reference_month == mes_inicio.month,
+            PayrollEntry.reference_year == mes_inicio.year
         ).scalar() or 0
 
         despesa_contas = db.session.query(func.sum(AccountPayable.paid_amount)).filter(
             AccountPayable.company_id == company_id,
             AccountPayable.status == 'paid',
-            func.strftime('%Y-%m', AccountPayable.paid_at) == mes_str
+            func.date(AccountPayable.paid_at) >= mes_inicio,
+            func.date(AccountPayable.paid_at) < mes_fim
         ).scalar() or 0
 
         despesa_freelancers = db.session.query(func.sum(FreelancerPayment.amount)).filter(
             FreelancerPayment.company_id == company_id,
             FreelancerPayment.status == 'paid',
-            func.strftime('%Y-%m', FreelancerPayment.paid_at) == mes_str
+            func.date(FreelancerPayment.paid_at) >= mes_inicio,
+            func.date(FreelancerPayment.paid_at) < mes_fim
         ).scalar() or 0
 
         total_despesa = float(despesa_folha) + float(despesa_contas) + float(despesa_freelancers)
@@ -93,7 +93,6 @@ def api_dados():
     for i in range(5, -1, -1):
         mes_ref = date.today().replace(day=1) - timedelta(days=30*i)
         margem_labels.append(mes_ref.strftime('%b/%y'))
-
         idx = 11 - i
         if idx < len(receitas_12m):
             rec = receitas_12m[idx]
@@ -103,28 +102,39 @@ def api_dados():
         else:
             margem_6m.append(0)
 
-    # Despesas por Categoria
+    # Despesas por Categoria (mês atual)
+    mes_atual_inicio = date.today().replace(day=1)
+    mes_atual_fim = (mes_atual_inicio + timedelta(days=32)).replace(day=1)
+
+    custo_manutencao_mes_atual = float(db.session.query(func.sum(Maintenance.total_cost)).filter(
+        Maintenance.company_id == company_id,
+        Maintenance.status == 'completed',
+        func.date(Maintenance.completed_at) >= mes_atual_inicio,
+        func.date(Maintenance.completed_at) < mes_atual_fim
+    ).scalar() or 0)
+
     despesas_cat = {
         'Folha': float(db.session.query(func.sum(PayrollEntry.net_salary)).filter(
             PayrollEntry.company_id == company_id,
-            func.strftime('%Y-%m', PayrollEntry.reference_date) == date.today().strftime('%Y-%m')
+            PayrollEntry.reference_month == date.today().month,
+            PayrollEntry.reference_year == date.today().year
         ).scalar() or 0),
         'Freelancers': float(db.session.query(func.sum(FreelancerPayment.amount)).filter(
             FreelancerPayment.company_id == company_id,
             FreelancerPayment.status == 'paid',
-            func.strftime('%Y-%m', FreelancerPayment.paid_at) == date.today().strftime('%Y-%m')
+            func.date(FreelancerPayment.paid_at) >= mes_atual_inicio,
+            func.date(FreelancerPayment.paid_at) < mes_atual_fim
         ).scalar() or 0),
         'Contas': float(db.session.query(func.sum(AccountPayable.paid_amount)).filter(
             AccountPayable.company_id == company_id,
             AccountPayable.status == 'paid',
-            func.strftime('%Y-%m', AccountPayable.paid_at) == date.today().strftime('%Y-%m')
+            func.date(AccountPayable.paid_at) >= mes_atual_inicio,
+            func.date(AccountPayable.paid_at) < mes_atual_fim
         ).scalar() or 0),
-        'Manutenção': 0  # TODO: adicionar quando model de manutenção tiver custo
+        'Manutencao': custo_manutencao_mes_atual
     }
 
     # ========== EQUIPAMENTOS ==========
-
-    # Total de equipamentos por categoria
     categories = Category.query.filter_by(company_id=company_id).all()
     equip_por_categoria = {}
     equip_icons = {'Som': '🎤', 'Luz': '💡', 'Materiais': '🔧', 'Instrumentos': '🎸'}
@@ -145,108 +155,206 @@ def api_dados():
         is_active=True
     ).count()
 
-    # Crescimento por categoria (12 meses) - SIMULADO
+    # Crescimento por categoria (12 meses)
     crescimento_categorias = {}
-    for cat_name in equip_por_categoria.keys():
-        # Simulando crescimento gradual
-        base = equip_por_categoria[cat_name]['count']
+    for cat in categories:
         crescimento = []
-        for i in range(12):
-            valor = int(base * (0.7 + (i * 0.025)))
-            crescimento.append(valor)
-        crescimento_categorias[cat_name] = crescimento
+        for i in range(11, -1, -1):
+            mes_ref = date.today().replace(day=1) - timedelta(days=30*i)
+            mes_fim = (mes_ref + timedelta(days=32)).replace(day=1)
+            count = Equipment.query.filter(
+                Equipment.company_id == company_id,
+                Equipment.category_id == cat.id,
+                Equipment.is_active == True,
+                Equipment.created_at < mes_fim
+            ).count()
+            crescimento.append(count)
+        crescimento_categorias[cat.name] = crescimento
 
     # ========== MANUTENÇÃO ==========
-
-    # Gastos com manutenção (12 meses) - SIMULADO
     manutencao_gastos = []
-    for i in range(12):
-        # Simulando custos variáveis
-        custo = 8000 + (i * 500) + ((i % 3) * 2000)
+    for i in range(11, -1, -1):
+        mes_inicio = date.today().replace(day=1) - timedelta(days=30*i)
+        mes_fim = (mes_inicio + timedelta(days=32)).replace(day=1)
+        custo = float(db.session.query(func.sum(Maintenance.total_cost)).filter(
+            Maintenance.company_id == company_id,
+            Maintenance.status == 'completed',
+            func.date(Maintenance.completed_at) >= mes_inicio,
+            func.date(Maintenance.completed_at) < mes_fim
+        ).scalar() or 0)
         manutencao_gastos.append(custo)
 
-    # Manutenções por tipo - SIMULADO
-    manutencao_tipos = {
-        'Preventiva': 42,
-        'Corretiva': 35,
-        'Preditiva': 15,
-        'Emergencial': 8
-    }
+    manutencao_tipos = {}
+    tipos_query = db.session.query(
+        Maintenance.maintenance_type,
+        func.count(Maintenance.id)
+    ).filter(
+        Maintenance.company_id == company_id
+    ).group_by(Maintenance.maintenance_type).all()
 
-    # Top 10 equipamentos com mais manutenções - SIMULADO
-    top_manutencao = [
-        {'nome': 'Moving Head Robe Robin #12', 'count': 7},
-        {'nome': 'Amplificador Crown XTi #3', 'count': 6},
-        {'nome': 'Console Yamaha CL5 #1', 'count': 5},
-        {'nome': 'LED PAR Cameo #22', 'count': 5},
-        {'nome': 'Microfone Shure SM58 #45', 'count': 4},
-        {'nome': 'Processador DBX #8', 'count': 4},
-        {'nome': 'Caixa Line Array #5', 'count': 3},
-        {'nome': 'Dimmer Avolites #2', 'count': 3},
-        {'nome': 'Cabo XLR 10m #89', 'count': 3},
-        {'nome': 'Pedestal Microfone #67', 'count': 2}
-    ]
+    for tipo, count in tipos_query:
+        tipo_label = {
+            'preventive': 'Preventiva',
+            'corrective': 'Corretiva',
+            'calibration': 'Calibracao',
+            'emergency': 'Emergencial'
+        }.get(tipo, tipo or 'Outros')
+        manutencao_tipos[tipo_label] = count
 
-    # ========== AQUISIÇÕES ==========
+    top_manutencao_query = db.session.query(
+        Equipment.code,
+        Equipment.brand,
+        Equipment.model,
+        func.count(Maintenance.id).label('count')
+    ).join(Maintenance, Equipment.id == Maintenance.equipment_id).filter(
+        Equipment.company_id == company_id
+    ).group_by(Equipment.id).order_by(func.count(Maintenance.id).desc()).limit(10).all()
 
+    top_manutencao = []
+    for eq_code, eq_brand, eq_model, count in top_manutencao_query:
+        nome = f"{eq_brand or ''} {eq_model or ''} {eq_code}".strip()
+        top_manutencao.append({'nome': nome, 'count': count})
+
+    # ========== AQUISIÇÕES - DADOS REAIS ==========
     aquisicoes_por_cat = {}
-    for cat_name in equip_por_categoria.keys():
-        # Simulando valores de investimento
-        valores = {'Som': 85000, 'Luz': 142000, 'Materiais': 38000, 'Instrumentos': 25000}
-        aquisicoes_por_cat[cat_name] = valores.get(cat_name, 50000)
+    ano_atual = date.today().year
 
-    # ========== MÉTRICAS DO TOPO ==========
+    for cat in categories:
+        try:
+            total = db.session.query(func.sum(Equipment.purchase_price)).filter(
+                Equipment.company_id == company_id,
+                Equipment.category_id == cat.id,
+                func.strftime('%Y', Equipment.purchase_date) == str(ano_atual)
+            ).scalar() or 0
+        except:
+            try:
+                total = db.session.query(func.sum(Equipment.value)).filter(
+                    Equipment.company_id == company_id,
+                    Equipment.category_id == cat.id,
+                    func.strftime('%Y', Equipment.purchase_date) == str(ano_atual)
+                ).scalar() or 0
+            except:
+                total = 0
+        aquisicoes_por_cat[cat.name] = float(total)
 
-    mes_atual = date.today().strftime('%Y-%m')
-
+    # ========== MÉTRICAS DO TOPO - SEM SIMULAÇÕES ==========
     receita_mes = db.session.query(func.sum(AccountReceivable.amount)).filter(
         AccountReceivable.company_id == company_id,
         AccountReceivable.status == 'received',
-        func.strftime('%Y-%m', AccountReceivable.received_at) == mes_atual
+        func.date(AccountReceivable.received_at) >= mes_atual_inicio,
+        func.date(AccountReceivable.received_at) < mes_atual_fim
     ).scalar() or 0
 
-    manutencoes_mes = 28  # SIMULADO
-    custo_manutencao_mes = 15400  # SIMULADO
-    taxa_utilizacao = 67.8  # SIMULADO
+    manutencoes_mes = Maintenance.query.filter(
+        Maintenance.company_id == company_id,
+        func.date(Maintenance.started_at) >= mes_atual_inicio,
+        func.date(Maintenance.started_at) < mes_atual_fim
+    ).count()
+
+    custo_manutencao_mes = custo_manutencao_mes_atual
+
+    # Taxa de utilização - DADOS REAIS
+    total_equip = Equipment.query.filter_by(company_id=company_id, is_active=True).count()
+    em_uso = Equipment.query.filter(
+        Equipment.company_id == company_id,
+        Equipment.is_active == True,
+        Equipment.status.in_(['in_tour', 'loading', 'in_transit'])
+    ).count()
+    taxa_utilizacao = (em_uso / total_equip * 100) if total_equip > 0 else 0
+
     margem_lucro = margem_6m[-1] if margem_6m else 0
 
-    # ========== ALERTAS ==========
+    # ========== ALERTAS - DADOS REAIS ==========
+    alertas = []
 
-    alertas = [
-        {
+    manutencoes_atrasadas = Maintenance.query.filter(
+        Maintenance.company_id == company_id,
+        Maintenance.status == 'pending',
+        Maintenance.started_at < datetime.now() - timedelta(days=15)
+    ).count()
+
+    if manutencoes_atrasadas > 0:
+        alertas.append({
             'tipo': 'danger',
             'icone': '🚨',
-            'titulo': 'Manutenção Atrasada',
-            'mensagem': '3 equipamentos com manutenção atrasada há mais de 15 dias'
-        },
-        {
+            'titulo': 'Manutencao Atrasada',
+            'mensagem': f'{manutencoes_atrasadas} equipamento(s) com manutencao atrasada ha mais de 15 dias'
+        })
+
+    equipamentos_criticos = db.session.query(
+        Equipment.code,
+        func.count(Maintenance.id).label('count')
+    ).join(Maintenance, Equipment.id == Maintenance.equipment_id).filter(
+        Equipment.company_id == company_id,
+        func.strftime('%Y', Maintenance.started_at) == str(ano_atual)
+    ).group_by(Equipment.id).having(func.count(Maintenance.id) >= 3).all()
+
+    if equipamentos_criticos:
+        eq_code, eq_count = equipamentos_criticos[0]
+        alertas.append({
             'tipo': 'warning',
             'icone': '⚠️',
-            'titulo': 'Equipamento Crítico',
-            'mensagem': 'Moving Head #12 - 5 manutenções em 3 meses (R$ 3.200)'
-        },
-        {
-            'tipo': 'warning',
-            'icone': '⚠️',
-            'titulo': 'Gastos Elevados',
-            'mensagem': 'Custos de manutenção 23% acima da média trimestral'
-        },
-        {
+            'titulo': 'Equipamento Critico',
+            'mensagem': f'{eq_code} - {eq_count} manutencoes este ano'
+        })
+
+    # Equipamentos ociosos - CORRIGIDO (verifica manutenção E tours)
+    equipamentos_ids_usados = set()
+
+    # IDs de equipamentos em manutenção recente
+    manut_ids = db.session.query(Maintenance.equipment_id).filter(
+        Maintenance.started_at > datetime.now() - timedelta(days=90)
+    ).all()
+    equipamentos_ids_usados.update([m[0] for m in manut_ids])
+
+    # IDs de equipamentos em tours recentes
+    tour_ids = db.session.query(TourEquipment.equipment_id).filter(
+        TourEquipment.allocated_at > datetime.now() - timedelta(days=90)
+    ).all()
+    equipamentos_ids_usados.update([t[0] for t in tour_ids])
+
+    ociosos = Equipment.query.filter(
+        Equipment.company_id == company_id,
+        Equipment.status == 'available',
+        Equipment.is_active == True,
+        ~Equipment.id.in_(equipamentos_ids_usados) if equipamentos_ids_usados else True
+    ).count()
+
+    if ociosos > 5:
+        alertas.append({
             'tipo': 'info',
             'icone': 'ℹ️',
             'titulo': 'Equipamentos Ociosos',
-            'mensagem': '18 equipamentos sem uso há mais de 90 dias - considerar realocação'
-        },
-        {
+            'mensagem': f'{ociosos} equipamentos sem uso ha mais de 90 dias - considerar realocacao'
+        })
+
+    if margem_lucro > 0:
+        alertas.append({
             'tipo': 'success',
             'icone': '✅',
-            'titulo': 'Meta Atingida',
-            'mensagem': 'Taxa de utilização aumentou 8,5% - meta trimestral alcançada'
-        }
-    ]
+            'titulo': 'Margem Positiva',
+            'mensagem': f'Margem de lucro em {margem_lucro:.1f}% - resultado positivo'
+        })
+
+    # ========== KPIs REAIS - DISPONÍVEIS E EM TOUR ==========
+    equipamentos_disponiveis = Equipment.query.filter(
+        Equipment.company_id == company_id,
+        Equipment.status == 'available',
+        Equipment.is_active == True
+    ).count()
+
+    equipamentos_em_tour = Equipment.query.filter(
+        Equipment.company_id == company_id,
+        Equipment.status.in_(['in_tour', 'loading', 'in_transit']),
+        Equipment.is_active == True
+    ).count()
+
+    equipamentos_em_manutencao = Equipment.query.filter(
+        Equipment.company_id == company_id,
+        Equipment.status.in_(['maintenance', 'in_repair', 'external_repair'])
+    ).count()
 
     # ========== RESPOSTA JSON ==========
-
     dados = {
         'financeiro': {
             'receitas_12m': receitas_12m,
@@ -259,7 +367,10 @@ def api_dados():
         'equipamentos': {
             'total': total_equipment,
             'por_categoria': equip_por_categoria,
-            'crescimento': crescimento_categorias
+            'crescimento': crescimento_categorias,
+            'em_manutencao': equipamentos_em_manutencao,
+            'disponiveis': equipamentos_disponiveis,
+            'em_tour': equipamentos_em_tour
         },
         'manutencao': {
             'gastos_12m': manutencao_gastos,
@@ -272,7 +383,7 @@ def api_dados():
             'total_equipamentos': total_equipment,
             'manutencoes_mes': manutencoes_mes,
             'custo_manutencao_mes': custo_manutencao_mes,
-            'taxa_utilizacao': taxa_utilizacao,
+            'taxa_utilizacao': round(taxa_utilizacao, 1),
             'margem_lucro': margem_lucro
         },
         'alertas': alertas

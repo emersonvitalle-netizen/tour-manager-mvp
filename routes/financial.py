@@ -29,7 +29,7 @@ def generate_code(prefix: str) -> str:
     company_id = current_user.company_id
     code_prefix = f'{prefix}-{company_id}-{year}'
     last_doc = None
-    
+
     if prefix == 'ORC':
         last_doc = Quote.query.filter(
             Quote.code.like(f'{code_prefix}-%'),
@@ -45,14 +45,14 @@ def generate_code(prefix: str) -> str:
             Invoice.code.like(f'{code_prefix}-%'),
             Invoice.company_id == company_id
         ).order_by(Invoice.id.desc()).first()
-    
+
     if last_doc:
         try:
             last_num = int(last_doc.code.split('-')[-1])
             return f'{code_prefix}-{str(last_num + 1).zfill(4)}'
         except:
             pass
-    
+
     return f'{code_prefix}-0001'
 
 
@@ -66,36 +66,36 @@ def index():
         status='sent',
         is_active=True
     ).count()
-    
+
     invoices_pending = Invoice.query.filter_by(
         company_id=current_user.company_id,
         status='pending',
         is_active=True
     ).count()
-    
+
     invoices_overdue = Invoice.query.filter(
         Invoice.company_id == current_user.company_id,
         Invoice.status == 'pending',
         Invoice.due_date < date.today(),
         Invoice.is_active == True
     ).count()
-    
+
     contracts_active = Contract.query.filter_by(
         company_id=current_user.company_id,
         status='active',
         is_active=True
     ).count()
-    
+
     recent_quotes = Quote.query.filter_by(
         company_id=current_user.company_id,
         is_active=True
     ).order_by(Quote.created_at.desc()).limit(5).all()
-    
+
     recent_invoices = Invoice.query.filter_by(
         company_id=current_user.company_id,
         is_active=True
     ).order_by(Invoice.created_at.desc()).limit(5).all()
-    
+
     return render_template('financial/index.html',
                           quotes_pending=quotes_pending,
                           invoices_pending=invoices_pending,
@@ -111,17 +111,17 @@ def index():
 def quotes():
     """Lista de orçamentos"""
     status = request.args.get('status', 'all')
-    
+
     query = Quote.query.filter_by(
         company_id=current_user.company_id,
         is_active=True
     )
-    
+
     if status != 'all':
         query = query.filter_by(status=status)
-    
+
     quotes = query.order_by(Quote.created_at.desc()).all()
-    
+
     return render_template('financial/quotes.html', quotes=quotes, status=status)
 
 
@@ -143,26 +143,26 @@ def new_quote():
             created_by=current_user.id,
             company_id=current_user.company_id
         )
-        
+
         valid_until = request.form.get('valid_until')
         if valid_until:
             quote.valid_until = datetime.strptime(valid_until, '%Y-%m-%d').date()
-        
+
         tour_id = request.form.get('tour_id')
         if tour_id:
             quote.tour_id = int(tour_id)
-        
+
         db.session.add(quote)
         db.session.commit()
-        
+
         flash('Orçamento criado! Adicione os itens.', 'success')
         return redirect(url_for('financial.edit_quote', id=quote.id))
-    
+
     tours = Tour.query.filter_by(
         company_id=current_user.company_id,
         is_active=True
     ).order_by(Tour.start_date.desc()).all()
-    
+
     return render_template('financial/quote_form.html', quote=None, tours=tours)
 
 
@@ -175,7 +175,7 @@ def view_quote(id):
         id=id,
         company_id=current_user.company_id
     ).first_or_404()
-    
+
     return render_template('financial/quote_view.html', quote=quote)
 
 
@@ -188,7 +188,7 @@ def edit_quote(id):
         id=id,
         company_id=current_user.company_id
     ).first_or_404()
-    
+
     if request.method == 'POST':
         quote.client_name = request.form.get('client_name', quote.client_name).strip()
         quote.client_email = request.form.get('client_email', '').strip()
@@ -197,25 +197,25 @@ def edit_quote(id):
         quote.title = request.form.get('title', quote.title).strip()
         quote.description = request.form.get('description', '').strip()
         quote.notes = request.form.get('notes', '').strip()
-        
+
         valid_until = request.form.get('valid_until')
         if valid_until:
             quote.valid_until = datetime.strptime(valid_until, '%Y-%m-%d').date()
-        
+
         discount_percent = request.form.get('discount_percent', '0')
         quote.discount_percent = Decimal(discount_percent or '0')
-        
+
         recalculate_quote_totals(quote)
-        
+
         db.session.commit()
         flash('Orçamento atualizado!', 'success')
         return redirect(url_for('financial.view_quote', id=quote.id))
-    
+
     tours = Tour.query.filter_by(
         company_id=current_user.company_id,
         is_active=True
     ).order_by(Tour.start_date.desc()).all()
-    
+
     return render_template('financial/quote_form.html', quote=quote, tours=tours)
 
 
@@ -228,7 +228,7 @@ def add_quote_item(id):
         id=id,
         company_id=current_user.company_id
     ).first_or_404()
-    
+
     item = QuoteItem(
         quote_id=quote.id,
         description=request.form.get('description', '').strip(),
@@ -236,11 +236,11 @@ def add_quote_item(id):
         unit_price=Decimal(request.form.get('unit_price', '0'))
     )
     item.total = item.quantity * item.unit_price
-    
+
     db.session.add(item)
     recalculate_quote_totals(quote)
     db.session.commit()
-    
+
     flash('Item adicionado!', 'success')
     return redirect(url_for('financial.edit_quote', id=quote.id))
 
@@ -254,12 +254,12 @@ def delete_quote_item(id, item_id):
         id=id,
         company_id=current_user.company_id
     ).first_or_404()
-    
+
     item = QuoteItem.query.filter_by(id=item_id, quote_id=quote.id).first_or_404()
     db.session.delete(item)
     recalculate_quote_totals(quote)
     db.session.commit()
-    
+
     flash('Item removido.', 'warning')
     return redirect(url_for('financial.edit_quote', id=quote.id))
 
@@ -273,10 +273,10 @@ def send_quote(id):
         id=id,
         company_id=current_user.company_id
     ).first_or_404()
-    
+
     quote.status = 'sent'
     db.session.commit()
-    
+
     flash('Orçamento marcado como enviado!', 'success')
     return redirect(url_for('financial.view_quote', id=quote.id))
 
@@ -290,12 +290,12 @@ def approve_quote(id):
         id=id,
         company_id=current_user.company_id
     ).first_or_404()
-    
+
     quote.status = 'approved'
     quote.approved_at = datetime.utcnow()
     quote.approved_by = current_user.id
     db.session.commit()
-    
+
     flash('Orçamento aprovado!', 'success')
     return redirect(url_for('financial.view_quote', id=quote.id))
 
@@ -310,15 +310,15 @@ def approve_quote(id):
 def contracts():
     """Lista de contratos"""
     status = request.args.get('status')
-    
+
     query = Contract.query.filter_by(
         company_id=current_user.company_id,
         is_active=True
     )
-    
+
     if status:
         query = query.filter_by(status=status)
-    
+
     contracts = query.order_by(Contract.created_at.desc()).all()
     return render_template('financial/contracts.html', contracts=contracts)
 
@@ -350,10 +350,10 @@ def contract_new():
         )
         db.session.add(contract)
         db.session.commit()
-        
+
         flash('Contrato criado com sucesso!', 'success')
         return redirect(url_for('financial.contract_edit', contract_id=contract.id))
-    
+
     return render_template('financial/contract_form.html', contract=None)
 
 
@@ -366,7 +366,7 @@ def contract_edit(contract_id):
         id=contract_id,
         company_id=current_user.company_id
     ).first_or_404()
-    
+
     if request.method == 'POST':
         contract.client_name = request.form.get('client_name', '').strip()
         contract.client_document = request.form.get('client_document', '').strip()
@@ -382,11 +382,11 @@ def contract_edit(contract_id):
         contract.service_description = request.form.get('service_description', '')
         contract.payment_terms = request.form.get('payment_terms', '')
         contract.additional_terms = request.form.get('additional_terms', '')
-        
+
         db.session.commit()
         flash('Contrato atualizado!', 'success')
         return redirect(url_for('financial.contract_edit', contract_id=contract.id))
-    
+
     return render_template('financial/contract_form.html', contract=contract)
 
 
@@ -399,10 +399,10 @@ def contract_delete(contract_id):
         id=contract_id,
         company_id=current_user.company_id
     ).first_or_404()
-    
+
     contract.is_active = False
     db.session.commit()
-    
+
     flash('Contrato excluído.', 'warning')
     return redirect(url_for('financial.contracts'))
 
@@ -416,7 +416,7 @@ def api_contract_get(contract_id):
         id=contract_id,
         company_id=current_user.company_id
     ).first_or_404()
-    
+
     return jsonify({
         'success': True,
         'contract': {
@@ -440,17 +440,17 @@ def api_contract_get(contract_id):
 def invoices():
     """Lista de faturas"""
     status = request.args.get('status', 'all')
-    
+
     query = Invoice.query.filter_by(
         company_id=current_user.company_id,
         is_active=True
     )
-    
+
     if status != 'all':
         query = query.filter_by(status=status)
-    
+
     invoices = query.order_by(Invoice.created_at.desc()).all()
-    
+
     return render_template('financial/invoices.html', invoices=invoices, status=status)
 
 
@@ -471,31 +471,31 @@ def new_invoice():
             created_by=current_user.id,
             company_id=current_user.company_id
         )
-        
+
         tax_percent = request.form.get('tax_percent', '0')
         invoice.tax_percent = Decimal(tax_percent or '0')
         invoice.tax_value = invoice.subtotal * invoice.tax_percent / 100
         invoice.total = invoice.subtotal + invoice.tax_value
-        
+
         tour_id = request.form.get('tour_id')
         if tour_id:
             invoice.tour_id = int(tour_id)
-        
+
         contract_id = request.form.get('contract_id')
         if contract_id:
             invoice.contract_id = int(contract_id)
-        
+
         db.session.add(invoice)
         db.session.commit()
-        
+
         flash('Fatura criada!', 'success')
         return redirect(url_for('financial.view_invoice', id=invoice.id))
-    
+
     tours = Tour.query.filter_by(
         company_id=current_user.company_id,
         is_active=True
     ).order_by(Tour.start_date.desc()).all()
-    
+
     return render_template('financial/invoice_form.html', invoice=None, tours=tours)
 
 
@@ -508,7 +508,7 @@ def view_invoice(id):
         id=id,
         company_id=current_user.company_id
     ).first_or_404()
-    
+
     return render_template('financial/invoice_view.html', invoice=invoice)
 
 
@@ -521,7 +521,7 @@ def register_payment(id):
         id=id,
         company_id=current_user.company_id
     ).first_or_404()
-    
+
     payment = Payment(
         invoice_id=invoice.id,
         amount=Decimal(request.form.get('amount', '0')),
@@ -533,17 +533,17 @@ def register_payment(id):
         provider='manual',
         company_id=current_user.company_id
     )
-    
+
     db.session.add(payment)
-    
+
     if payment.amount >= invoice.amount_pending:
         invoice.status = 'paid'
         invoice.paid_at = datetime.utcnow()
     else:
         invoice.status = 'partial'
-    
+
     db.session.commit()
-    
+
     flash('Pagamento registrado!', 'success')
     return redirect(url_for('financial.view_invoice', id=invoice.id))
 
@@ -562,21 +562,21 @@ def recalculate_quote_totals(quote):
 def receitas():
     """Lista de receitas (faturas)"""
     status = request.args.get('status', 'all')
-    
+
     query = Invoice.query.filter_by(
         company_id=current_user.company_id,
         is_active=True
     )
-    
+
     if status == 'pago':
         query = query.filter_by(status='paid')
     elif status == 'pendente':
         query = query.filter_by(status='pending')
     elif status == 'atrasado':
         query = query.filter(Invoice.status == 'pending', Invoice.due_date < date.today())
-    
+
     faturas = query.order_by(Invoice.created_at.desc()).all()
-    
+
     return render_template('financial/receitas.html', faturas=faturas, status=status)
 
 
@@ -595,19 +595,19 @@ def folha_clt():
     """Folha de pagamento CLT - visualizacao (dados do RH)"""
     from models.rh import Employee, PayrollEntry
     from dateutil.relativedelta import relativedelta
-    
+
     funcionarios = Employee.query.filter_by(
         company_id=current_user.company_id,
         status='active'
     ).order_by(Employee.name).all()
-    
+
     mes_atual = datetime.now().month
     ano_atual = datetime.now().year
-    
+
     total_salarios = sum(float(f.salary or 0) for f in funcionarios)
     encargos_estimados = total_salarios * 0.68
     custo_total = total_salarios + encargos_estimados
-    
+
     funcionarios_data = []
     for func in funcionarios:
         prox_ferias = None
@@ -615,9 +615,9 @@ def folha_clt():
             anos_trabalhados = (date.today() - func.admission_date).days // 365
             prox_aquisitivo = func.admission_date + relativedelta(years=anos_trabalhados + 1)
             prox_ferias = prox_aquisitivo + relativedelta(months=11)
-        
+
         custo_func = float(func.salary or 0) * 1.68
-        
+
         funcionarios_data.append({
             'id': func.id,
             'name': func.name,
@@ -627,7 +627,7 @@ def folha_clt():
             'admission_date': func.admission_date,
             'prox_ferias': prox_ferias
         })
-    
+
     return render_template('financial/folha_clt.html', 
                           funcionarios=funcionarios_data,
                           total_salarios=total_salarios,
@@ -643,31 +643,31 @@ def folha_clt():
 def freelancers():
     """Pagamentos a freelancers - visualizacao (dados do RH)"""
     from models.rh import Freelancer, FreelancerAssignment
-    
+
     freelancers_list = Freelancer.query.filter_by(
         company_id=current_user.company_id,
         status='active'
     ).order_by(Freelancer.overall_score.desc()).all()
-    
+
     mes_atual = datetime.now().month
     ano_atual = datetime.now().year
-    
+
     freelancers_data = []
     total_mes = 0
-    
+
     for fl in freelancers_list:
         eventos_mes = FreelancerAssignment.query.filter(
             FreelancerAssignment.freelancer_id == fl.id,
             func.strftime('%Y-%m', FreelancerAssignment.start_date) == f'{ano_atual}-{mes_atual:02d}'
         ).count()
-        
+
         valor_mes = db.session.query(func.sum(FreelancerAssignment.total_amount)).filter(
             FreelancerAssignment.freelancer_id == fl.id,
             func.strftime('%Y-%m', FreelancerAssignment.start_date) == f'{ano_atual}-{mes_atual:02d}'
         ).scalar() or 0
-        
+
         total_mes += float(valor_mes)
-        
+
         freelancers_data.append({
             'id': fl.id,
             'name': fl.name,
@@ -678,7 +678,7 @@ def freelancers():
             'valor_mes': float(valor_mes),
             'score': fl.overall_score
         })
-    
+
     return render_template('financial/freelancers.html',
                           freelancers=freelancers_data,
                           total_mes=total_mes,
@@ -693,12 +693,12 @@ def contas_pagar():
     """Contas a pagar - lista com filtros"""
     from models.rh import AccountPayable
     from sqlalchemy import func
-    
+
     status_filter = request.args.get('status', 'pending')
     categoria_filter = request.args.get('categoria', '')
-    
+
     query = AccountPayable.query.filter_by(company_id=current_user.company_id)
-    
+
     if status_filter == 'pending':
         query = query.filter_by(status='pending')
     elif status_filter == 'paid':
@@ -708,34 +708,45 @@ def contas_pagar():
             AccountPayable.status == 'pending',
             AccountPayable.due_date < date.today()
         )
-    
+
     if categoria_filter:
         query = query.filter_by(category=categoria_filter)
-    
+
     contas = query.order_by(AccountPayable.due_date).all()
-    
+
     total_vencidas = db.session.query(func.sum(AccountPayable.amount)).filter(
         AccountPayable.company_id == current_user.company_id,
         AccountPayable.status == 'pending',
         AccountPayable.due_date < date.today()
     ).scalar() or 0
-    
+
     total_7_dias = db.session.query(func.sum(AccountPayable.amount)).filter(
         AccountPayable.company_id == current_user.company_id,
         AccountPayable.status == 'pending',
         AccountPayable.due_date >= date.today(),
         AccountPayable.due_date <= date.today() + timedelta(days=7)
     ).scalar() or 0
-    
+
     current_month = date.today().strftime('%Y-%m')
     total_mes = db.session.query(func.sum(AccountPayable.amount)).filter(
         AccountPayable.company_id == current_user.company_id,
         AccountPayable.status == 'pending',
         func.strftime('%Y-%m', AccountPayable.due_date) == current_month
     ).scalar() or 0
-    
-    categorias = ['aluguel', 'energia', 'agua', 'telefone', 'internet', 'combustivel', 'manutencao', 'outros']
-    
+
+    # ✅ LISTA EXPANDIDA DE CATEGORIAS (24 categorias)
+    categorias = [
+        'folha_clt', 'freelancers', 'manutencao',
+        'aluguel', 'energia', 'agua', 'telefone', 'internet',
+        'contabilidade', 'juridico', 'softwares',
+        'transporte', 'combustivel', 'pedagios', 'manutencao_veiculos',
+        'impostos', 'seguros',
+        'equipamentos', 'veiculos',
+        'marketing',
+        'materiais_consumo', 'ferramentas',
+        'parcelamentos', 'outros'
+    ]
+
     return render_template('financial/contas_pagar.html',
                           contas=contas,
                           total_vencidas=total_vencidas,
@@ -752,19 +763,19 @@ def contas_pagar():
 def nova_conta_pagar():
     """Criar nova conta a pagar"""
     from models.rh import AccountPayable
-    
+
     if request.method == 'POST':
         try:
             total_installments = int(request.form.get('total_installments', '1') or '1')
             valor_total = Decimal(request.form.get('amount', '0').replace(',', '.'))
             valor_parcela = valor_total / total_installments if total_installments > 1 else valor_total
             due_date_base = datetime.strptime(request.form.get('due_date'), '%Y-%m-%d').date()
-            
+
             from dateutil.relativedelta import relativedelta
-            
+
             for i in range(total_installments):
                 due_date = due_date_base + relativedelta(months=i) if total_installments > 1 else due_date_base
-                
+
                 conta = AccountPayable(
                     company_id=current_user.company_id,
                     description=request.form.get('description', '').strip(),
@@ -782,24 +793,35 @@ def nova_conta_pagar():
                     status='pending',
                     created_by=current_user.id
                 )
-                
+
                 db.session.add(conta)
-            
+
             db.session.commit()
-            
+
             if total_installments > 1:
                 flash(f'{total_installments} parcelas cadastradas com sucesso!', 'success')
             else:
                 flash('Conta cadastrada com sucesso!', 'success')
             return redirect(url_for('financial.contas_pagar'))
-            
+
         except ValueError as e:
             flash(f'Erro nos dados: verifique valor e data.', 'danger')
         except Exception as e:
             db.session.rollback()
             flash(f'Erro ao salvar: {str(e)}', 'danger')
-    
-    categorias = ['aluguel', 'energia', 'agua', 'telefone', 'internet', 'combustivel', 'manutencao', 'outros']
+
+    # ✅ LISTA EXPANDIDA DE CATEGORIAS (24 categorias)
+    categorias = [
+        'folha_clt', 'freelancers', 'manutencao',
+        'aluguel', 'energia', 'agua', 'telefone', 'internet',
+        'contabilidade', 'juridico', 'softwares',
+        'transporte', 'combustivel', 'pedagios', 'manutencao_veiculos',
+        'impostos', 'seguros',
+        'equipamentos', 'veiculos',
+        'marketing',
+        'materiais_consumo', 'ferramentas',
+        'parcelamentos', 'outros'
+    ]
     return render_template('financial/conta_pagar_form.html', conta=None, categorias=categorias)
 
 
@@ -809,12 +831,12 @@ def nova_conta_pagar():
 def editar_conta_pagar(id):
     """Editar conta a pagar"""
     from models.rh import AccountPayable
-    
+
     conta = AccountPayable.query.filter_by(
         id=id,
         company_id=current_user.company_id
     ).first_or_404()
-    
+
     if request.method == 'POST':
         try:
             conta.description = request.form.get('description', conta.description).strip()
@@ -827,17 +849,28 @@ def editar_conta_pagar(id):
             conta.recurrence_type = request.form.get('recurrence_type') if conta.is_recurring else None
             conta.payment_method = request.form.get('payment_method', '').strip() or None
             conta.notes = request.form.get('notes', '').strip()
-            
+
             db.session.commit()
-            
+
             flash('Conta atualizada!', 'success')
             return redirect(url_for('financial.contas_pagar'))
-            
+
         except Exception as e:
             db.session.rollback()
             flash(f'Erro ao salvar: {str(e)}', 'danger')
-    
-    categorias = ['aluguel', 'energia', 'agua', 'telefone', 'internet', 'combustivel', 'manutencao', 'outros']
+
+    # ✅ LISTA EXPANDIDA DE CATEGORIAS (24 categorias)
+    categorias = [
+        'folha_clt', 'freelancers', 'manutencao',
+        'aluguel', 'energia', 'agua', 'telefone', 'internet',
+        'contabilidade', 'juridico', 'softwares',
+        'transporte', 'combustivel', 'pedagios', 'manutencao_veiculos',
+        'impostos', 'seguros',
+        'equipamentos', 'veiculos',
+        'marketing',
+        'materiais_consumo', 'ferramentas',
+        'parcelamentos', 'outros'
+    ]
     return render_template('financial/conta_pagar_form.html', conta=conta, categorias=categorias)
 
 
@@ -847,26 +880,26 @@ def editar_conta_pagar(id):
 def pagar_conta(id):
     """Marcar conta como paga"""
     from models.rh import AccountPayable
-    
+
     conta = AccountPayable.query.filter_by(
         id=id,
         company_id=current_user.company_id
     ).first_or_404()
-    
+
     valor_pago = request.form.get('paid_amount', '')
     if valor_pago:
         conta.paid_amount = Decimal(valor_pago.replace(',', '.'))
     else:
         conta.paid_amount = conta.amount
-    
+
     conta.status = 'paid'
     conta.paid_at = datetime.utcnow()
-    
+
     db.session.commit()
-    
+
     if conta.is_recurring:
         from dateutil.relativedelta import relativedelta
-        
+
         proxima = AccountPayable(
             company_id=conta.company_id,
             description=conta.description,
@@ -879,7 +912,7 @@ def pagar_conta(id):
             status='pending',
             created_by=current_user.id
         )
-        
+
         if conta.recurrence_type == 'monthly':
             proxima.due_date = conta.due_date + relativedelta(months=1)
         elif conta.recurrence_type == 'weekly':
@@ -888,13 +921,13 @@ def pagar_conta(id):
             proxima.due_date = conta.due_date + relativedelta(years=1)
         else:
             proxima.due_date = conta.due_date + relativedelta(months=1)
-        
+
         db.session.add(proxima)
         db.session.commit()
         flash(f'Conta paga! Proxima parcela criada para {proxima.due_date.strftime("%d/%m/%Y")}.', 'success')
     else:
         flash('Conta marcada como paga!', 'success')
-    
+
     return redirect(url_for('financial.contas_pagar'))
 
 
@@ -904,15 +937,15 @@ def pagar_conta(id):
 def excluir_conta_pagar(id):
     """Excluir conta a pagar"""
     from models.rh import AccountPayable
-    
+
     conta = AccountPayable.query.filter_by(
         id=id,
         company_id=current_user.company_id
     ).first_or_404()
-    
+
     conta.status = 'cancelled'
     db.session.commit()
-    
+
     flash('Conta cancelada.', 'warning')
     return redirect(url_for('financial.contas_pagar'))
 
@@ -925,7 +958,7 @@ def emitir_nfse():
     if request.method == 'POST':
         flash('NFSe seria emitida aqui (integracao pendente)', 'info')
         return redirect(url_for('financial.emitir_nfse'))
-    
+
     return render_template('financial/emitir_nfse.html')
 
 
@@ -939,11 +972,11 @@ def gerar_pix():
         status='pending',
         is_active=True
     ).all()
-    
+
     if request.method == 'POST':
         flash('QR Code PIX seria gerado aqui (integracao pendente)', 'info')
         return redirect(url_for('financial.gerar_pix'))
-    
+
     return render_template('financial/gerar_pix.html', faturas=faturas)
 
 
@@ -953,51 +986,51 @@ def gerar_pix():
 def dre():
     """Demonstrativo de Resultado do Exercicio com dados reais"""
     from models.rh import AccountPayable, AccountReceivable, FreelancerPayment, PayrollEntry
-    
+
     current_month = date.today().month
     current_year = date.today().year
     current_month_str = date.today().strftime('%Y-%m')
-    
+
     receitas_locacao = db.session.query(func.sum(AccountReceivable.received_amount)).filter(
         AccountReceivable.company_id == current_user.company_id,
         AccountReceivable.status == 'received',
         func.strftime('%Y-%m', AccountReceivable.received_at) == current_month_str
     ).scalar() or 0
-    
+
     receitas_pendentes = db.session.query(func.sum(AccountReceivable.amount)).filter(
         AccountReceivable.company_id == current_user.company_id,
         AccountReceivable.status == 'pending',
         func.strftime('%Y-%m', AccountReceivable.due_date) == current_month_str
     ).scalar() or 0
-    
+
     despesas_folha = db.session.query(func.sum(PayrollEntry.net_salary)).filter(
         PayrollEntry.company_id == current_user.company_id,
         PayrollEntry.reference_month == current_month,
         PayrollEntry.reference_year == current_year
     ).scalar() or 0
-    
+
     despesas_contas = db.session.query(func.sum(AccountPayable.paid_amount)).filter(
         AccountPayable.company_id == current_user.company_id,
         AccountPayable.status == 'paid',
         func.strftime('%Y-%m', AccountPayable.paid_at) == current_month_str
     ).scalar() or 0
-    
+
     despesas_pendentes = db.session.query(func.sum(AccountPayable.amount)).filter(
         AccountPayable.company_id == current_user.company_id,
         AccountPayable.status == 'pending',
         func.strftime('%Y-%m', AccountPayable.due_date) == current_month_str
     ).scalar() or 0
-    
+
     despesas_freelancers = db.session.query(func.sum(FreelancerPayment.amount)).filter(
         FreelancerPayment.company_id == current_user.company_id,
         FreelancerPayment.status == 'paid',
         func.strftime('%Y-%m', FreelancerPayment.paid_at) == current_month_str
     ).scalar() or 0
-    
+
     total_receitas = float(receitas_locacao)
     total_despesas = float(despesas_folha) + float(despesas_contas) + float(despesas_freelancers)
     lucro = total_receitas - total_despesas
-    
+
     return render_template('financial/dre.html',
                           receitas_locacao=receitas_locacao,
                           receitas_pendentes=receitas_pendentes,
@@ -1017,11 +1050,11 @@ def dre():
 def contas_receber():
     """Lista de contas a receber"""
     from models.rh import AccountReceivable, Client
-    
+
     status_filter = request.args.get('status', 'pending')
-    
+
     query = AccountReceivable.query.filter_by(company_id=current_user.company_id)
-    
+
     if status_filter == 'pending':
         query = query.filter(AccountReceivable.status == 'pending')
     elif status_filter == 'overdue':
@@ -1031,31 +1064,31 @@ def contas_receber():
         )
     elif status_filter == 'received':
         query = query.filter(AccountReceivable.status == 'received')
-    
+
     contas = query.order_by(AccountReceivable.due_date.asc()).all()
-    
+
     total_vencidas = db.session.query(func.sum(AccountReceivable.amount)).filter(
         AccountReceivable.company_id == current_user.company_id,
         AccountReceivable.status == 'pending',
         AccountReceivable.due_date < date.today()
     ).scalar() or 0
-    
+
     total_7_dias = db.session.query(func.sum(AccountReceivable.amount)).filter(
         AccountReceivable.company_id == current_user.company_id,
         AccountReceivable.status == 'pending',
         AccountReceivable.due_date >= date.today(),
         AccountReceivable.due_date <= date.today() + timedelta(days=7)
     ).scalar() or 0
-    
+
     current_month = date.today().strftime('%Y-%m')
     total_mes = db.session.query(func.sum(AccountReceivable.amount)).filter(
         AccountReceivable.company_id == current_user.company_id,
         AccountReceivable.status == 'pending',
         func.strftime('%Y-%m', AccountReceivable.due_date) == current_month
     ).scalar() or 0
-    
+
     clientes = Client.query.filter_by(company_id=current_user.company_id, is_active=True).all()
-    
+
     return render_template('financial/contas_receber.html',
                           contas=contas,
                           total_vencidas=total_vencidas,
@@ -1071,19 +1104,19 @@ def contas_receber():
 def nova_conta_receber():
     """Criar nova conta a receber"""
     from models.rh import AccountReceivable, Client
-    
+
     if request.method == 'POST':
         try:
             total_installments = int(request.form.get('total_installments', '1') or '1')
             valor_total = Decimal(request.form.get('amount', '0').replace(',', '.'))
             valor_parcela = valor_total / total_installments if total_installments > 1 else valor_total
             due_date_base = datetime.strptime(request.form.get('due_date'), '%Y-%m-%d').date()
-            
+
             from dateutil.relativedelta import relativedelta
-            
+
             for i in range(total_installments):
                 due_date = due_date_base + relativedelta(months=i) if total_installments > 1 else due_date_base
-                
+
                 conta = AccountReceivable(
                     company_id=current_user.company_id,
                     description=request.form.get('description', '').strip(),
@@ -1099,23 +1132,23 @@ def nova_conta_receber():
                     status='pending',
                     created_by=current_user.id
                 )
-                
+
                 db.session.add(conta)
-            
+
             db.session.commit()
-            
+
             if total_installments > 1:
                 flash(f'{total_installments} parcelas cadastradas com sucesso!', 'success')
             else:
                 flash('Conta a receber cadastrada!', 'success')
             return redirect(url_for('financial.contas_receber'))
-            
+
         except ValueError as e:
             flash(f'Erro nos dados: verifique valor e data.', 'danger')
         except Exception as e:
             db.session.rollback()
             flash(f'Erro ao salvar: {str(e)}', 'danger')
-    
+
     clientes = Client.query.filter_by(company_id=current_user.company_id, is_active=True).all()
     categorias = ['servico', 'venda', 'locacao', 'projeto', 'outros']
     return render_template('financial/conta_receber_form.html', conta=None, categorias=categorias, clientes=clientes)
@@ -1127,24 +1160,24 @@ def nova_conta_receber():
 def receber_conta(id):
     """Marcar conta como recebida"""
     from models.rh import AccountReceivable
-    
+
     conta = AccountReceivable.query.filter_by(
         id=id,
         company_id=current_user.company_id
     ).first_or_404()
-    
+
     valor_recebido = request.form.get('received_amount', '')
     if valor_recebido:
         conta.received_amount = Decimal(valor_recebido.replace(',', '.'))
     else:
         conta.received_amount = conta.amount
-    
+
     conta.status = 'received'
     conta.received_at = datetime.utcnow()
-    
+
     db.session.commit()
     flash('Recebimento confirmado!', 'success')
-    
+
     return redirect(url_for('financial.contas_receber'))
 
 
@@ -1154,15 +1187,15 @@ def receber_conta(id):
 def excluir_conta_receber(id):
     """Excluir conta a receber"""
     from models.rh import AccountReceivable
-    
+
     conta = AccountReceivable.query.filter_by(
         id=id,
         company_id=current_user.company_id
     ).first_or_404()
-    
+
     conta.status = 'cancelled'
     db.session.commit()
-    
+
     flash('Conta cancelada.', 'warning')
     return redirect(url_for('financial.contas_receber'))
 
@@ -1173,12 +1206,12 @@ def excluir_conta_receber(id):
 def clientes():
     """Lista de clientes"""
     from models.rh import Client
-    
+
     clientes = Client.query.filter_by(
         company_id=current_user.company_id,
         is_active=True
     ).order_by(Client.name).all()
-    
+
     return render_template('financial/clientes.html', clientes=clientes)
 
 
@@ -1188,7 +1221,7 @@ def clientes():
 def novo_cliente():
     """Criar novo cliente"""
     from models.rh import Client
-    
+
     if request.method == 'POST':
         try:
             cliente = Client(
@@ -1204,17 +1237,17 @@ def novo_cliente():
                 notes=request.form.get('notes', '').strip(),
                 is_active=True
             )
-            
+
             db.session.add(cliente)
             db.session.commit()
-            
+
             flash('Cliente cadastrado com sucesso!', 'success')
             return redirect(url_for('financial.clientes'))
-            
+
         except Exception as e:
             db.session.rollback()
             flash(f'Erro ao salvar: {str(e)}', 'danger')
-    
+
     return render_template('financial/cliente_form.html', cliente=None)
 
 
@@ -1224,12 +1257,12 @@ def novo_cliente():
 def editar_cliente(id):
     """Editar cliente"""
     from models.rh import Client
-    
+
     cliente = Client.query.filter_by(
         id=id,
         company_id=current_user.company_id
     ).first_or_404()
-    
+
     if request.method == 'POST':
         try:
             cliente.name = request.form.get('name', cliente.name).strip()
@@ -1241,16 +1274,16 @@ def editar_cliente(id):
             cliente.city = request.form.get('city', '').strip()
             cliente.state = request.form.get('state', '').strip()
             cliente.notes = request.form.get('notes', '').strip()
-            
+
             db.session.commit()
-            
+
             flash('Cliente atualizado!', 'success')
             return redirect(url_for('financial.clientes'))
-            
+
         except Exception as e:
             db.session.rollback()
             flash(f'Erro ao salvar: {str(e)}', 'danger')
-    
+
     return render_template('financial/cliente_form.html', cliente=cliente)
 
 
@@ -1260,14 +1293,14 @@ def editar_cliente(id):
 def excluir_cliente(id):
     """Desativar cliente"""
     from models.rh import Client
-    
+
     cliente = Client.query.filter_by(
         id=id,
         company_id=current_user.company_id
     ).first_or_404()
-    
+
     cliente.is_active = False
     db.session.commit()
-    
+
     flash('Cliente removido.', 'warning')
     return redirect(url_for('financial.clientes'))
