@@ -171,11 +171,58 @@
                 <div class="form-group">
                     <label class="form-label">Categoria</label>
                     <select name="category" class="form-select" id="category-select" onchange="toggleCustomCategory()">
-                        {% for cat in categorias %}
-                        <option value="{{ cat }}" {{ 'selected' if conta and conta.category == cat else '' }}>
-                            {{ cat|capitalize }}
-                        </option>
-                        {% endfor %}
+                        <option value="">Selecione...</option>
+
+                        <optgroup label="Operacionais">
+                            <option value="folha_clt" {{ 'selected' if conta and conta.category == 'folha_clt' else '' }}>Folha CLT</option>
+                            <option value="freelancers" {{ 'selected' if conta and conta.category == 'freelancers' else '' }}>Freelancers/Terceiros</option>
+                            <option value="manutencao" {{ 'selected' if conta and conta.category == 'manutencao' else '' }}>Manutenção Equipamentos</option>
+                        </optgroup>
+
+                        <optgroup label="Administrativas">
+                            <option value="aluguel" {{ 'selected' if conta and conta.category == 'aluguel' else '' }}>Aluguel</option>
+                            <option value="energia" {{ 'selected' if conta and conta.category == 'energia' else '' }}>Energia Elétrica</option>
+                            <option value="agua" {{ 'selected' if conta and conta.category == 'agua' else '' }}>Água</option>
+                            <option value="telefone" {{ 'selected' if conta and conta.category == 'telefone' else '' }}>Telefone</option>
+                            <option value="internet" {{ 'selected' if conta and conta.category == 'internet' else '' }}>Internet</option>
+                            <option value="contabilidade" {{ 'selected' if conta and conta.category == 'contabilidade' else '' }}>Contabilidade</option>
+                            <option value="juridico" {{ 'selected' if conta and conta.category == 'juridico' else '' }}>Jurídico/Advocacia</option>
+                            <option value="softwares" {{ 'selected' if conta and conta.category == 'softwares' else '' }}>Softwares/Assinaturas</option>
+                        </optgroup>
+
+                        <optgroup label="Logística">
+                            <option value="transporte" {{ 'selected' if conta and conta.category == 'transporte' else '' }}>Transporte/Frete</option>
+                            <option value="combustivel" {{ 'selected' if conta and conta.category == 'combustivel' else '' }}>Combustível</option>
+                            <option value="pedagios" {{ 'selected' if conta and conta.category == 'pedagios' else '' }}>Pedágios</option>
+                            <option value="manutencao_veiculos" {{ 'selected' if conta and conta.category == 'manutencao_veiculos' else '' }}>Manutenção Veículos</option>
+                        </optgroup>
+
+                        <optgroup label="Impostos & Seguros">
+                            <option value="impostos" {{ 'selected' if conta and conta.category == 'impostos' else '' }}>Impostos/Taxas</option>
+                            <option value="seguros" {{ 'selected' if conta and conta.category == 'seguros' else '' }}>Seguros</option>
+                        </optgroup>
+
+                        <optgroup label="CAPEX">
+                            <option value="equipamentos" {{ 'selected' if conta and conta.category == 'equipamentos' else '' }}>Equipamentos (CAPEX)</option>
+                            <option value="veiculos" {{ 'selected' if conta and conta.category == 'veiculos' else '' }}>Veículos</option>
+                        </optgroup>
+
+                        <optgroup label="Marketing">
+                            <option value="marketing" {{ 'selected' if conta and conta.category == 'marketing' else '' }}>Marketing/Publicidade</option>
+                        </optgroup>
+
+                        <optgroup label="Materiais">
+                            <option value="materiais_consumo" {{ 'selected' if conta and conta.category == 'materiais_consumo' else '' }}>Material de Consumo</option>
+                            <option value="ferramentas" {{ 'selected' if conta and conta.category == 'ferramentas' else '' }}>Ferramentas</option>
+                        </optgroup>
+
+                        <optgroup label="Financeiro">
+                            <option value="parcelamentos" {{ 'selected' if conta and conta.category == 'parcelamentos' else '' }}>Parcelamentos</option>
+                        </optgroup>
+
+                        <optgroup label="Outras">
+                            <option value="outros" {{ 'selected' if conta and conta.category == 'outros' else '' }}>Outros</option>
+                        </optgroup>
                     </select>
                 </div>
 
@@ -283,3 +330,4 @@ function toggleCustomCategory() {
 }
 </script>
 {% endblock %}
+</document_content>
