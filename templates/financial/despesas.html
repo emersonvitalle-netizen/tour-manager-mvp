@@ -61,6 +61,7 @@
     .kpi-card.orange { background: linear-gradient(135deg, #e65100 0%, #f57c00 100%); }
     .kpi-card.yellow { background: linear-gradient(135deg, #f9a825 0%, #fbc02d 100%); }
     .kpi-card.purple { background: linear-gradient(135deg, #6a1b9a 0%, #8e24aa 100%); }
+    .kpi-card.green { background: linear-gradient(135deg, #2e7d32 0%, #388e3c 100%); }
 
     .kpi-card .kpi-label {
         font-size: 0.75rem;
@@ -162,6 +163,18 @@
         color: #666;
         font-size: 0.7rem;
     }
+
+    .empty-state {
+        text-align: center;
+        padding: 24px;
+        color: #666;
+    }
+
+    .empty-state i {
+        font-size: 2rem;
+        margin-bottom: 8px;
+        display: block;
+    }
 </style>
 {% endblock %}
 
@@ -180,19 +193,23 @@
     <div class="kpi-grid">
         <div class="kpi-card red">
             <div class="kpi-label">Total Mes</div>
-            <div class="kpi-value">R$ 37k</div>
+            <div class="kpi-value">R$ {{ "{:,.0f}".format(total_mes).replace(",", ".") }}</div>
         </div>
         <div class="kpi-card orange">
             <div class="kpi-label">Folha CLT</div>
-            <div class="kpi-value">R$ 18.5k</div>
+            <div class="kpi-value">R$ {{ "{:,.0f}".format(folha_clt).replace(",", ".") }}</div>
         </div>
         <div class="kpi-card yellow">
-            <div class="kpi-label">Contas Fixas</div>
-            <div class="kpi-value">R$ 9.2k</div>
+            <div class="kpi-label">Contas Pagas</div>
+            <div class="kpi-value">R$ {{ "{:,.0f}".format(contas_fixas).replace(",", ".") }}</div>
         </div>
         <div class="kpi-card purple">
             <div class="kpi-label">Manutencao</div>
-            <div class="kpi-value">R$ 6.8k</div>
+            <div class="kpi-value">R$ {{ "{:,.0f}".format(manutencao).replace(",", ".") }}</div>
+        </div>
+        <div class="kpi-card green" style="grid-column: span 2;">
+            <div class="kpi-label">Freelancers</div>
+            <div class="kpi-value">R$ {{ "{:,.0f}".format(freelancers_total).replace(",", ".") }}</div>
         </div>
     </div>
 
@@ -218,39 +235,38 @@
     <h4 class="section-title">Ultimas Despesas</h4>
 
     <div class="list-card">
-        <div class="list-item">
-            <div class="icon">🎯</div>
-            <div class="info">
-                <h4>Freelancer</h4>
-                <p>Joao Silva - 3 shows</p>
+        {% if ultimas_despesas and ultimas_despesas|length > 0 %}
+            {% for despesa in ultimas_despesas %}
+            <div class="list-item">
+                <div class="icon">
+                    {% if despesa.tipo == 'freelancer' %}
+                        🎯
+                    {% elif despesa.tipo == 'conta' %}
+                        💡
+                    {% elif despesa.tipo == 'manutencao' %}
+                        🔧
+                    {% elif despesa.tipo == 'folha' %}
+                        👔
+                    {% else %}
+                        📋
+                    {% endif %}
+                </div>
+                <div class="info">
+                    <h4>{{ despesa.categoria }}</h4>
+                    <p>{{ despesa.descricao[:40] }}{% if despesa.descricao|length > 40 %}...{% endif %}</p>
+                </div>
+                <div class="value">
+                    <div class="amount">R$ {{ "{:,.2f}".format(despesa.valor).replace(",", "X").replace(".", ",").replace("X", ".") }}</div>
+                    <div class="date">{{ despesa.data.strftime('%d/%m') }}</div>
+                </div>
             </div>
-            <div class="value">
-                <div class="amount">R$ 1.500</div>
-                <div class="date">20/06</div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-inbox"></i>
+                <p>Nenhuma despesa registrada este mes</p>
             </div>
-        </div>
-        <div class="list-item">
-            <div class="icon">💡</div>
-            <div class="info">
-                <h4>Energia</h4>
-                <p>Conta de luz junho</p>
-            </div>
-            <div class="value">
-                <div class="amount">R$ 850</div>
-                <div class="date">18/06</div>
-            </div>
-        </div>
-        <div class="list-item">
-            <div class="icon">🔧</div>
-            <div class="info">
-                <h4>Manutencao</h4>
-                <p>Reparo Mesa X32</p>
-            </div>
-            <div class="value">
-                <div class="amount">R$ 620</div>
-                <div class="date">15/06</div>
-            </div>
-        </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

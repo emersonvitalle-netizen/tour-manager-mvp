@@ -56,12 +56,12 @@ class WizardController {
         if (bodyEl) bodyEl.innerHTML = typeof step.content === 'function' 
             ? step.content(this.data) 
             : step.content;
-        
+
         if (progressEl) {
             const progress = ((this.currentStep + 1) / this.steps.length) * 100;
             progressEl.style.width = `${progress}%`;
         }
-        
+
         const progressTextEl = document.getElementById('wizardProgressText');
         if (progressTextEl) {
             progressTextEl.textContent = `${this.currentStep + 1}/${this.steps.length}`;
@@ -155,15 +155,18 @@ class WizardController {
                 margin-bottom: 8px;
                 display: block;
             }
-            .wizard-body .form-control {
+            .wizard-body .form-control,
+            .wizard-body .form-select {
                 background: #0a0a0a;
                 border: 1px solid #333;
                 border-radius: 8px;
                 color: #fff;
                 padding: 12px 16px;
                 font-size: 1rem;
+                width: 100%;
             }
-            .wizard-body .form-control:focus {
+            .wizard-body .form-control:focus,
+            .wizard-body .form-select:focus {
                 border-color: #d4a574;
                 box-shadow: 0 0 0 2px rgba(212, 165, 116, 0.2);
                 outline: none;
@@ -231,9 +234,9 @@ class WizardController {
 
     async _next() {
         const step = this.steps[this.currentStep];
-        
+
         this._collectFormData();
-        
+
         if (!step.validate(this.data)) {
             return;
         }
@@ -286,7 +289,7 @@ class WizardController {
                 this.data[key] = value;
             });
         }
-        
+
         document.querySelectorAll('#wizardBody input, #wizardBody select, #wizardBody textarea').forEach(el => {
             if (el.name && !el.closest('form')) {
                 if (el.type === 'checkbox') {
@@ -317,7 +320,7 @@ class WizardController {
         const bodyEl = document.getElementById('wizardBody');
         const existingAlert = bodyEl.querySelector('.alert-danger');
         if (existingAlert) existingAlert.remove();
-        
+
         bodyEl.insertAdjacentHTML('afterbegin', 
             `<div class="alert alert-danger alert-dismissible fade show">
                 ${message}
@@ -359,6 +362,9 @@ class WizardController {
     }
 }
 
+// ============================================
+// WIZARD: APROVAÇÃO DE ORÇAMENTO (SeparationList)
+// ============================================
 function startQuoteApprovalWizard(quoteId, quoteName, quoteTotal) {
     const wizard = new WizardController({
         onComplete: (data) => {
@@ -367,6 +373,7 @@ function startQuoteApprovalWizard(quoteId, quoteName, quoteTotal) {
         }
     });
 
+    // Step 1: Confirmar aprovação
     wizard.addStep({
         title: 'Aprovar Orçamento',
         content: (data) => `
@@ -391,6 +398,7 @@ function startQuoteApprovalWizard(quoteId, quoteName, quoteTotal) {
         endpoint: `/orcamento/${quoteId}/approve`
     });
 
+    // Step 2: Gerar Contrato?
     wizard.addStep({
         title: 'Gerar Contrato?',
         content: () => `
@@ -440,6 +448,7 @@ function startQuoteApprovalWizard(quoteId, quoteName, quoteTotal) {
         }
     });
 
+    // Step 3: Gerar Contas a Receber? (CORRIGIDO)
     wizard.addStep({
         title: 'Gerar Contas a Receber?',
         content: (data) => `
@@ -463,9 +472,10 @@ function startQuoteApprovalWizard(quoteId, quoteName, quoteTotal) {
                 <input type="date" name="first_due_date" class="form-control bg-dark text-white border-secondary" 
                        value="${new Date().toISOString().split('T')[0]}">
             </div>`,
-        endpoint: `/financial/contas-receber/from-quote/${quoteId}`
+        endpoint: `/api/automation/quote/${quoteId}/receivables`
     });
 
+    // Step 4: Vincular a Evento? (CORRIGIDO)
     wizard.addStep({
         title: 'Vincular a Evento?',
         content: () => `
@@ -485,9 +495,11 @@ function startQuoteApprovalWizard(quoteId, quoteName, quoteTotal) {
                 const select = document.querySelector('select[name="tour_id"]');
                 tours.forEach(tour => {
                     select.insertAdjacentHTML('beforeend', 
-                        `<option value="${tour.id}">${tour.name} - ${tour.artist}</option>`);
+                        `<option value="${tour.id}">${tour.name}${tour.artist ? ' - ' + tour.artist : ''}</option>`);
                 });
-            } catch (e) {}
+            } catch (e) {
+                console.error('Erro ao carregar tours:', e);
+            }
         }
     });
 
@@ -495,19 +507,9 @@ function startQuoteApprovalWizard(quoteId, quoteName, quoteTotal) {
     wizard.start();
 }
 
-function formatCurrency(value) {
-    return parseFloat(value || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
-
-function calculateFreelancerTotal() {
-    const dailyRate = parseFloat(document.getElementById('dailyRateInput')?.value || 0);
-    const days = parseInt(document.getElementById('daysInput')?.value || 1);
-    const totalInput = document.getElementById('totalValueInput');
-    if (totalInput) {
-        totalInput.value = (dailyRate * days).toFixed(2);
-    }
-}
-
+// ============================================
+// WIZARD: FUNCIONÁRIO CLT - DESPESAS AUTOMÁTICAS (CORRIGIDO)
+// ============================================
 function startEmployeeWizard(employeeId, employeeName, salary) {
     const salaryNum = parseFloat(salary) || 0;
     const wizard = new WizardController({
@@ -537,7 +539,7 @@ function startEmployeeWizard(employeeId, employeeName, salary) {
                     Criar despesas de benefícios (VT, VR)
                 </label>
             </div>`,
-        endpoint: `/rh/employees/${employeeId}/auto-expenses`
+        endpoint: `/api/automation/employee/${employeeId}/auto-expenses`
     });
 
     wizard.addStep({
@@ -560,6 +562,9 @@ function startEmployeeWizard(employeeId, employeeName, salary) {
     wizard.start();
 }
 
+// ============================================
+// WIZARD: FREELANCER - REGISTRAR PAGAMENTO (CORRIGIDO)
+// ============================================
 function startFreelancerPaymentWizard(freelancerId, freelancerName, eventName, dailyRate) {
     const dailyRateNum = parseFloat(dailyRate) || 0;
     const wizard = new WizardController({
@@ -597,27 +602,20 @@ function startFreelancerPaymentWizard(freelancerId, freelancerName, eventName, d
                 <input type="date" name="payment_date" class="form-control bg-dark text-white border-secondary" 
                        value="${new Date().toISOString().split('T')[0]}">
             </div>`,
-        endpoint: `/rh/freelancers/${freelancerId}/register-payment`
+        endpoint: `/api/automation/freelancer/${freelancerId}/payable`
     });
 
+    // Step 2: Criar Conta a Pagar? (CORRIGIDO - usa mesmo endpoint)
     wizard.addStep({
         title: 'Criar Conta a Pagar?',
         content: () => `
             <div class="text-center mb-4">
                 <i class="bi bi-credit-card" style="font-size: 3rem; color: #ffc107;"></i>
             </div>
-            <p class="text-center mb-4">Registrar na Contas a Pagar?</p>
-            <div class="d-flex justify-content-center gap-3">
-                <label class="btn btn-outline-success">
-                    <input type="radio" name="create_payable" value="yes" class="d-none" checked> 
-                    <i class="bi bi-check-lg"></i> Sim
-                </label>
-                <label class="btn btn-outline-secondary">
-                    <input type="radio" name="create_payable" value="no" class="d-none"> 
-                    <i class="bi bi-x-lg"></i> Não
-                </label>
-            </div>`,
-        endpoint: (data) => data.create_payable === 'yes' ? `/financial/contas-pagar/from-freelancer` : null
+            <p class="text-center mb-4">Conta a pagar já foi registrada!</p>
+            <div class="alert alert-success text-center">
+                <i class="bi bi-check-circle"></i> Pagamento do freelancer criado com sucesso
+            </div>`
     });
 
     wizard.setData('freelancer_id', freelancerId);
@@ -625,6 +623,9 @@ function startFreelancerPaymentWizard(freelancerId, freelancerName, eventName, d
     wizard.start();
 }
 
+// ============================================
+// WIZARD: PÓS-APROVAÇÃO (CORRIGIDO)
+// ============================================
 function startPostApprovalWizard(quoteId, quoteName, quoteTotal) {
     const wizard = new WizardController({
         onComplete: (data) => {
@@ -685,20 +686,9 @@ function startPostApprovalWizard(quoteId, quoteName, quoteTotal) {
     wizard.start();
 }
 
-function showToast(message, type = 'success') {
-    const toast = document.createElement('div');
-    toast.className = `toast align-items-center text-white bg-${type} border-0 position-fixed bottom-0 end-0 m-3`;
-    toast.setAttribute('role', 'alert');
-    toast.innerHTML = `
-        <div class="d-flex">
-            <div class="toast-body">${message}</div>
-            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-        </div>`;
-    document.body.appendChild(toast);
-    new bootstrap.Toast(toast).show();
-    setTimeout(() => toast.remove(), 3000);
-}
-
+// ============================================
+// WIZARD: CRIAR WORKLIST (CORRIGIDO)
+// ============================================
 function startWorkListWizard(quoteId, quoteName, clientName) {
     const wizard = new WizardController({
         onComplete: (data) => {
@@ -740,4 +730,41 @@ function startWorkListWizard(quoteId, quoteName, clientName) {
 
     wizard.setData('quote_id', quoteId);
     wizard.start();
+}
+
+// ============================================
+// FUNÇÕES AUXILIARES
+// ============================================
+function formatCurrency(value) {
+    return parseFloat(value || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function calculateFreelancerTotal() {
+    const dailyRate = parseFloat(document.getElementById('dailyRateInput')?.value || 0);
+    const days = parseInt(document.getElementById('daysInput')?.value || 1);
+    const totalInput = document.getElementById('totalValueInput');
+    if (totalInput) {
+        totalInput.value = (dailyRate * days).toFixed(2);
+    }
+}
+
+function showToast(message, type = 'success') {
+    const toast = document.createElement('div');
+    toast.className = `toast align-items-center text-white bg-${type} border-0 position-fixed bottom-0 end-0 m-3`;
+    toast.setAttribute('role', 'alert');
+    toast.style.zIndex = '10000';
+    toast.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">${message}</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>`;
+    document.body.appendChild(toast);
+
+    if (typeof bootstrap !== 'undefined') {
+        new bootstrap.Toast(toast).show();
+    } else {
+        toast.style.display = 'block';
+    }
+
+    setTimeout(() => toast.remove(), 3000);
 }

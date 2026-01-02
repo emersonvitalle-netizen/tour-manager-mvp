@@ -247,13 +247,19 @@
                 <span class="value despesa">R$ {{ "%.2f"|format(despesas_freelancers) }}</span>
             </div>
             {% endif %}
+            {% if despesas_manutencao is defined and despesas_manutencao > 0 %}
+            <div class="dre-item">
+                <span class="label">Manutencao</span>
+                <span class="value despesa">R$ {{ "%.2f"|format(despesas_manutencao) }}</span>
+            </div>
+            {% endif %}
             {% if despesas_pendentes > 0 %}
             <div class="dre-item pendente">
                 <span class="label">Pendente de pagamento</span>
                 <span class="value">R$ {{ "%.2f"|format(despesas_pendentes) }}</span>
             </div>
             {% endif %}
-            {% if despesas_folha == 0 and despesas_contas == 0 and despesas_freelancers == 0 %}
+            {% if despesas_folha == 0 and despesas_contas == 0 and despesas_freelancers == 0 and (despesas_manutencao is not defined or despesas_manutencao == 0) %}
             <div class="dre-item">
                 <span class="label">Nenhuma despesa registrada</span>
                 <span class="value">R$ 0,00</span>
