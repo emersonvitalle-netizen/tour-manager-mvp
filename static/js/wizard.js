@@ -604,6 +604,9 @@ function startQuoteApprovalWizard(quoteId, quoteName, quoteTotal) {
     });
 
     console.log('[Debug] After all steps, total:', wizard.steps.length);
+    if (wizard.steps.length !== 4) {
+        alert('ERRO: Wizard deveria ter 4 steps mas tem ' + wizard.steps.length);
+    }
     wizard.setData('quote_id', quoteId);
     wizard.start();
 }
