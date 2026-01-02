@@ -491,60 +491,78 @@ function startQuoteApprovalWizard(quoteId, quoteName, quoteTotal) {
         endpoint: `/api/automation/quote/${quoteId}/receivables`
     });
 
-    // Step 4: Criar Evento Automaticamente
-    console.log('[Debug] Before step 4, steps:', wizard.steps.length);
+    // Step 4: Pergunta simples SIM/NÃO
     wizard.addStep({
-        title: 'Criar Evento',
+        title: 'Registrar Evento',
         content: () => `
             <div class="text-center mb-4">
-                <i class="bi bi-calendar-plus" style="font-size: 3rem; color: #17a2b8;"></i>
+                <i class="bi bi-calendar-plus" style="font-size: 4rem; color: #d4a574;"></i>
             </div>
-            <p class="text-center mb-3">Criar evento a partir do orçamento:</p>
-            <div class="mb-3">
-                <label class="form-label">Nome do Evento</label>
-                <input type="text" name="event_name" class="form-control bg-dark text-white border-secondary" 
-                       value="${quoteName}" readonly style="background: #1a1a1a;">
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Data do Evento</label>
-                <input type="date" name="event_date" class="form-control bg-dark text-white border-secondary"
-                       value="${quoteDate || new Date().toISOString().split('T')[0]}">
-            </div>
-            <div class="text-center mt-4">
-                <small class="text-muted">O evento será criado com os equipamentos do orçamento</small>
+            <h4 class="text-center mb-4" style="color: #fff;">
+                Adicionar <span style="color: #d4a574;">"${quoteName}"</span><br>em Eventos?
+            </h4>
+            <div class="d-flex gap-3 justify-content-center mt-4">
+                <button type="button" class="btn btn-lg px-5" id="btnEventoSim" 
+                        style="background: #d4a574; color: #000; font-weight: 600;">
+                    SIM
+                </button>
+                <button type="button" class="btn btn-lg btn-outline-secondary px-5" id="btnEventoNao">
+                    NÃO
+                </button>
             </div>`,
-        onLeave: async (data) => {
-            try {
-                const response = await fetch('/api/automation/quote/' + quoteId + '/create-event', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        name: data.event_name || quoteName,
-                        start_date: data.event_date
-                    })
-                });
-                const result = await response.json();
-                console.log('[Wizard] Create event result:', result);
-                if (result.success && result.data && result.data.tour_id) {
-                    showToast('Evento criado com sucesso!', 'success');
-                    setTimeout(() => {
-                        window.location.href = '/tour/' + result.data.tour_id;
-                    }, 1000);
-                    return false;
-                } else {
-                    showToast(result.message || 'Erro ao criar evento', 'error');
+        onEnter: () => {
+            setTimeout(() => {
+                const btnSim = document.getElementById('btnEventoSim');
+                const btnNao = document.getElementById('btnEventoNao');
+                const wizardNext = document.getElementById('wizardNext');
+                const wizardPrev = document.getElementById('wizardPrev');
+                const wizardClose = document.getElementById('wizardClose');
+                
+                if (wizardNext) wizardNext.style.display = 'none';
+                if (wizardPrev) wizardPrev.style.display = 'none';
+                if (wizardClose) wizardClose.style.display = 'none';
+                
+                if (btnSim) {
+                    btnSim.addEventListener('click', async () => {
+                        btnSim.disabled = true;
+                        btnSim.innerHTML = '<i class="bi bi-hourglass-split"></i> Criando...';
+                        try {
+                            const response = await fetch('/api/automation/quote/' + quoteId + '/create-event', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ name: quoteName })
+                            });
+                            const result = await response.json();
+                            if (result.success && result.data && result.data.tour_id) {
+                                showToast('Evento criado!', 'success');
+                                setTimeout(() => {
+                                    window.location.href = '/tour/' + result.data.tour_id;
+                                }, 800);
+                            } else {
+                                showToast(result.message || 'Erro ao criar evento', 'error');
+                                btnSim.disabled = false;
+                                btnSim.innerHTML = 'SIM';
+                            }
+                        } catch (e) {
+                            console.error('Erro:', e);
+                            showToast('Erro ao criar evento', 'error');
+                            btnSim.disabled = false;
+                            btnSim.innerHTML = 'SIM';
+                        }
+                    });
                 }
-            } catch (e) {
-                console.error('Erro ao criar evento:', e);
-                showToast('Erro ao criar evento', 'error');
-            }
-            return true;
+                
+                if (btnNao) {
+                    btnNao.addEventListener('click', () => {
+                        showToast('Orçamento aprovado!', 'success');
+                        const modal = document.getElementById('wizardModal');
+                        if (modal) modal.remove();
+                        setTimeout(() => location.reload(), 1000);
+                    });
+                }
+            }, 100);
         }
     });
-    console.log('[Debug] After step 4, steps:', wizard.steps.length);
-    if (wizard.steps.length !== 4) {
-        alert('[ERRO] Wizard deveria ter 4 steps, mas tem ' + wizard.steps.length);
-    }
 
     wizard.start({
         quoteId: quoteId,
