@@ -32,6 +32,7 @@ def create_contract_from_quote(quote_id):
         current_user.company_id, 
         current_user.id
     )
+    print(f"[DEBUG] Contract endpoint returning: {result}")
     return jsonify(result)
 
 
