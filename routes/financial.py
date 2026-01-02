@@ -1419,12 +1419,20 @@ def nova_conta_receber():
 def contas_receber_from_quote(quote_id):
     """Gera contas a receber a partir de um orçamento aprovado (wizard automation)"""
     from models.rh import AccountReceivable
+    from models.separation_list import SeparationList
     from dateutil.relativedelta import relativedelta
 
-    quote = Quote.query.filter_by(
+    # Try SeparationList first (main quote system), fallback to Quote
+    quote = SeparationList.query.filter_by(
         id=quote_id,
         company_id=current_user.company_id
-    ).first_or_404()
+    ).first()
+    
+    if not quote:
+        quote = Quote.query.filter_by(
+            id=quote_id,
+            company_id=current_user.company_id
+        ).first_or_404()
 
     data = request.get_json() or {}
     num_parcelas = int(data.get('installments', 1))
@@ -1435,8 +1443,17 @@ def contas_receber_from_quote(quote_id):
     else:
         primeiro_vencimento = date.today() + timedelta(days=30)
 
-    valor_total = Decimal(str(quote.total_value)) if quote.total_value else Decimal('0')
+    # SeparationList uses calculated_total or total_value; Quote uses total_value
+    valor_total = Decimal('0')
+    if hasattr(quote, 'calculated_total') and quote.calculated_total:
+        valor_total = Decimal(str(quote.calculated_total))
+    elif quote.total_value:
+        valor_total = Decimal(str(quote.total_value))
+    
     valor_parcela = valor_total / num_parcelas if num_parcelas > 0 else valor_total
+    
+    # SeparationList uses 'name', Quote uses 'code'
+    quote_identifier = getattr(quote, 'code', None) or getattr(quote, 'name', f'#{quote.id}')
 
     contas_criadas = []
     for i in range(num_parcelas):
@@ -1444,14 +1461,14 @@ def contas_receber_from_quote(quote_id):
 
         conta = AccountReceivable(
             company_id=current_user.company_id,
-            description=f"Orçamento {quote.code} - Parcela {i+1}/{num_parcelas}" if num_parcelas > 1 else f"Orçamento {quote.code}",
+            description=f"Orçamento {quote_identifier} - Parcela {i+1}/{num_parcelas}" if num_parcelas > 1 else f"Orçamento {quote_identifier}",
             category='locacao',
             client_name=quote.client_name or '',
             amount=valor_parcela,
             due_date=due_date,
             installment_number=i + 1 if num_parcelas > 1 else None,
             total_installments=num_parcelas if num_parcelas > 1 else None,
-            notes=f"Gerado automaticamente do orçamento {quote.code}",
+            notes=f"Gerado automaticamente do orçamento {quote_identifier}",
             status='pending',
             created_by=current_user.id
         )
