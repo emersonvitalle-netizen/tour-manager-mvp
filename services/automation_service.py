@@ -517,20 +517,33 @@ class AutomationService:
     
     @staticmethod
     def create_event_from_quote(quote_id, company_id, user_id, name=None, artist=None, start_date=None):
-        """Cria evento/tour a partir do orçamento aprovado"""
+        """Cria evento/tour a partir do orçamento aprovado com requisitos de equipamentos"""
         from models.separation_list import SeparationList
-        from models.tour import Tour
+        from models.tour import Tour, TourRequirement
         
         sep_list = SeparationList.query.filter_by(id=quote_id, company_id=company_id).first()
         if not sep_list:
             return {'success': False, 'message': 'Orcamento nao encontrado'}
+        
+        event_name = name or sep_list.name
+        
+        existing = Tour.query.filter_by(company_id=company_id, name=event_name).first()
+        if existing:
+            return {
+                'success': True,
+                'data': {
+                    'tour_id': existing.id,
+                    'tour_name': existing.name,
+                    'already_exists': True
+                }
+            }
         
         if start_date and isinstance(start_date, str):
             start_date = date.fromisoformat(start_date)
         
         tour = Tour(
             company_id=company_id,
-            name=name or sep_list.name,
+            name=event_name,
             artist=artist or sep_list.client_name,
             start_date=start_date or sep_list.event_date,
             status='planned',
@@ -538,12 +551,28 @@ class AutomationService:
             is_active=True
         )
         db.session.add(tour)
+        db.session.flush()
+        
+        equipment_count = 0
+        for item in sep_list.items:
+            item_name = item.item_name or item.item_description or 'Item'
+            tour_req = TourRequirement(
+                tour_id=tour.id,
+                equipment_name=item_name,
+                brand=getattr(item, 'brand', None),
+                model=getattr(item, 'model', None),
+                quantity=item.quantity or 1
+            )
+            db.session.add(tour_req)
+            equipment_count += 1
+        
         db.session.commit()
         
         return {
             'success': True,
             'data': {
                 'tour_id': tour.id,
-                'tour_name': tour.name
+                'tour_name': tour.name,
+                'equipment_count': equipment_count
             }
         }
