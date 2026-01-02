@@ -23,6 +23,8 @@ class WizardController {
     }
 
     start(initialData = {}) {
+        console.log('[Wizard] Starting with', this.steps.length, 'steps');
+        this.steps.forEach((s, i) => console.log('[Wizard] Step', i, ':', s.title));
         this.data = { ...initialData };
         this.currentStep = 0;
         this._findNextValidStep();
@@ -270,15 +272,16 @@ class WizardController {
         }
 
         this.currentStep++;
-        console.log('[Wizard] Advanced to step:', this.currentStep);
+        console.log('[Wizard] Advanced to step:', this.currentStep, 'of', this.steps.length);
         this._findNextValidStep();
-        console.log('[Wizard] After findNextValidStep:', this.currentStep);
+        console.log('[Wizard] After findNextValidStep:', this.currentStep, 'of', this.steps.length);
+        console.log('[Wizard] Condition check:', this.currentStep, '>=', this.steps.length, '=', this.currentStep >= this.steps.length);
 
         if (this.currentStep >= this.steps.length) {
-            console.log('[Wizard] Completing wizard');
+            console.log('[Wizard] Completing wizard - currentStep >= steps.length');
             this._complete();
         } else {
-            console.log('[Wizard] Rendering next step');
+            console.log('[Wizard] Rendering step', this.currentStep, ':', this.steps[this.currentStep]?.title);
             this._render();
         }
     }
@@ -461,6 +464,7 @@ function startQuoteApprovalWizard(quoteId, quoteName, quoteTotal) {
     });
 
     // Step 3: Gerar Contas a Receber? (CORRIGIDO)
+    console.log('[Debug] Before step 3, steps:', wizard.steps.length);
     wizard.addStep({
         title: 'Gerar Contas a Receber?',
         content: (data) => `
@@ -488,6 +492,7 @@ function startQuoteApprovalWizard(quoteId, quoteName, quoteTotal) {
     });
 
     // Step 4: Criar ou Vincular Evento
+    console.log('[Debug] Before step 4, steps:', wizard.steps.length);
     wizard.addStep({
         title: 'Registrar Evento',
         content: () => `
@@ -598,6 +603,7 @@ function startQuoteApprovalWizard(quoteId, quoteName, quoteTotal) {
         }
     });
 
+    console.log('[Debug] After all steps, total:', wizard.steps.length);
     wizard.setData('quote_id', quoteId);
     wizard.start();
 }

@@ -50,6 +50,7 @@ def create_receivables_from_quote(quote_id):
         installments=installments,
         first_due_date=first_due_date
     )
+    print(f"[DEBUG] Receivables endpoint returning: {result}")
     return jsonify(result)
 
 
