@@ -234,21 +234,28 @@ class WizardController {
 
     async _next() {
         const step = this.steps[this.currentStep];
+        console.log('[Wizard] _next called, currentStep:', this.currentStep, 'totalSteps:', this.steps.length);
 
         this._collectFormData();
+        console.log('[Wizard] Form data collected:', this.data);
 
         if (!step.validate(this.data)) {
+            console.log('[Wizard] Validation failed');
             return;
         }
 
         const leaveResult = await step.onLeave(this.data);
+        console.log('[Wizard] onLeave result:', leaveResult);
         if (leaveResult === false) {
+            console.log('[Wizard] onLeave returned false, stopping');
             return;
         }
 
         if (step.endpoint) {
+            console.log('[Wizard] Calling endpoint:', step.endpoint);
             try {
                 const response = await this._callEndpoint(step.endpoint);
+                console.log('[Wizard] Endpoint response:', response);
                 if (response.success) {
                     this.data = { ...this.data, ...response.data };
                 } else {
@@ -256,17 +263,22 @@ class WizardController {
                     return;
                 }
             } catch (error) {
+                console.error('[Wizard] Endpoint error:', error);
                 this._showError('Erro de conexão');
                 return;
             }
         }
 
         this.currentStep++;
+        console.log('[Wizard] Advanced to step:', this.currentStep);
         this._findNextValidStep();
+        console.log('[Wizard] After findNextValidStep:', this.currentStep);
 
         if (this.currentStep >= this.steps.length) {
+            console.log('[Wizard] Completing wizard');
             this._complete();
         } else {
+            console.log('[Wizard] Rendering next step');
             this._render();
         }
     }
