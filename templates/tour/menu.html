@@ -365,7 +365,7 @@
                     </div>
                     <div class="evento-actions">
                         <a href="{{ url_for('tour.scan_equipment', tour_id=evento.id) }}" class="btn-primary">📱 Scan Separacao</a>
-                        <a href="{{ url_for('tour.tour_detail', id=evento.id) }}" class="btn-secondary">👁️ Detalhes</a>
+                        <a href="{{ url_for('tour.detail_tour', id=evento.id) }}" class="btn-secondary">👁️ Detalhes</a>
                     </div>
                 </div>
                 {% endfor %}
@@ -396,7 +396,7 @@
                     </div>
                     <div class="evento-actions">
                         <a href="{{ url_for('tour.checkpoint', tour_id=evento.id, checkpoint_type='chegada_show') }}" class="btn-primary">📱 Checkpoint</a>
-                        <a href="{{ url_for('tour.tour_detail', id=evento.id) }}" class="btn-secondary">👁️ Detalhes</a>
+                        <a href="{{ url_for('tour.detail_tour', id=evento.id) }}" class="btn-secondary">👁️ Detalhes</a>
                     </div>
                 </div>
                 {% endfor %}
@@ -426,7 +426,7 @@
                         <div>📦 {{ evento.allocated_equipment|length }} equipamentos</div>
                     </div>
                     <div class="evento-actions">
-                        <a href="{{ url_for('tour.tour_detail', id=evento.id) }}" class="btn-secondary" style="flex: 1;">👁️ Ver Detalhes</a>
+                        <a href="{{ url_for('tour.detail_tour', id=evento.id) }}" class="btn-secondary" style="flex: 1;">👁️ Ver Detalhes</a>
                     </div>
                 </div>
                 {% endfor %}
