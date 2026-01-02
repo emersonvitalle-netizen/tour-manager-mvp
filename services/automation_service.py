@@ -554,7 +554,8 @@ class AutomationService:
         db.session.flush()
         
         equipment_count = 0
-        for item in sep_list.items:
+        items_list = sep_list.items.all() if hasattr(sep_list.items, 'all') else sep_list.items
+        for item in items_list:
             item_name = item.item_name or item.item_description or 'Item'
             tour_req = TourRequirement(
                 tour_id=tour.id,
