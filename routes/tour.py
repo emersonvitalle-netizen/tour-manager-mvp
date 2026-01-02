@@ -8,59 +8,81 @@ from datetime import datetime
 
 tour_bp = Blueprint('tour', __name__, url_prefix='/tour')
 
+
+# ============================================
+# API: Lista de Tours em JSON (para wizard)
+# ============================================
+@tour_bp.route('/api/list')
+@login_required
+def api_list_tours():
+    """API: Retorna lista de tours em JSON para wizard"""
+    tours = Tour.query.filter_by(
+        company_id=current_user.company_id,
+        is_active=True
+    ).order_by(Tour.created_at.desc()).all()
+
+    return jsonify([{
+        'id': t.id,
+        'name': t.name,
+        'artist': t.artist or '',
+        'status': t.status,
+        'start_date': t.start_date.isoformat() if t.start_date else None
+    } for t in tours])
+
+
 @tour_bp.route('/')
 @login_required
 def tour_menu():
     from datetime import date
-    
+
     all_tours = Tour.query.filter_by(
         company_id=current_user.company_id,
         is_active=True
     ).order_by(Tour.start_date.asc()).all()
-    
+
     today = date.today()
-    
+
     proximos = [t for t in all_tours if t.status == 'planned' or (t.start_date and t.start_date > today)]
     em_andamento = [t for t in all_tours if t.status == 'active']
     concluidos = [t for t in all_tours if t.status == 'completed']
-    
+
     return render_template('tour/menu.html',
                           proximos=proximos,
                           em_andamento=em_andamento,
                           concluidos=concluidos)
 
+
 @tour_bp.route('/checklist-selection')
 @login_required
 def checklist_selection():
-    # Lista tours ativas para escolher qual checklist abrir
     tours = Tour.query.filter_by(
         company_id=current_user.company_id,
         is_active=True,
         status='active'
     ).order_by(Tour.created_at.desc()).all()
-    
+
     return render_template('tour/checklist_selection.html', tours=tours)
+
 
 @tour_bp.route('/<int:tour_id>/checklist')
 @login_required
 def checklist(tour_id):
     from models.category import Category
-    
+
     tour = Tour.query.filter_by(
         id=tour_id,
         company_id=current_user.company_id
     ).first_or_404()
-    
-    # Get allocated equipment grouped by category
+
     allocated = TourEquipment.query.filter_by(
         tour_id=tour_id,
         returned_at=None
     ).all()
-    
+
     equipment_by_category = {}
     total_count = len(allocated)
     checked_count = sum(1 for e in allocated if e.current_status == 'checked')
-    
+
     for te in allocated:
         if te.equipment and te.equipment.category:
             cat_name = te.equipment.category.name
@@ -70,13 +92,14 @@ def checklist(tour_id):
                     'items': []
                 }
             equipment_by_category[cat_name]['items'].append(te)
-    
+
     return render_template('tour/checklist.html',
                           tour=tour,
                           equipment_by_category=equipment_by_category,
                           total_count=total_count,
                           checked_count=checked_count,
                           pending_count=total_count - checked_count)
+
 
 @tour_bp.route('/list')
 @login_required
@@ -86,6 +109,7 @@ def list_tours():
         is_active=True
     ).order_by(Tour.created_at.desc()).all()
     return render_template('tour/list.html', tours=tours)
+
 
 @tour_bp.route('/<int:id>')
 @login_required
@@ -105,6 +129,7 @@ def detail_tour(id):
                          shows=shows,
                          requirements=requirements,
                          allocated_equipment=allocated_equipment)
+
 
 @tour_bp.route('/new', methods=['GET', 'POST'])
 @login_required
@@ -134,6 +159,7 @@ def new_tour():
         return redirect(url_for('tour.detail_tour', id=tour.id))
     return render_template('tour/new.html')
 
+
 @tour_bp.route('/<int:tour_id>/add-show', methods=['POST'])
 @login_required
 def add_show(tour_id):
@@ -160,6 +186,7 @@ def add_show(tour_id):
     db.session.commit()
     flash(f'Show adicionado com sucesso!', 'success')
     return redirect(url_for('tour.detail_tour', id=tour_id))
+
 
 @tour_bp.route('/<int:tour_id>/add-requirement', methods=['GET', 'POST'])
 @login_required
@@ -200,6 +227,7 @@ def add_requirement(tour_id):
                          equipment_list=equipment_list,
                          kits=kits)
 
+
 @tour_bp.route('/<int:tour_id>/scan-equipment')
 @login_required
 def scan_equipment(tour_id):
@@ -208,6 +236,7 @@ def scan_equipment(tour_id):
         company_id=current_user.company_id
     ).first_or_404()
     return render_template('tour/scan_equipment.html', tour=tour)
+
 
 @tour_bp.route('/<int:id>/allocate-scanned', methods=['POST'])
 @login_required
@@ -260,6 +289,7 @@ def allocate_scanned(id):
         }
     })
 
+
 @tour_bp.route('/<int:tour_id>/checkpoint/<checkpoint_type>')
 @login_required
 def checkpoint_scanner(tour_id, checkpoint_type):
@@ -283,6 +313,7 @@ def checkpoint_scanner(tour_id, checkpoint_type):
                          checkpoint_type=checkpoint_type,
                          checkpoint_label=checkpoint_labels[checkpoint_type],
                          show=show)
+
 
 @tour_bp.route('/<int:tour_id>/register-checkpoint', methods=['POST'])
 @login_required
@@ -342,6 +373,7 @@ def register_checkpoint(tour_id):
             'status': allocation.current_status
         }
     })
+
 
 @tour_bp.route('/<int:tour_id>/complete', methods=['POST'])
 @login_required

@@ -1,4 +1,4 @@
-"""Rotas do mÃ³dulo financeiro - apenas admin"""
+"""Rotas do módulo financeiro - apenas admin"""
 from flask import Blueprint, render_template, redirect, url_for, request, flash, jsonify
 from flask_login import login_required, current_user
 from extensions import db
@@ -24,7 +24,7 @@ def admin_required(f):
 
 
 def generate_code(prefix: str) -> str:
-    """Gera cÃ³digo sequencial para documentos (inclui company_id para unicidade global)"""
+    """Gera código sequencial para documentos (inclui company_id para unicidade global)"""
     year = datetime.now().year
     company_id = current_user.company_id
     code_prefix = f'{prefix}-{company_id}-{year}'
@@ -121,7 +121,7 @@ def index():
             badge = 'URGENTE'
             badge_class = 'urgent'
         elif dias_restantes <= 5:
-            badge = 'ATENÇÃO'
+            badge = 'ATENCAO'
             badge_class = 'warning'
         else:
             badge = 'OK'
@@ -239,7 +239,7 @@ def index():
 @login_required
 @admin_required
 def quotes():
-    """Lista de orÃ§amentos"""
+    """Lista de orçamentos"""
     status = request.args.get('status', 'all')
 
     query = Quote.query.filter_by(
@@ -259,7 +259,7 @@ def quotes():
 @login_required
 @admin_required
 def new_quote():
-    """Criar novo orÃ§amento"""
+    """Criar novo orçamento"""
     if request.method == 'POST':
         quote = Quote(
             code=generate_code('ORC'),
@@ -285,7 +285,7 @@ def new_quote():
         db.session.add(quote)
         db.session.commit()
 
-        flash('OrÃ§amento criado! Adicione os itens.', 'success')
+        flash('Orçamento criado! Adicione os itens.', 'success')
         return redirect(url_for('financial.edit_quote', id=quote.id))
 
     tours = Tour.query.filter_by(
@@ -300,7 +300,7 @@ def new_quote():
 @login_required
 @admin_required
 def view_quote(id):
-    """Visualizar orÃ§amento"""
+    """Visualizar orçamento"""
     quote = Quote.query.filter_by(
         id=id,
         company_id=current_user.company_id
@@ -313,7 +313,7 @@ def view_quote(id):
 @login_required
 @admin_required
 def edit_quote(id):
-    """Editar orÃ§amento"""
+    """Editar orçamento"""
     quote = Quote.query.filter_by(
         id=id,
         company_id=current_user.company_id
@@ -338,7 +338,7 @@ def edit_quote(id):
         recalculate_quote_totals(quote)
 
         db.session.commit()
-        flash('OrÃ§amento atualizado!', 'success')
+        flash('Orçamento atualizado!', 'success')
         return redirect(url_for('financial.view_quote', id=quote.id))
 
     tours = Tour.query.filter_by(
@@ -353,7 +353,7 @@ def edit_quote(id):
 @login_required
 @admin_required
 def add_quote_item(id):
-    """Adicionar item ao orÃ§amento"""
+    """Adicionar item ao orçamento"""
     quote = Quote.query.filter_by(
         id=id,
         company_id=current_user.company_id
@@ -379,7 +379,7 @@ def add_quote_item(id):
 @login_required
 @admin_required
 def delete_quote_item(id, item_id):
-    """Remover item do orÃ§amento"""
+    """Remover item do orçamento"""
     quote = Quote.query.filter_by(
         id=id,
         company_id=current_user.company_id
@@ -398,7 +398,7 @@ def delete_quote_item(id, item_id):
 @login_required
 @admin_required
 def send_quote(id):
-    """Marcar orÃ§amento como enviado"""
+    """Marcar orçamento como enviado"""
     quote = Quote.query.filter_by(
         id=id,
         company_id=current_user.company_id
@@ -407,7 +407,7 @@ def send_quote(id):
     quote.status = 'sent'
     db.session.commit()
 
-    flash('OrÃ§amento marcado como enviado!', 'success')
+    flash('Orçamento marcado como enviado!', 'success')
     return redirect(url_for('financial.view_quote', id=quote.id))
 
 
@@ -415,7 +415,7 @@ def send_quote(id):
 @login_required
 @admin_required
 def approve_quote(id):
-    """Aprovar orÃ§amento"""
+    """Aprovar orçamento"""
     quote = Quote.query.filter_by(
         id=id,
         company_id=current_user.company_id
@@ -426,7 +426,7 @@ def approve_quote(id):
     quote.approved_by = current_user.id
     db.session.commit()
 
-    flash('OrÃ§amento aprovado!', 'success')
+    flash('Orçamento aprovado!', 'success')
     return redirect(url_for('financial.view_quote', id=quote.id))
 
 
@@ -533,7 +533,7 @@ def contract_delete(contract_id):
     contract.is_active = False
     db.session.commit()
 
-    flash('Contrato excluÃ­do.', 'warning')
+    flash('Contrato excluido.', 'warning')
     return redirect(url_for('financial.contracts'))
 
 
@@ -679,7 +679,7 @@ def register_payment(id):
 
 
 def recalculate_quote_totals(quote):
-    """Recalcula totais do orÃ§amento"""
+    """Recalcula totais do orçamento"""
     subtotal = sum(item.total for item in quote.items)
     quote.subtotal = subtotal
     quote.discount_value = subtotal * (quote.discount_percent or 0) / 100
@@ -710,12 +710,122 @@ def receitas():
     return render_template('financial/receitas.html', faturas=faturas, status=status)
 
 
+# ============================================
+# DESPESAS - CORRIGIDO COM DADOS REAIS
+# ============================================
+
 @financial_bp.route('/despesas')
 @login_required
 @admin_required
 def despesas():
-    """Visao geral de despesas"""
-    return render_template('financial/despesas.html')
+    """Visao geral de despesas - DADOS REAIS"""
+    from models.rh import AccountPayable, PayrollEntry, FreelancerPayment
+    from models.maintenance import Maintenance
+
+    company_id = current_user.company_id
+    hoje = date.today()
+    mes_atual = hoje.replace(day=1)
+    mes_fim = (mes_atual + timedelta(days=32)).replace(day=1)
+
+    # ========== FOLHA CLT (mês atual) ==========
+    folha_clt = float(db.session.query(func.sum(PayrollEntry.net_salary)).filter(
+        PayrollEntry.company_id == company_id,
+        PayrollEntry.reference_month == hoje.month,
+        PayrollEntry.reference_year == hoje.year
+    ).scalar() or 0)
+
+    # ========== CONTAS PAGAS (mês atual) ==========
+    contas_fixas = float(db.session.query(func.sum(AccountPayable.paid_amount)).filter(
+        AccountPayable.company_id == company_id,
+        AccountPayable.status == 'paid',
+        func.date(AccountPayable.paid_at) >= mes_atual,
+        func.date(AccountPayable.paid_at) < mes_fim
+    ).scalar() or 0)
+
+    # ========== FREELANCERS (mês atual) ==========
+    freelancers_total = float(db.session.query(func.sum(FreelancerPayment.amount)).filter(
+        FreelancerPayment.company_id == company_id,
+        FreelancerPayment.status == 'paid',
+        func.date(FreelancerPayment.paid_at) >= mes_atual,
+        func.date(FreelancerPayment.paid_at) < mes_fim
+    ).scalar() or 0)
+
+    # ========== MANUTENÇÃO (mês atual) ==========
+    manutencao = float(db.session.query(func.sum(Maintenance.total_cost)).filter(
+        Maintenance.company_id == company_id,
+        Maintenance.status == 'completed',
+        func.date(Maintenance.completed_at) >= mes_atual,
+        func.date(Maintenance.completed_at) < mes_fim
+    ).scalar() or 0)
+
+    # ========== TOTAL MÊS ==========
+    total_mes = folha_clt + contas_fixas + freelancers_total + manutencao
+
+    # ========== ÚLTIMAS DESPESAS (10 mais recentes) ==========
+    ultimas_despesas = []
+
+    # Contas pagas recentes
+    contas_recentes = AccountPayable.query.filter(
+        AccountPayable.company_id == company_id,
+        AccountPayable.status == 'paid'
+    ).order_by(AccountPayable.paid_at.desc()).limit(5).all()
+
+    for conta in contas_recentes:
+        if conta.paid_at:
+            ultimas_despesas.append({
+                'tipo': 'conta',
+                'categoria': conta.category or 'Conta',
+                'descricao': conta.description or 'Pagamento',
+                'valor': float(conta.paid_amount or conta.amount or 0),
+                'data': conta.paid_at
+            })
+
+    # Freelancers pagos recentes
+    freelancers_recentes = FreelancerPayment.query.filter(
+        FreelancerPayment.company_id == company_id,
+        FreelancerPayment.status == 'paid'
+    ).order_by(FreelancerPayment.paid_at.desc()).limit(3).all()
+
+    for fp in freelancers_recentes:
+        if fp.paid_at:
+            freelancer_name = fp.freelancer.name if fp.freelancer else 'Freelancer'
+            ultimas_despesas.append({
+                'tipo': 'freelancer',
+                'categoria': 'Freelancer',
+                'descricao': f'{freelancer_name} - {fp.description or "Pagamento"}',
+                'valor': float(fp.amount or 0),
+                'data': fp.paid_at
+            })
+
+    # Manutenções concluídas recentes
+    manutencoes_recentes = Maintenance.query.filter(
+        Maintenance.company_id == company_id,
+        Maintenance.status == 'completed',
+        Maintenance.total_cost > 0
+    ).order_by(Maintenance.completed_at.desc()).limit(3).all()
+
+    for m in manutencoes_recentes:
+        if m.completed_at:
+            equip_name = m.equipment.name if m.equipment else 'Equipamento'
+            ultimas_despesas.append({
+                'tipo': 'manutencao',
+                'categoria': 'Manutencao',
+                'descricao': f'{m.maintenance_type or "Reparo"} - {equip_name}',
+                'valor': float(m.total_cost or 0),
+                'data': m.completed_at
+            })
+
+    # Ordenar por data (mais recente primeiro) e limitar a 10
+    ultimas_despesas.sort(key=lambda x: x['data'], reverse=True)
+    ultimas_despesas = ultimas_despesas[:10]
+
+    return render_template('financial/despesas.html',
+                          total_mes=total_mes,
+                          folha_clt=folha_clt,
+                          contas_fixas=contas_fixas,
+                          freelancers_total=freelancers_total,
+                          manutencao=manutencao,
+                          ultimas_despesas=ultimas_despesas)
 
 
 @financial_bp.route('/folha-clt')
@@ -864,7 +974,7 @@ def contas_pagar():
         func.strftime('%Y-%m', AccountPayable.due_date) == current_month
     ).scalar() or 0
 
-    # âœ… LISTA EXPANDIDA DE CATEGORIAS (24 categorias)
+    # LISTA EXPANDIDA DE CATEGORIAS (24 categorias)
     categorias = [
         'folha_clt', 'freelancers', 'manutencao',
         'aluguel', 'energia', 'agua', 'telefone', 'internet',
@@ -940,7 +1050,7 @@ def nova_conta_pagar():
             db.session.rollback()
             flash(f'Erro ao salvar: {str(e)}', 'danger')
 
-    # âœ… LISTA EXPANDIDA DE CATEGORIAS (24 categorias)
+    # LISTA EXPANDIDA DE CATEGORIAS (24 categorias)
     categorias = [
         'folha_clt', 'freelancers', 'manutencao',
         'aluguel', 'energia', 'agua', 'telefone', 'internet',
@@ -989,7 +1099,7 @@ def editar_conta_pagar(id):
             db.session.rollback()
             flash(f'Erro ao salvar: {str(e)}', 'danger')
 
-    # âœ… LISTA EXPANDIDA DE CATEGORIAS (24 categorias)
+    # LISTA EXPANDIDA DE CATEGORIAS (24 categorias)
     categorias = [
         'folha_clt', 'freelancers', 'manutencao',
         'aluguel', 'energia', 'agua', 'telefone', 'internet',
@@ -1110,17 +1220,25 @@ def gerar_pix():
     return render_template('financial/gerar_pix.html', faturas=faturas)
 
 
+# ============================================
+# DRE - CORRIGIDO COM MANUTENÇÃO
+# ============================================
+
 @financial_bp.route('/dre')
 @login_required
 @admin_required
 def dre():
     """Demonstrativo de Resultado do Exercicio com dados reais"""
     from models.rh import AccountPayable, AccountReceivable, FreelancerPayment, PayrollEntry
+    from models.maintenance import Maintenance
 
     current_month = date.today().month
     current_year = date.today().year
     current_month_str = date.today().strftime('%Y-%m')
+    mes_atual_inicio = date.today().replace(day=1)
+    mes_atual_fim = (mes_atual_inicio + timedelta(days=32)).replace(day=1)
 
+    # ========== RECEITAS ==========
     receitas_locacao = db.session.query(func.sum(AccountReceivable.received_amount)).filter(
         AccountReceivable.company_id == current_user.company_id,
         AccountReceivable.status == 'received',
@@ -1133,6 +1251,7 @@ def dre():
         func.strftime('%Y-%m', AccountReceivable.due_date) == current_month_str
     ).scalar() or 0
 
+    # ========== DESPESAS ==========
     despesas_folha = db.session.query(func.sum(PayrollEntry.net_salary)).filter(
         PayrollEntry.company_id == current_user.company_id,
         PayrollEntry.reference_month == current_month,
@@ -1157,8 +1276,17 @@ def dre():
         func.strftime('%Y-%m', FreelancerPayment.paid_at) == current_month_str
     ).scalar() or 0
 
+    # ========== MANUTENÇÃO (NOVO - consistente com relatorios.py) ==========
+    despesas_manutencao = db.session.query(func.sum(Maintenance.total_cost)).filter(
+        Maintenance.company_id == current_user.company_id,
+        Maintenance.status == 'completed',
+        func.date(Maintenance.completed_at) >= mes_atual_inicio,
+        func.date(Maintenance.completed_at) < mes_atual_fim
+    ).scalar() or 0
+
+    # ========== TOTAIS ==========
     total_receitas = float(receitas_locacao)
-    total_despesas = float(despesas_folha) + float(despesas_contas) + float(despesas_freelancers)
+    total_despesas = float(despesas_folha) + float(despesas_contas) + float(despesas_freelancers) + float(despesas_manutencao)
     lucro = total_receitas - total_despesas
 
     return render_template('financial/dre.html',
@@ -1168,6 +1296,7 @@ def dre():
                           despesas_contas=despesas_contas,
                           despesas_pendentes=despesas_pendentes,
                           despesas_freelancers=despesas_freelancers,
+                          despesas_manutencao=despesas_manutencao,
                           total_receitas=total_receitas,
                           total_despesas=total_despesas,
                           lucro=lucro,
@@ -1282,6 +1411,60 @@ def nova_conta_receber():
     clientes = Client.query.filter_by(company_id=current_user.company_id, is_active=True).all()
     categorias = ['servico', 'venda', 'locacao', 'projeto', 'outros']
     return render_template('financial/conta_receber_form.html', conta=None, categorias=categorias, clientes=clientes)
+
+
+@financial_bp.route('/contas-receber/from-quote/<int:quote_id>', methods=['POST'])
+@login_required
+@admin_required
+def contas_receber_from_quote(quote_id):
+    """Gera contas a receber a partir de um orçamento aprovado (wizard automation)"""
+    from models.rh import AccountReceivable
+    from dateutil.relativedelta import relativedelta
+
+    quote = Quote.query.filter_by(
+        id=quote_id,
+        company_id=current_user.company_id
+    ).first_or_404()
+
+    data = request.get_json() or {}
+    num_parcelas = int(data.get('installments', 1))
+    primeiro_vencimento_str = data.get('first_due_date', '')
+
+    if primeiro_vencimento_str:
+        primeiro_vencimento = datetime.strptime(primeiro_vencimento_str, '%Y-%m-%d').date()
+    else:
+        primeiro_vencimento = date.today() + timedelta(days=30)
+
+    valor_total = Decimal(str(quote.total_value)) if quote.total_value else Decimal('0')
+    valor_parcela = valor_total / num_parcelas if num_parcelas > 0 else valor_total
+
+    contas_criadas = []
+    for i in range(num_parcelas):
+        due_date = primeiro_vencimento + relativedelta(months=i)
+
+        conta = AccountReceivable(
+            company_id=current_user.company_id,
+            description=f"Orçamento {quote.code} - Parcela {i+1}/{num_parcelas}" if num_parcelas > 1 else f"Orçamento {quote.code}",
+            category='locacao',
+            client_name=quote.client_name or '',
+            amount=valor_parcela,
+            due_date=due_date,
+            installment_number=i + 1 if num_parcelas > 1 else None,
+            total_installments=num_parcelas if num_parcelas > 1 else None,
+            notes=f"Gerado automaticamente do orçamento {quote.code}",
+            status='pending',
+            created_by=current_user.id
+        )
+        db.session.add(conta)
+        contas_criadas.append(conta)
+
+    db.session.commit()
+
+    return jsonify({
+        'success': True,
+        'message': f'{num_parcelas} conta(s) a receber gerada(s)!',
+        'count': len(contas_criadas)
+    })
 
 
 @financial_bp.route('/contas-receber/<int:id>/receber', methods=['POST'])
@@ -1440,7 +1623,7 @@ def excluir_cliente(id):
 @login_required
 @admin_required
 def api_fluxo_caixa():
-    """API para fluxo de caixa com período customizado"""
+    """API para fluxo de caixa com periodo customizado"""
     from models.rh import AccountReceivable, AccountPayable, PayrollEntry, FreelancerPayment
 
     company_id = current_user.company_id
@@ -1452,7 +1635,7 @@ def api_fluxo_caixa():
     hoje = date.today()
 
     if periodo == 'diario':
-        # Últimos 30 dias
+        # Ultimos 30 dias
         for i in range(29, -1, -1):
             dia = hoje - timedelta(days=i)
             dia_prox = dia + timedelta(days=1)
@@ -1483,7 +1666,7 @@ def api_fluxo_caixa():
             despesas.append(desp_c + desp_fl)
 
     elif periodo == 'semanal':
-        # Últimas 12 semanas
+        # Ultimas 12 semanas
         for i in range(11, -1, -1):
             semana_inicio = hoje - timedelta(days=hoje.weekday()) - timedelta(weeks=i)
             semana_fim = semana_inicio + timedelta(days=7)
@@ -1514,7 +1697,7 @@ def api_fluxo_caixa():
             despesas.append(desp_c + desp_fl)
 
     elif periodo == 'mensal':
-        # Últimos 12 meses
+        # Ultimos 12 meses
         mes_atual = hoje.replace(day=1)
         for i in range(11, -1, -1):
             mes = (mes_atual - timedelta(days=30*i)).replace(day=1)
@@ -1552,7 +1735,7 @@ def api_fluxo_caixa():
             despesas.append(desp_f + desp_c + desp_fl)
 
     elif periodo == 'anual':
-        # Últimos 5 anos
+        # Ultimos 5 anos
         ano_atual = hoje.year
         for i in range(4, -1, -1):
             ano = ano_atual - i
