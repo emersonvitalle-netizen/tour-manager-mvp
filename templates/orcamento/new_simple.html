@@ -543,7 +543,8 @@ function renderItems() {
             e.preventDefault();
             const index = parseInt(this.getAttribute('data-index'));
             const action = this.getAttribute('data-action');
-            if (action === 'increase' && window.items[index].quantity < window.items[index].available) {
+            const maxQty = window.items[index].available || 999;
+            if (action === 'increase' && window.items[index].quantity < maxQty) {
                 window.items[index].quantity++;
                 renderItems();
             } else if (action === 'decrease' && window.items[index].quantity > 1) {
