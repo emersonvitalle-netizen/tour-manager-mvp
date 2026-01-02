@@ -514,3 +514,36 @@ class AutomationService:
                 'share_token': share_token
             }
         }
+    
+    @staticmethod
+    def create_event_from_quote(quote_id, company_id, user_id, name=None, artist=None, start_date=None):
+        """Cria evento/tour a partir do orçamento aprovado"""
+        from models.separation_list import SeparationList
+        from models.tour import Tour
+        
+        sep_list = SeparationList.query.filter_by(id=quote_id, company_id=company_id).first()
+        if not sep_list:
+            return {'success': False, 'message': 'Orcamento nao encontrado'}
+        
+        if start_date and isinstance(start_date, str):
+            start_date = date.fromisoformat(start_date)
+        
+        tour = Tour(
+            company_id=company_id,
+            name=name or sep_list.name,
+            artist=artist or sep_list.client_name,
+            start_date=start_date or sep_list.event_date,
+            status='planned',
+            created_by=user_id,
+            is_active=True
+        )
+        db.session.add(tour)
+        db.session.commit()
+        
+        return {
+            'success': True,
+            'data': {
+                'tour_id': tour.id,
+                'tour_name': tour.name
+            }
+        }
