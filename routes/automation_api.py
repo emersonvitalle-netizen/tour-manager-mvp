@@ -121,3 +121,21 @@ def create_worklist_from_quote(quote_id):
         assigned_to=data.get('assigned_to')
     )
     return jsonify(result)
+
+
+@automation_api.route('/quote/<int:quote_id>/create-event', methods=['POST'])
+@login_required
+@admin_required
+def create_event_from_quote(quote_id):
+    """Cria evento/tour a partir do orçamento aprovado"""
+    data = request.get_json() or {}
+    
+    result = AutomationService.create_event_from_quote(
+        quote_id,
+        current_user.company_id,
+        current_user.id,
+        name=data.get('name'),
+        artist=data.get('artist'),
+        start_date=data.get('start_date')
+    )
+    return jsonify(result)
