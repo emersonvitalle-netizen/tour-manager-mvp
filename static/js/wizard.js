@@ -475,31 +475,114 @@ function startQuoteApprovalWizard(quoteId, quoteName, quoteTotal) {
         endpoint: `/api/automation/quote/${quoteId}/receivables`
     });
 
-    // Step 4: Vincular a Evento? (CORRIGIDO)
+    // Step 4: Criar ou Vincular Evento
     wizard.addStep({
-        title: 'Vincular a Evento?',
+        title: 'Registrar Evento',
         content: () => `
             <div class="text-center mb-4">
                 <i class="bi bi-calendar-event" style="font-size: 3rem; color: #17a2b8;"></i>
             </div>
-            <p class="text-center mb-3">Deseja vincular a um evento/tour existente?</p>
+            <p class="text-center mb-3">Criar novo evento ou vincular a existente?</p>
             <div class="mb-3">
-                <select name="tour_id" class="form-select bg-dark text-white border-secondary">
-                    <option value="">Não vincular</option>
-                </select>
+                <div class="btn-group w-100" role="group">
+                    <input type="radio" class="btn-check" name="event_action" id="createNew" value="create" checked>
+                    <label class="btn btn-outline-light" for="createNew">Criar Novo</label>
+                    <input type="radio" class="btn-check" name="event_action" id="linkExisting" value="link">
+                    <label class="btn btn-outline-light" for="linkExisting">Vincular Existente</label>
+                    <input type="radio" class="btn-check" name="event_action" id="skipEvent" value="skip">
+                    <label class="btn btn-outline-secondary" for="skipEvent">Pular</label>
+                </div>
+            </div>
+            <div id="createEventFields" class="mt-3">
+                <div class="mb-3">
+                    <label class="form-label">Nome do Evento</label>
+                    <input type="text" name="event_name" class="form-control bg-dark text-white border-secondary" 
+                           placeholder="Ex: Festa de Itajai" value="${quoteName}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Artista/Cliente</label>
+                    <input type="text" name="event_artist" class="form-control bg-dark text-white border-secondary" 
+                           placeholder="Nome do artista ou cliente">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Data do Evento</label>
+                    <input type="date" name="event_date" class="form-control bg-dark text-white border-secondary">
+                </div>
+            </div>
+            <div id="linkEventFields" class="mt-3" style="display: none;">
+                <div class="mb-3">
+                    <label class="form-label">Selecionar Evento</label>
+                    <select name="tour_id" class="form-select bg-dark text-white border-secondary">
+                        <option value="">Carregando...</option>
+                    </select>
+                </div>
             </div>`,
         onEnter: async (data) => {
+            const radios = document.querySelectorAll('input[name="event_action"]');
+            const createFields = document.getElementById('createEventFields');
+            const linkFields = document.getElementById('linkEventFields');
+            
+            radios.forEach(radio => {
+                radio.addEventListener('change', () => {
+                    if (radio.value === 'create') {
+                        createFields.style.display = 'block';
+                        linkFields.style.display = 'none';
+                    } else if (radio.value === 'link') {
+                        createFields.style.display = 'none';
+                        linkFields.style.display = 'block';
+                    } else {
+                        createFields.style.display = 'none';
+                        linkFields.style.display = 'none';
+                    }
+                });
+            });
+            
             try {
                 const response = await fetch('/tour/api/list');
                 const tours = await response.json();
                 const select = document.querySelector('select[name="tour_id"]');
+                select.innerHTML = '<option value="">Selecionar evento...</option>';
                 tours.forEach(tour => {
                     select.insertAdjacentHTML('beforeend', 
                         `<option value="${tour.id}">${tour.name}${tour.artist ? ' - ' + tour.artist : ''}</option>`);
                 });
             } catch (e) {
-                console.error('Erro ao carregar tours:', e);
+                console.error('Erro ao carregar eventos:', e);
             }
+        },
+        onLeave: async (data) => {
+            const action = data.event_action;
+            
+            if (action === 'create' && data.event_name) {
+                try {
+                    const response = await fetch('/api/automation/quote/' + quoteId + '/create-event', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            name: data.event_name,
+                            artist: data.event_artist,
+                            start_date: data.event_date
+                        })
+                    });
+                    const result = await response.json();
+                    if (result.success && result.data && result.data.tour_id) {
+                        showToast('Evento criado com sucesso!', 'success');
+                        setTimeout(() => {
+                            window.location.href = '/tour/' + result.data.tour_id;
+                        }, 1000);
+                        return false;
+                    }
+                } catch (e) {
+                    console.error('Erro ao criar evento:', e);
+                }
+            } else if (action === 'link' && data.tour_id) {
+                showToast('Vinculado ao evento!', 'success');
+                setTimeout(() => {
+                    window.location.href = '/tour/' + data.tour_id;
+                }, 1000);
+                return false;
+            }
+            return true;
         }
     });
 
