@@ -1,0 +1,313 @@
+{% extends "base.html" %}
+
+{% block title %}Relatorio de Custo por Funcionario{% endblock %}
+
+{% block extra_css %}
+<style>
+    .report-container {
+        padding: 16px;
+        padding-bottom: 100px;
+        background: #0a0a0a;
+        min-height: 100vh;
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .page-title {
+        color: #f5f5f5;
+        font-size: 1.3rem;
+        font-weight: 600;
+    }
+
+    .period-badge {
+        background: #2a2a2a;
+        color: #d4a574;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 0.85rem;
+    }
+
+    .summary-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 12px;
+        margin-bottom: 24px;
+    }
+
+    .summary-card {
+        background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+        border-radius: 12px;
+        padding: 16px;
+        text-align: center;
+    }
+
+    .summary-card.highlight {
+        background: linear-gradient(135deg, #7b1fa2 0%, #4a148c 100%);
+    }
+
+    .summary-label {
+        color: #888;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        margin-bottom: 6px;
+    }
+
+    .summary-card.highlight .summary-label {
+        color: rgba(255,255,255,0.8);
+    }
+
+    .summary-value {
+        color: #f5f5f5;
+        font-size: 1.1rem;
+        font-weight: 700;
+    }
+
+    .employee-table {
+        background: #1a1a1a;
+        border-radius: 12px;
+        overflow: hidden;
+        margin-bottom: 16px;
+    }
+
+    .table-header {
+        background: #2a2a2a;
+        padding: 12px 16px;
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+        gap: 8px;
+        color: #888;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+    }
+
+    .employee-row {
+        padding: 12px 16px;
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+        gap: 8px;
+        border-bottom: 1px solid #333;
+        align-items: center;
+    }
+
+    .employee-row:last-child {
+        border-bottom: none;
+    }
+
+    .employee-name {
+        color: #f5f5f5;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .employee-role {
+        color: #888;
+        font-size: 0.75rem;
+    }
+
+    .value-cell {
+        color: #f5f5f5;
+        font-size: 0.85rem;
+        text-align: right;
+    }
+
+    .value-highlight {
+        color: #d4a574;
+        font-weight: 600;
+    }
+
+    .detail-section {
+        background: #1a1a1a;
+        border-radius: 12px;
+        margin-bottom: 16px;
+        overflow: hidden;
+    }
+
+    .detail-header {
+        background: #2a2a2a;
+        padding: 12px 16px;
+        color: #d4a574;
+        font-weight: 600;
+    }
+
+    .detail-content {
+        padding: 16px;
+    }
+
+    .cost-breakdown {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+    }
+
+    .cost-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid #333;
+    }
+
+    .cost-label {
+        color: #888;
+        font-size: 0.9rem;
+    }
+
+    .cost-value {
+        color: #f5f5f5;
+        font-weight: 600;
+    }
+
+    .empty-state {
+        text-align: center;
+        color: #666;
+        padding: 60px 20px;
+    }
+
+    .btn-back {
+        background: #333;
+        color: #fff;
+        padding: 8px 16px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-size: 0.9rem;
+    }
+
+    @media (max-width: 768px) {
+        .table-header, .employee-row {
+            grid-template-columns: 1fr 1fr;
+        }
+        .table-header > :nth-child(n+3),
+        .employee-row > :nth-child(n+3) {
+            display: none;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="report-container">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Custo Total por Funcionario</h1>
+            <span class="period-badge">
+                <i class="fas fa-calendar"></i>
+                {{ periodo_inicio.strftime('%m/%Y') }} - {{ periodo_fim.strftime('%m/%Y') }}
+            </span>
+        </div>
+        <a href="{{ url_for('rh.dashboard') }}" class="btn-back">
+            <i class="fas fa-arrow-left"></i> Voltar
+        </a>
+    </div>
+
+    {% if relatorio %}
+    <div class="summary-cards">
+        <div class="summary-card highlight">
+            <div class="summary-label">Custo Total Mensal</div>
+            <div class="summary-value">R$ {{ '{:,.2f}'.format(totais.custo_total).replace(',', 'X').replace('.', ',').replace('X', '.') }}</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-label">Salarios</div>
+            <div class="summary-value">R$ {{ '{:,.2f}'.format(totais.salarios).replace(',', 'X').replace('.', ',').replace('X', '.') }}</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-label">INSS Patronal</div>
+            <div class="summary-value">R$ {{ '{:,.2f}'.format(totais.inss_patronal).replace(',', 'X').replace('.', ',').replace('X', '.') }}</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-label">FGTS</div>
+            <div class="summary-value">R$ {{ '{:,.2f}'.format(totais.fgts).replace(',', 'X').replace('.', ',').replace('X', '.') }}</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-label">Prov. Ferias</div>
+            <div class="summary-value">R$ {{ '{:,.2f}'.format(totais.provisao_ferias).replace(',', 'X').replace('.', ',').replace('X', '.') }}</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-label">Prov. 13o</div>
+            <div class="summary-value">R$ {{ '{:,.2f}'.format(totais.provisao_13).replace(',', 'X').replace('.', ',').replace('X', '.') }}</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-label">Beneficios</div>
+            <div class="summary-value">R$ {{ '{:,.2f}'.format(totais.beneficios).replace(',', 'X').replace('.', ',').replace('X', '.') }}</div>
+        </div>
+    </div>
+
+    <div class="detail-section">
+        <div class="detail-header">
+            <i class="fas fa-users"></i> Detalhamento por Funcionario
+        </div>
+        <div class="employee-table">
+            <div class="table-header">
+                <div>Funcionario</div>
+                <div style="text-align: right;">Salario</div>
+                <div style="text-align: right;">Encargos</div>
+                <div style="text-align: right;">Beneficios</div>
+                <div style="text-align: right;">Custo Total</div>
+            </div>
+            {% for item in relatorio %}
+            <div class="employee-row">
+                <div>
+                    <div class="employee-name">{{ item.funcionario.name }}</div>
+                    <div class="employee-role">{{ item.funcionario.position or 'Sem cargo' }}</div>
+                </div>
+                <div class="value-cell">R$ {{ '{:,.2f}'.format(item.salario).replace(',', 'X').replace('.', ',').replace('X', '.') }}</div>
+                <div class="value-cell">R$ {{ '{:,.2f}'.format(item.inss_patronal + item.fgts + item.provisao_ferias + item.provisao_13).replace(',', 'X').replace('.', ',').replace('X', '.') }}</div>
+                <div class="value-cell">R$ {{ '{:,.2f}'.format(item.beneficios).replace(',', 'X').replace('.', ',').replace('X', '.') }}</div>
+                <div class="value-cell value-highlight">R$ {{ '{:,.2f}'.format(item.custo_mensal).replace(',', 'X').replace('.', ',').replace('X', '.') }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="detail-section">
+        <div class="detail-header">
+            <i class="fas fa-chart-pie"></i> Analise de Composicao
+        </div>
+        <div class="detail-content">
+            <div class="cost-breakdown">
+                <div>
+                    <div class="cost-item">
+                        <span class="cost-label">Salarios Brutos</span>
+                        <span class="cost-value">{{ '{:.1f}'.format((totais.salarios / totais.custo_total * 100) if totais.custo_total else 0) }}%</span>
+                    </div>
+                    <div class="cost-item">
+                        <span class="cost-label">INSS Patronal (20%)</span>
+                        <span class="cost-value">{{ '{:.1f}'.format((totais.inss_patronal / totais.custo_total * 100) if totais.custo_total else 0) }}%</span>
+                    </div>
+                    <div class="cost-item">
+                        <span class="cost-label">FGTS (8%)</span>
+                        <span class="cost-value">{{ '{:.1f}'.format((totais.fgts / totais.custo_total * 100) if totais.custo_total else 0) }}%</span>
+                    </div>
+                </div>
+                <div>
+                    <div class="cost-item">
+                        <span class="cost-label">Provisao Ferias</span>
+                        <span class="cost-value">{{ '{:.1f}'.format((totais.provisao_ferias / totais.custo_total * 100) if totais.custo_total else 0) }}%</span>
+                    </div>
+                    <div class="cost-item">
+                        <span class="cost-label">Provisao 13o Salario</span>
+                        <span class="cost-value">{{ '{:.1f}'.format((totais.provisao_13 / totais.custo_total * 100) if totais.custo_total else 0) }}%</span>
+                    </div>
+                    <div class="cost-item">
+                        <span class="cost-label">Beneficios</span>
+                        <span class="cost-value">{{ '{:.1f}'.format((totais.beneficios / totais.custo_total * 100) if totais.custo_total else 0) }}%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-users" style="font-size: 3rem; margin-bottom: 16px;"></i>
+        <h3>Nenhum funcionario ativo</h3>
+        <p>Cadastre funcionarios para visualizar o relatorio de custos.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
