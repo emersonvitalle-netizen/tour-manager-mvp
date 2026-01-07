@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'Editar' if centro else 'Novo' }} Centro de Custo{% endblock %}
+
+{% block extra_css %}
+<style>
+    .container {
+        padding: 16px;
+        padding-bottom: 100px;
+        background: #0a0a0a;
+        min-height: 100vh;
+    }
+
+    .page-header {
+        margin-bottom: 24px;
+    }
+
+    .page-title {
+        color: #f5f5f5;
+        font-size: 1.3rem;
+        font-weight: 600;
+    }
+
+    .form-card {
+        background: #1a1a1a;
+        border-radius: 12px;
+        padding: 20px;
+    }
+
+    .form-group {
+        margin-bottom: 16px;
+    }
+
+    .form-label {
+        display: block;
+        color: #888;
+        font-size: 0.85rem;
+        margin-bottom: 6px;
+    }
+
+    .form-control {
+        width: 100%;
+        background: #0a0a0a;
+        border: 1px solid #333;
+        border-radius: 8px;
+        padding: 12px;
+        color: #f5f5f5;
+        font-size: 1rem;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #d4a574;
+    }
+
+    .checkbox-group {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .checkbox-group input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        accent-color: #d4a574;
+    }
+
+    .checkbox-group label {
+        color: #f5f5f5;
+        font-size: 0.9rem;
+    }
+
+    .btn-submit {
+        width: 100%;
+        background: linear-gradient(135deg, #d4a574 0%, #b8956a 100%);
+        color: #000;
+        border: none;
+        padding: 14px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 1rem;
+        cursor: pointer;
+        margin-top: 8px;
+    }
+
+    .back-link {
+        color: #d4a574;
+        text-decoration: none;
+        font-size: 0.9rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <a href="{{ url_for('financial.centros_custo') }}" class="back-link">
+        <i class="fas fa-arrow-left"></i> Voltar
+    </a>
+
+    <div class="page-header" style="margin-top: 16px;">
+        <h1 class="page-title">
+            <i class="fas fa-sitemap"></i> 
+            {{ 'Editar' if centro else 'Novo' }} Centro de Custo
+        </h1>
+    </div>
+
+    <div class="form-card">
+        <form method="post">
+            <div class="form-group">
+                <label class="form-label">Codigo *</label>
+                <input type="text" name="code" class="form-control" 
+                       value="{{ centro.code if centro else '' }}" 
+                       placeholder="Ex: ADM, OPE, MKT" 
+                       maxlength="10" required
+                       style="text-transform: uppercase;">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Nome *</label>
+                <input type="text" name="name" class="form-control" 
+                       value="{{ centro.name if centro else '' }}" 
+                       placeholder="Nome do centro de custo" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Descricao</label>
+                <textarea name="description" class="form-control" rows="3"
+                          placeholder="Descricao opcional...">{{ centro.description if centro else '' }}</textarea>
+            </div>
+
+            <div class="form-group">
+                <div class="checkbox-group">
+                    <input type="checkbox" name="is_active" id="is_active"
+                           {{ 'checked' if not centro or centro.is_active else '' }}>
+                    <label for="is_active">Centro de custo ativo</label>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-submit">
+                <i class="fas fa-save"></i> {{ 'Atualizar' if centro else 'Criar' }} Centro de Custo
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

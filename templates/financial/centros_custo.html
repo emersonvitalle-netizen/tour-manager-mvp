@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+
+{% block title %}Centros de Custo{% endblock %}
+
+{% block extra_css %}
+<style>
+    .container {
+        padding: 16px;
+        padding-bottom: 100px;
+        background: #0a0a0a;
+        min-height: 100vh;
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+    }
+
+    .page-title {
+        color: #f5f5f5;
+        font-size: 1.3rem;
+        font-weight: 600;
+    }
+
+    .btn-new {
+        background: linear-gradient(135deg, #d4a574 0%, #b8956a 100%);
+        color: #000;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+    .centro-card {
+        background: #1a1a1a;
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-left: 4px solid #d4a574;
+    }
+
+    .centro-card.inactive {
+        border-left-color: #666;
+        opacity: 0.6;
+    }
+
+    .centro-info {
+        flex: 1;
+    }
+
+    .centro-code {
+        display: inline-block;
+        background: rgba(212,165,116,0.2);
+        color: #d4a574;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-weight: 700;
+        font-size: 0.85rem;
+        margin-right: 8px;
+    }
+
+    .centro-name {
+        color: #f5f5f5;
+        font-weight: 600;
+        font-size: 1rem;
+    }
+
+    .centro-desc {
+        color: #888;
+        font-size: 0.85rem;
+        margin-top: 4px;
+    }
+
+    .centro-actions {
+        display: flex;
+        gap: 8px;
+    }
+
+    .btn-edit, .btn-delete {
+        padding: 8px 12px;
+        border-radius: 6px;
+        border: none;
+        cursor: pointer;
+        font-size: 0.85rem;
+    }
+
+    .btn-edit {
+        background: #333;
+        color: #fff;
+        text-decoration: none;
+    }
+
+    .btn-delete {
+        background: #b71c1c;
+        color: #fff;
+    }
+
+    .empty-state {
+        text-align: center;
+        color: #666;
+        padding: 60px 20px;
+    }
+
+    .back-link {
+        color: #d4a574;
+        text-decoration: none;
+        font-size: 0.9rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <a href="{{ url_for('financial.index') }}" class="back-link">
+        <i class="fas fa-arrow-left"></i> Voltar ao Financeiro
+    </a>
+
+    <div class="page-header" style="margin-top: 16px;">
+        <h1 class="page-title"><i class="fas fa-sitemap"></i> Centros de Custo</h1>
+        <a href="{{ url_for('financial.novo_centro_custo') }}" class="btn-new">
+            <i class="fas fa-plus"></i> Novo
+        </a>
+    </div>
+
+    {% if centros %}
+        {% for centro in centros %}
+        <div class="centro-card {{ 'inactive' if not centro.is_active else '' }}">
+            <div class="centro-info">
+                <div>
+                    <span class="centro-code">{{ centro.code }}</span>
+                    <span class="centro-name">{{ centro.name }}</span>
+                    {% if not centro.is_active %}
+                    <span style="color: #666; font-size: 0.75rem;">(inativo)</span>
+                    {% endif %}
+                </div>
+                {% if centro.description %}
+                <div class="centro-desc">{{ centro.description }}</div>
+                {% endif %}
+            </div>
+            <div class="centro-actions">
+                <a href="{{ url_for('financial.editar_centro_custo', id=centro.id) }}" class="btn-edit">
+                    <i class="fas fa-edit"></i>
+                </a>
+                <form action="{{ url_for('financial.excluir_centro_custo', id=centro.id) }}" method="post" style="display: inline;" onsubmit="return confirm('Excluir este centro de custo?');">
+                    <button type="submit" class="btn-delete">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty-state">
+            <i class="fas fa-sitemap" style="font-size: 3rem; margin-bottom: 16px;"></i>
+            <h3>Nenhum centro de custo</h3>
+            <p>Crie centros de custo para organizar suas despesas.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
