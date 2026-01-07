@@ -1,0 +1,320 @@
+{% extends "base.html" %}
+
+{% block title %}RH - Ferias{% endblock %}
+
+{% block extra_css %}
+<style>
+    .vacation-container {
+        padding: 16px;
+        padding-bottom: 100px;
+        background: #0a0a0a;
+        min-height: 100vh;
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+    }
+
+    .page-title {
+        color: #f5f5f5;
+        font-size: 1.3rem;
+        font-weight: 600;
+    }
+
+    .btn-back {
+        background: #333;
+        color: white;
+        border: none;
+        padding: 10px 16px;
+        border-radius: 8px;
+        text-decoration: none;
+    }
+
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin-bottom: 24px;
+    }
+
+    .stat-card {
+        background: #1a1a1a;
+        border-radius: 12px;
+        padding: 16px;
+        text-align: center;
+    }
+
+    .stat-value {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #f5f5f5;
+    }
+
+    .stat-value.warning { color: #ff9800; }
+    .stat-value.danger { color: #f44336; }
+    .stat-value.info { color: #2196f3; }
+
+    .stat-label {
+        color: #888;
+        font-size: 0.75rem;
+        margin-top: 4px;
+    }
+
+    .filter-tabs {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 20px;
+        overflow-x: auto;
+        padding-bottom: 8px;
+    }
+
+    .filter-tab {
+        background: #1a1a1a;
+        color: #888;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        text-decoration: none;
+        white-space: nowrap;
+    }
+
+    .filter-tab.active {
+        background: linear-gradient(135deg, #7b1fa2 0%, #4a148c 100%);
+        color: white;
+    }
+
+    .vacation-card {
+        background: #1a1a1a;
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 12px;
+    }
+
+    .vacation-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 12px;
+    }
+
+    .employee-name {
+        color: #f5f5f5;
+        font-weight: 600;
+        font-size: 1rem;
+    }
+
+    .vacation-period {
+        color: #888;
+        font-size: 0.85rem;
+        margin-top: 4px;
+    }
+
+    .status-badge {
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .status-pending { background: #ff9800; color: #000; }
+    .status-scheduled { background: #2196f3; color: #fff; }
+    .status-enjoying { background: #9c27b0; color: #fff; }
+    .status-paid { background: #4caf50; color: #fff; }
+    .status-overdue { background: #f44336; color: #fff; }
+
+    .vacation-dates {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        margin-bottom: 12px;
+        padding: 12px;
+        background: #0a0a0a;
+        border-radius: 8px;
+    }
+
+    .date-item {
+        text-align: center;
+    }
+
+    .date-label {
+        color: #666;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+    }
+
+    .date-value {
+        color: #f5f5f5;
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
+
+    .vacation-value {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 12px;
+        border-top: 1px solid #333;
+    }
+
+    .value-label {
+        color: #888;
+        font-size: 0.85rem;
+    }
+
+    .value-amount {
+        color: #4caf50;
+        font-weight: 700;
+        font-size: 1.1rem;
+    }
+
+    .vacation-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+    }
+
+    .btn-action {
+        flex: 1;
+        padding: 10px;
+        border-radius: 8px;
+        border: none;
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-decoration: none;
+        text-align: center;
+        cursor: pointer;
+    }
+
+    .btn-view {
+        background: #333;
+        color: #fff;
+    }
+
+    .btn-schedule {
+        background: linear-gradient(135deg, #7b1fa2 0%, #4a148c 100%);
+        color: #fff;
+    }
+
+    .btn-pay {
+        background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%);
+        color: #fff;
+    }
+
+    .empty-state {
+        text-align: center;
+        color: #666;
+        padding: 60px 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="vacation-container">
+    <div class="page-header">
+        <a href="{{ url_for('rh.index') }}" class="btn-back">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <h1 class="page-title"><i class="fas fa-umbrella-beach"></i> Ferias</h1>
+        <div></div>
+    </div>
+
+    <!-- Estatisticas -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-value warning">{{ total_pendentes }}</div>
+            <div class="stat-label">Pendentes</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value danger">{{ total_vencidas }}</div>
+            <div class="stat-label">Vencidas</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value info">{{ total_agendadas }}</div>
+            <div class="stat-label">Agendadas</div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="filter-tabs">
+        <a href="{{ url_for('rh.ferias_list', status='all') }}" 
+           class="filter-tab {{ 'active' if status_filter == 'all' else '' }}">Todas</a>
+        <a href="{{ url_for('rh.ferias_list', status='pending') }}" 
+           class="filter-tab {{ 'active' if status_filter == 'pending' else '' }}">Pendentes</a>
+        <a href="{{ url_for('rh.ferias_list', status='scheduled') }}" 
+           class="filter-tab {{ 'active' if status_filter == 'scheduled' else '' }}">Agendadas</a>
+        <a href="{{ url_for('rh.ferias_list', status='paid') }}" 
+           class="filter-tab {{ 'active' if status_filter == 'paid' else '' }}">Pagas</a>
+    </div>
+
+    <!-- Lista de Ferias -->
+    {% if vacations %}
+        {% for v in vacations %}
+        <div class="vacation-card">
+            <div class="vacation-header">
+                <div>
+                    <div class="employee-name">{{ v.employee.name }}</div>
+                    <div class="vacation-period">
+                        Periodo Aquisitivo: {{ v.acquisition_start.strftime('%d/%m/%Y') }} - {{ v.acquisition_end.strftime('%d/%m/%Y') }}
+                    </div>
+                </div>
+                <span class="status-badge status-{{ 'overdue' if v.is_overdue else v.status }}">
+                    {% if v.is_overdue %}VENCIDAS
+                    {% elif v.status == 'pending' %}PENDENTE
+                    {% elif v.status == 'scheduled' %}AGENDADA
+                    {% elif v.status == 'enjoying' %}EM GOZO
+                    {% elif v.status == 'paid' %}PAGA
+                    {% else %}{{ v.status|upper }}{% endif %}
+                </span>
+            </div>
+
+            <div class="vacation-dates">
+                <div class="date-item">
+                    <div class="date-label">Limite Concessao</div>
+                    <div class="date-value">{{ v.concession_end.strftime('%d/%m/%Y') if v.concession_end else '-' }}</div>
+                </div>
+                <div class="date-item">
+                    <div class="date-label">Inicio Ferias</div>
+                    <div class="date-value">{{ v.vacation_start.strftime('%d/%m/%Y') if v.vacation_start else '-' }}</div>
+                </div>
+            </div>
+
+            {% if v.net_value %}
+            <div class="vacation-value">
+                <span class="value-label">Valor Liquido</span>
+                <span class="value-amount">R$ {{ '{:,.2f}'.format(v.net_value).replace(',', 'X').replace('.', ',').replace('X', '.') }}</span>
+            </div>
+            {% endif %}
+
+            <div class="vacation-actions">
+                <a href="{{ url_for('rh.ferias_view', id=v.id) }}" class="btn-action btn-view">
+                    <i class="fas fa-eye"></i> Ver
+                </a>
+                {% if v.status == 'pending' %}
+                <a href="{{ url_for('rh.ferias_agendar', id=v.id) }}" class="btn-action btn-schedule">
+                    <i class="fas fa-calendar-plus"></i> Agendar
+                </a>
+                {% elif v.status == 'scheduled' %}
+                <form action="{{ url_for('rh.ferias_pagar', id=v.id) }}" method="POST" style="flex: 1;">
+                    <button type="submit" class="btn-action btn-pay" style="width: 100%;">
+                        <i class="fas fa-check"></i> Pagar
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty-state">
+            <i class="fas fa-umbrella-beach fa-3x" style="margin-bottom: 16px; color: #444;"></i>
+            <p>Nenhum periodo de ferias encontrado</p>
+            <p style="font-size: 0.85rem; color: #555; margin-top: 8px;">
+                Periodos sao gerados automaticamente ao cadastrar funcionarios
+            </p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

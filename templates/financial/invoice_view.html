@@ -85,9 +85,10 @@
                             <thead>
                                 <tr>
                                     <th>Data</th>
-                                    <th>Método</th>
+                                    <th>Metodo</th>
                                     <th class="text-end">Valor</th>
                                     <th>Status</th>
+                                    <th></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -97,6 +98,14 @@
                                     <td>{{ payment.method_label }}</td>
                                     <td class="text-end text-success">R$ {{ "%.2f"|format(payment.amount|float) }}</td>
                                     <td><span class="badge {{ payment.status_badge }}">{{ payment.status_label }}</span></td>
+                                    <td>
+                                        {% if payment.status == 'pending' and payment.provider != 'manual' %}
+                                        <a href="{{ url_for('financial.verificar_pagamento', id=invoice.id, payment_id=payment.id) }}" 
+                                           class="btn btn-sm btn-outline-info">
+                                            <i class="bi bi-arrow-repeat"></i> Verificar
+                                        </a>
+                                        {% endif %}
+                                    </td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -109,10 +118,36 @@
 
         <div class="col-lg-4">
             {% if invoice.status != 'paid' %}
+
+            <!-- COBRANCA AUTOMATICA (ASAAS) -->
+            <div class="card bg-dark border-info mb-4">
+                <div class="card-header bg-transparent border-info">
+                    <h6 class="text-info mb-0">
+                        <i class="bi bi-lightning-charge"></i> Cobranca Automatica
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">Gere PIX ou Boleto com baixa automatica</p>
+
+                    <form method="POST" action="{{ url_for('financial.gerar_pix_asaas', id=invoice.id) }}" class="d-grid mb-2">
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-qr-code"></i> Gerar PIX
+                        </button>
+                    </form>
+
+                    <form method="POST" action="{{ url_for('financial.gerar_boleto', id=invoice.id) }}" class="d-grid">
+                        <button type="submit" class="btn btn-outline-warning">
+                            <i class="bi bi-upc"></i> Gerar Boleto
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- PAGAMENTO MANUAL -->
             <div class="card bg-dark border-warning mb-4">
                 <div class="card-header bg-transparent border-warning">
                     <h6 class="text-warning mb-0">
-                        <i class="bi bi-cash"></i> Registrar Pagamento
+                        <i class="bi bi-cash"></i> Registrar Pagamento Manual
                     </h6>
                 </div>
                 <div class="card-body">
@@ -123,18 +158,18 @@
                                    value="{{ invoice.amount_pending }}" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label text-white">Método</label>
+                            <label class="form-label text-white">Metodo</label>
                             <select name="method" class="form-select bg-dark text-white border-secondary">
                                 <option value="pix">PIX</option>
-                                <option value="transfer">Transferência</option>
+                                <option value="transfer">Transferencia</option>
                                 <option value="boleto">Boleto</option>
                                 <option value="cash">Dinheiro</option>
-                                <option value="credit_card">Cartão Crédito</option>
-                                <option value="debit_card">Cartão Débito</option>
+                                <option value="credit_card">Cartao Credito</option>
+                                <option value="debit_card">Cartao Debito</option>
                             </select>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label text-white">Observação</label>
+                            <label class="form-label text-white">Observacao</label>
                             <input type="text" name="notes" class="form-control bg-dark text-white border-secondary">
                         </div>
                         <button type="submit" class="btn btn-success w-100">
@@ -154,11 +189,44 @@
                 </div>
                 <div class="card-body text-center">
                     <p class="text-white mb-2">{{ invoice.nfse_number }}</p>
+                    <span class="badge bg-success mb-2">{{ invoice.nfse_status or 'Emitida' }}</span>
                     {% if invoice.nfse_url %}
-                    <a href="{{ invoice.nfse_url }}" target="_blank" class="btn btn-outline-info btn-sm">
+                    <a href="{{ invoice.nfse_url }}" target="_blank" class="btn btn-outline-info btn-sm d-block mt-2">
                         <i class="bi bi-download"></i> Baixar PDF
                     </a>
                     {% endif %}
+                    <a href="{{ url_for('financial.verificar_nfse', id=invoice.id) }}" class="btn btn-outline-secondary btn-sm d-block mt-2">
+                        <i class="bi bi-arrow-repeat"></i> Atualizar Status
+                    </a>
+                </div>
+            </div>
+            {% elif invoice.nfse_id %}
+            <div class="card bg-dark border-warning">
+                <div class="card-header bg-transparent border-warning">
+                    <h6 class="text-warning mb-0">
+                        <i class="bi bi-clock-history"></i> NFSe Agendada
+                    </h6>
+                </div>
+                <div class="card-body text-center">
+                    <p class="text-muted small mb-2">Aguardando emissao pela prefeitura</p>
+                    <span class="badge bg-warning text-dark mb-2">{{ invoice.nfse_status or 'Processando' }}</span>
+                    <a href="{{ url_for('financial.verificar_nfse', id=invoice.id) }}" class="btn btn-warning btn-sm d-block mt-2">
+                        <i class="bi bi-arrow-repeat"></i> Verificar Status
+                    </a>
+                </div>
+            </div>
+            {% elif invoice.status == 'paid' %}
+            <div class="card bg-dark border-success">
+                <div class="card-header bg-transparent border-success">
+                    <h6 class="text-success mb-0">
+                        <i class="bi bi-file-earmark-plus"></i> Nota Fiscal
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">Emita a NFSe para esta fatura paga</p>
+                    <a href="{{ url_for('financial.emitir_nfse_fatura', id=invoice.id) }}" class="btn btn-success w-100">
+                        <i class="bi bi-file-invoice"></i> Emitir NFSe
+                    </a>
                 </div>
             </div>
             {% endif %}
@@ -166,7 +234,7 @@
     </div>
 
     <div class="mt-4">
-        <a href="{{ url_for('financial.invoices') }}" class="btn btn-outline-secondary">
+        <a href="{{ url_for('financial.receitas') }}" class="btn btn-outline-secondary">
             <i class="bi bi-arrow-left"></i> Voltar
         </a>
     </div>

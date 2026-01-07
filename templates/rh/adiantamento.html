@@ -1,0 +1,498 @@
+{% extends "base.html" %}
+
+{% block title %}Adiantamento Salarial{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-container {
+        padding: 0;
+        min-height: 100vh;
+        padding-bottom: 100px;
+        background: #0a0a0a;
+    }
+
+    .page-header {
+        background: linear-gradient(135deg, rgba(245,158,11,0.3) 0%, rgba(26,26,26,0.95) 100%);
+        padding: 20px 16px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        border-bottom: 1px solid #2a2a2a;
+    }
+
+    .back-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #f59e0b;
+        text-decoration: none;
+    }
+
+    .page-title h1 {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #f5f5f5;
+        margin: 0;
+    }
+
+    .page-title p {
+        color: #888;
+        font-size: 0.8rem;
+        margin: 4px 0 0;
+    }
+
+    /* Form Card */
+    .form-card {
+        margin: 16px;
+        background: #1a1a1a;
+        border-radius: 12px;
+        padding: 20px;
+        border: 1px solid #2a2a2a;
+    }
+
+    .form-title {
+        color: #f59e0b;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin-bottom: 16px;
+    }
+
+    .form-group {
+        margin-bottom: 16px;
+    }
+
+    .form-label {
+        display: block;
+        color: #888;
+        font-size: 0.85rem;
+        margin-bottom: 6px;
+    }
+
+    .form-control {
+        width: 100%;
+        background: #252525;
+        border: 1px solid #333;
+        border-radius: 8px;
+        padding: 12px;
+        color: #f5f5f5;
+        font-size: 1rem;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #f59e0b;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+
+    /* Info do funcionario */
+    .employee-info {
+        background: #252525;
+        border-radius: 8px;
+        padding: 12px;
+        margin-bottom: 16px;
+        display: none;
+    }
+
+    .employee-info.visible {
+        display: block;
+    }
+
+    .employee-info .name {
+        color: #f5f5f5;
+        font-weight: 600;
+    }
+
+    .employee-info .salary {
+        color: #888;
+        font-size: 0.85rem;
+    }
+
+    .employee-info .max-value {
+        color: #f59e0b;
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-top: 8px;
+    }
+
+    /* Tipo valor */
+    .tipo-valor-group {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    .tipo-btn {
+        flex: 1;
+        padding: 12px;
+        border-radius: 8px;
+        border: 2px solid #333;
+        background: #252525;
+        color: #888;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .tipo-btn.active {
+        border-color: #f59e0b;
+        background: rgba(245,158,11,0.1);
+        color: #f59e0b;
+    }
+
+    .tipo-btn i {
+        display: block;
+        font-size: 1.5rem;
+        margin-bottom: 6px;
+    }
+
+    /* Percentual slider */
+    .percentual-group {
+        display: none;
+    }
+
+    .percentual-group.visible {
+        display: block;
+    }
+
+    .percentual-slider {
+        width: 100%;
+        margin: 10px 0;
+    }
+
+    .percentual-value {
+        text-align: center;
+        font-size: 2rem;
+        font-weight: 700;
+        color: #f59e0b;
+    }
+
+    .percentual-labels {
+        display: flex;
+        justify-content: space-between;
+        color: #666;
+        font-size: 0.75rem;
+    }
+
+    /* Valor fixo */
+    .valor-fixo-group {
+        display: none;
+    }
+
+    .valor-fixo-group.visible {
+        display: block;
+    }
+
+    .btn-submit {
+        width: 100%;
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        color: #000;
+        border: none;
+        padding: 14px;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        margin-top: 8px;
+    }
+
+    /* Lista de adiantamentos */
+    .section-title {
+        padding: 16px;
+        color: #888;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+    }
+
+    .list-card {
+        margin: 0 16px;
+        background: #1a1a1a;
+        border-radius: 12px;
+        border: 1px solid #2a2a2a;
+    }
+
+    .list-item {
+        padding: 16px;
+        border-bottom: 1px solid #2a2a2a;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .list-item:last-child {
+        border-bottom: none;
+    }
+
+    .list-icon {
+        width: 40px;
+        height: 40px;
+        background: rgba(245,158,11,0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #f59e0b;
+    }
+
+    .list-info {
+        flex: 1;
+    }
+
+    .list-info h4 {
+        color: #f5f5f5;
+        font-size: 0.9rem;
+        margin: 0 0 4px;
+    }
+
+    .list-info p {
+        color: #666;
+        font-size: 0.8rem;
+        margin: 0;
+    }
+
+    .list-value {
+        text-align: right;
+    }
+
+    .list-value .amount {
+        color: #f59e0b;
+        font-weight: 700;
+        font-size: 1rem;
+    }
+
+    .list-value .date {
+        color: #666;
+        font-size: 0.75rem;
+    }
+
+    .list-actions {
+        display: flex;
+        gap: 8px;
+    }
+
+    .btn-action {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+    }
+
+    .btn-action.pay {
+        background: #10b981;
+        color: white;
+    }
+
+    .btn-action.cancel {
+        background: #ef4444;
+        color: white;
+    }
+
+    .btn-action.view {
+        background: #3b82f6;
+        color: white;
+    }
+
+    .btn-action.print {
+        background: #f59e0b;
+        color: white;
+    }
+
+    .empty-state {
+        padding: 40px;
+        text-align: center;
+        color: #666;
+    }
+
+    .empty-state i {
+        font-size: 2.5rem;
+        margin-bottom: 12px;
+        display: block;
+        color: #444;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <a href="{{ url_for('rh.index') }}" class="back-btn">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <div class="page-title">
+            <h1><i class="fas fa-hand-holding-usd"></i> Adiantamento</h1>
+            <p>Vale salarial (max 40%)</p>
+        </div>
+    </div>
+
+    <!-- Form de novo adiantamento -->
+    <form method="POST" class="form-card">
+        <div class="form-title">Novo Adiantamento</div>
+
+        <div class="form-group">
+            <label class="form-label">Funcionario</label>
+            <select name="employee_id" id="employeeSelect" class="form-control" required onchange="updateEmployeeInfo()">
+                <option value="">Selecione...</option>
+                {% for emp in employees %}
+                <option value="{{ emp.id }}" data-salary="{{ emp.salary }}">{{ emp.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div id="employeeInfo" class="employee-info">
+            <div class="name" id="empName"></div>
+            <div class="salary">Salario: R$ <span id="empSalary">0,00</span></div>
+            <div class="max-value">Maximo (40%): R$ <span id="empMax">0,00</span></div>
+        </div>
+
+        <!-- Tipo de valor -->
+        <div class="form-label">Tipo de Valor</div>
+        <div class="tipo-valor-group">
+            <div class="tipo-btn active" id="btnPercentual" onclick="setTipoValor('percentual')">
+                <i class="fas fa-percent"></i>
+                Percentual
+            </div>
+            <div class="tipo-btn" id="btnFixo" onclick="setTipoValor('fixo')">
+                <i class="fas fa-dollar-sign"></i>
+                Valor Fixo
+            </div>
+        </div>
+        <input type="hidden" name="tipo_valor" id="tipoValor" value="percentual">
+
+        <!-- Percentual -->
+        <div id="percentualGroup" class="percentual-group visible">
+            <div class="percentual-value"><span id="percentualDisplay">20</span>%</div>
+            <input type="range" name="percentual" id="percentualSlider" class="percentual-slider" 
+                   min="5" max="40" step="5" value="20" oninput="updatePercentual()">
+            <div class="percentual-labels">
+                <span>5%</span>
+                <span>40%</span>
+            </div>
+            <div style="text-align: center; color: #888; margin-top: 8px;">
+                Valor: R$ <span id="percentualValor">0,00</span>
+            </div>
+        </div>
+
+        <!-- Valor fixo -->
+        <div id="valorFixoGroup" class="valor-fixo-group">
+            <div class="form-group">
+                <label class="form-label">Valor (R$)</label>
+                <input type="number" name="valor" id="valorFixo" class="form-control" step="0.01" min="0.01" placeholder="0,00">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Data do Pagamento</label>
+            <input type="date" name="data_pagamento" class="form-control" value="{{ today }}">
+        </div>
+
+        <button type="submit" class="btn-submit">
+            <i class="fas fa-plus"></i> Criar Adiantamento
+        </button>
+    </form>
+
+    <!-- Lista de adiantamentos pendentes -->
+    <div class="section-title">Adiantamentos Pendentes</div>
+
+    <div class="list-card">
+        {% if adiantamentos and adiantamentos|length > 0 %}
+            {% for ad in adiantamentos %}
+            <div class="list-item">
+                <div class="list-icon">
+                    <i class="fas fa-hand-holding-usd"></i>
+                </div>
+                <div class="list-info">
+                    <h4>{{ ad.description }}</h4>
+                    <p>Vence: {{ ad.due_date.strftime('%d/%m/%Y') }}</p>
+                </div>
+                <div class="list-value">
+                    <div class="amount">R$ {{ "%.2f"|format(ad.amount) }}</div>
+                </div>
+                <div class="list-actions">
+                    <a href="{{ url_for('rh.recibo_adiantamento', id=ad.id) }}" class="btn-action view" title="Ver Recibo">
+                        <i class="fas fa-eye"></i>
+                    </a>
+                    <a href="{{ url_for('rh.recibo_adiantamento', id=ad.id) }}" onclick="setTimeout(()=>window.print(),500)" class="btn-action print" title="Imprimir">
+                        <i class="fas fa-print"></i>
+                    </a>
+                    <form method="POST" action="{{ url_for('rh.pagar_adiantamento', id=ad.id) }}" style="display:inline;">
+                        <button type="submit" class="btn-action pay" title="Pagar">
+                            <i class="fas fa-check"></i>
+                        </button>
+                    </form>
+                    <form method="POST" action="{{ url_for('rh.cancelar_adiantamento', id=ad.id) }}" style="display:inline;">
+                        <button type="submit" class="btn-action cancel" title="Cancelar">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-inbox"></i>
+                <p>Nenhum adiantamento pendente</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+let salarioAtual = 0;
+
+function updateEmployeeInfo() {
+    const select = document.getElementById('employeeSelect');
+    const option = select.options[select.selectedIndex];
+    const info = document.getElementById('employeeInfo');
+
+    if (option.value) {
+        salarioAtual = parseFloat(option.dataset.salary) || 0;
+        const maxValue = salarioAtual * 0.40;
+
+        document.getElementById('empName').textContent = option.text;
+        document.getElementById('empSalary').textContent = salarioAtual.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+        document.getElementById('empMax').textContent = maxValue.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+        document.getElementById('valorFixo').max = maxValue;
+
+        info.classList.add('visible');
+        updatePercentual();
+    } else {
+        info.classList.remove('visible');
+        salarioAtual = 0;
+    }
+}
+
+function setTipoValor(tipo) {
+    document.getElementById('tipoValor').value = tipo;
+
+    document.getElementById('btnPercentual').classList.toggle('active', tipo === 'percentual');
+    document.getElementById('btnFixo').classList.toggle('active', tipo === 'fixo');
+
+    document.getElementById('percentualGroup').classList.toggle('visible', tipo === 'percentual');
+    document.getElementById('valorFixoGroup').classList.toggle('visible', tipo === 'fixo');
+}
+
+function updatePercentual() {
+    const percentual = document.getElementById('percentualSlider').value;
+    document.getElementById('percentualDisplay').textContent = percentual;
+
+    const valor = salarioAtual * (percentual / 100);
+    document.getElementById('percentualValor').textContent = valor.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+}
+</script>
+{% endblock %}

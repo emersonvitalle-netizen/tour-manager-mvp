@@ -1,6 +1,7 @@
 """
 Blueprint para Relatórios Visuais (Dashboards com Chart.js)
 VERSÃO FINAL - SEM SIMULAÇÕES - 100% DADOS REAIS
+ATUALIZADO: despesas_cat separado por categorias RH (consistente com DRE)
 """
 from flask import Blueprint, render_template, jsonify
 from flask_login import login_required, current_user
@@ -102,10 +103,11 @@ def api_dados():
         else:
             margem_6m.append(0)
 
-    # Despesas por Categoria (mês atual)
+    # ========== DESPESAS POR CATEGORIA (mês atual) - SEPARADO POR TIPO ==========
     mes_atual_inicio = date.today().replace(day=1)
     mes_atual_fim = (mes_atual_inicio + timedelta(days=32)).replace(day=1)
 
+    # Custo de manutenção do mês
     custo_manutencao_mes_atual = float(db.session.query(func.sum(Maintenance.total_cost)).filter(
         Maintenance.company_id == company_id,
         Maintenance.status == 'completed',
@@ -113,26 +115,49 @@ def api_dados():
         func.date(Maintenance.completed_at) < mes_atual_fim
     ).scalar() or 0)
 
+    # Função auxiliar para somar AccountPayable por categoria
+    def soma_contas_categoria(categoria):
+        return float(db.session.query(func.sum(AccountPayable.paid_amount)).filter(
+            AccountPayable.company_id == company_id,
+            AccountPayable.status == 'paid',
+            AccountPayable.category == categoria,
+            func.date(AccountPayable.paid_at) >= mes_atual_inicio,
+            func.date(AccountPayable.paid_at) < mes_atual_fim
+        ).scalar() or 0)
+
+    # Categorias RH separadas
+    categorias_rh = ['adiantamento', 'inss', 'fgts', 'irrf']
+
+    # Outras contas (excluindo categorias RH)
+    outras_contas = float(db.session.query(func.sum(AccountPayable.paid_amount)).filter(
+            AccountPayable.company_id == company_id,
+            AccountPayable.status == 'paid',
+            ~AccountPayable.category.in_(categorias_rh),
+            func.date(AccountPayable.paid_at) >= mes_atual_inicio,
+            func.date(AccountPayable.paid_at) < mes_atual_fim
+    ).scalar() or 0)
+
+    # Despesas por categoria - CONSISTENTE COM DRE
     despesas_cat = {
-        'Folha': float(db.session.query(func.sum(PayrollEntry.net_salary)).filter(
+        'Salarios': float(db.session.query(func.sum(PayrollEntry.net_salary)).filter(
             PayrollEntry.company_id == company_id,
             PayrollEntry.reference_month == date.today().month,
             PayrollEntry.reference_year == date.today().year
         ).scalar() or 0),
+        'Adiantamentos': soma_contas_categoria('adiantamento'),
+        'Encargos': soma_contas_categoria('inss') + soma_contas_categoria('fgts') + soma_contas_categoria('irrf'),
         'Freelancers': float(db.session.query(func.sum(FreelancerPayment.amount)).filter(
             FreelancerPayment.company_id == company_id,
             FreelancerPayment.status == 'paid',
             func.date(FreelancerPayment.paid_at) >= mes_atual_inicio,
             func.date(FreelancerPayment.paid_at) < mes_atual_fim
         ).scalar() or 0),
-        'Contas': float(db.session.query(func.sum(AccountPayable.paid_amount)).filter(
-            AccountPayable.company_id == company_id,
-            AccountPayable.status == 'paid',
-            func.date(AccountPayable.paid_at) >= mes_atual_inicio,
-            func.date(AccountPayable.paid_at) < mes_atual_fim
-        ).scalar() or 0),
+        'Outras Contas': outras_contas,
         'Manutencao': custo_manutencao_mes_atual
     }
+
+    # Remover categorias com valor zero para não poluir o gráfico
+    despesas_cat = {k: v for k, v in despesas_cat.items() if v > 0}
 
     # ========== EQUIPAMENTOS ==========
     categories = Category.query.filter_by(company_id=company_id).all()

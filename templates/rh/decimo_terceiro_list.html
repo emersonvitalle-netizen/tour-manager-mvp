@@ -1,0 +1,385 @@
+{% extends "base.html" %}
+
+{% block title %}RH - 13o Salario{% endblock %}
+
+{% block extra_css %}
+<style>
+    .thirteenth-container {
+        padding: 16px;
+        padding-bottom: 100px;
+        background: #0a0a0a;
+        min-height: 100vh;
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+    }
+
+    .page-title {
+        color: #f5f5f5;
+        font-size: 1.3rem;
+        font-weight: 600;
+    }
+
+    .btn-back {
+        background: #333;
+        color: white;
+        border: none;
+        padding: 10px 16px;
+        border-radius: 8px;
+        text-decoration: none;
+    }
+
+    .year-selector {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 24px;
+        background: #1a1a1a;
+        padding: 12px 16px;
+        border-radius: 12px;
+    }
+
+    .year-selector label {
+        color: #888;
+        font-size: 0.9rem;
+    }
+
+    .year-selector select {
+        background: #0a0a0a;
+        border: 1px solid #333;
+        color: #f5f5f5;
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-size: 1rem;
+    }
+
+    .btn-generate {
+        background: linear-gradient(135deg, #7b1fa2 0%, #4a148c 100%);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        margin-left: auto;
+    }
+
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin-bottom: 24px;
+    }
+
+    .stat-card {
+        background: #1a1a1a;
+        border-radius: 12px;
+        padding: 16px;
+        text-align: center;
+    }
+
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #f5f5f5;
+    }
+
+    .stat-value.money {
+        font-size: 1.2rem;
+        color: #4caf50;
+    }
+
+    .stat-value.pending {
+        color: #ff9800;
+    }
+
+    .stat-label {
+        color: #888;
+        font-size: 0.75rem;
+        margin-top: 4px;
+    }
+
+    .section-title {
+        color: #888;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        margin-bottom: 12px;
+        margin-top: 24px;
+    }
+
+    .employee-card {
+        background: #1a1a1a;
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 12px;
+    }
+
+    .employee-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 12px;
+    }
+
+    .employee-name {
+        color: #f5f5f5;
+        font-weight: 600;
+        font-size: 1rem;
+    }
+
+    .employee-months {
+        color: #888;
+        font-size: 0.85rem;
+        margin-top: 4px;
+    }
+
+    .status-badge {
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .status-pending { background: #ff9800; color: #000; }
+    .status-first_paid { background: #2196f3; color: #fff; }
+    .status-completed { background: #4caf50; color: #fff; }
+
+    .parcelas-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+
+    .parcela-card {
+        background: #0a0a0a;
+        border-radius: 8px;
+        padding: 12px;
+        text-align: center;
+    }
+
+    .parcela-label {
+        color: #666;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+    }
+
+    .parcela-value {
+        color: #f5f5f5;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .parcela-status {
+        font-size: 0.7rem;
+        margin-top: 4px;
+        padding: 2px 6px;
+        border-radius: 4px;
+        display: inline-block;
+    }
+
+    .parcela-status.paid {
+        background: #1b5e20;
+        color: #fff;
+    }
+
+    .parcela-status.pending {
+        background: #333;
+        color: #888;
+    }
+
+    .employee-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid #333;
+    }
+
+    .btn-action {
+        flex: 1;
+        padding: 10px;
+        border-radius: 8px;
+        border: none;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        text-align: center;
+    }
+
+    .btn-pay-first {
+        background: linear-gradient(135deg, #1976d2 0%, #0d47a1 100%);
+        color: #fff;
+    }
+
+    .btn-pay-second {
+        background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%);
+        color: #fff;
+    }
+
+    .btn-disabled {
+        background: #333;
+        color: #666;
+        cursor: not-allowed;
+    }
+
+    .empty-state {
+        text-align: center;
+        color: #666;
+        padding: 60px 20px;
+    }
+
+    .info-box {
+        background: #1a1a2e;
+        border: 1px solid #3f51b5;
+        border-radius: 8px;
+        padding: 12px;
+        margin-bottom: 16px;
+        color: #9fa8da;
+        font-size: 0.85rem;
+    }
+
+    .info-box i {
+        margin-right: 8px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="thirteenth-container">
+    <div class="page-header">
+        <a href="{{ url_for('rh.index') }}" class="btn-back">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <h1 class="page-title"><i class="fas fa-gift"></i> 13o Salario</h1>
+        <div></div>
+    </div>
+
+    <!-- Seletor de Ano e Gerar -->
+    <div class="year-selector">
+        <label>Ano:</label>
+        <select id="yearSelect" onchange="changeYear()">
+            {% for y in range(year - 2, year + 2) %}
+            <option value="{{ y }}" {{ 'selected' if y == year else '' }}>{{ y }}</option>
+            {% endfor %}
+        </select>
+        <form action="{{ url_for('rh.decimo_terceiro_gerar') }}" method="POST" style="margin-left: auto;">
+            <input type="hidden" name="year" value="{{ year }}">
+            <button type="submit" class="btn-generate">
+                <i class="fas fa-sync-alt"></i> Gerar {{ year }}
+            </button>
+        </form>
+    </div>
+
+    <div class="info-box">
+        <i class="fas fa-info-circle"></i>
+        <strong>1a Parcela:</strong> ate 30/Nov (50% sem descontos) |
+        <strong>2a Parcela:</strong> ate 20/Dez (50% com INSS e IRRF)
+    </div>
+
+    <!-- Estatisticas -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-value pending">{{ pendentes }}</div>
+            <div class="stat-label">Pendentes</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value money">R$ {{ '{:,.0f}'.format(total_primeira).replace(',', '.') }}</div>
+            <div class="stat-label">1a Parcela</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value money">R$ {{ '{:,.0f}'.format(total_segunda).replace(',', '.') }}</div>
+            <div class="stat-label">2a Parcela</div>
+        </div>
+    </div>
+
+    <!-- Lista de Funcionarios -->
+    {% if entries %}
+        {% for entry in entries %}
+        <div class="employee-card">
+            <div class="employee-header">
+                <div>
+                    <div class="employee-name">{{ entry.employee.name }}</div>
+                    <div class="employee-months">{{ entry.months_worked }} meses trabalhados</div>
+                </div>
+                <span class="status-badge status-{{ entry.status }}">
+                    {% if entry.status == 'pending' %}PENDENTE
+                    {% elif entry.status == 'first_paid' %}1a PAGA
+                    {% elif entry.status == 'completed' %}COMPLETO
+                    {% else %}{{ entry.status|upper }}{% endif %}
+                </span>
+            </div>
+
+            <div class="parcelas-grid">
+                <div class="parcela-card">
+                    <div class="parcela-label">1a Parcela</div>
+                    <div class="parcela-value">R$ {{ '{:,.2f}'.format(entry.first_installment_value or 0).replace(',', 'X').replace('.', ',').replace('X', '.') }}</div>
+                    <span class="parcela-status {{ 'paid' if entry.first_installment_paid else 'pending' }}">
+                        {{ 'PAGO' if entry.first_installment_paid else 'PENDENTE' }}
+                    </span>
+                </div>
+                <div class="parcela-card">
+                    <div class="parcela-label">2a Parcela</div>
+                    <div class="parcela-value">R$ {{ '{:,.2f}'.format(entry.second_installment_net or 0).replace(',', 'X').replace('.', ',').replace('X', '.') }}</div>
+                    <span class="parcela-status {{ 'paid' if entry.second_installment_paid else 'pending' }}">
+                        {{ 'PAGO' if entry.second_installment_paid else 'PENDENTE' }}
+                    </span>
+                </div>
+            </div>
+
+            <div class="employee-actions">
+                {% if not entry.first_installment_paid %}
+                <form action="{{ url_for('rh.decimo_terceiro_pagar_primeira', id=entry.id) }}" method="POST" style="flex: 1;">
+                    <input type="hidden" name="method" value="transfer">
+                    <button type="submit" class="btn-action btn-pay-first" style="width: 100%;">
+                        <i class="fas fa-check"></i> Pagar 1a
+                    </button>
+                </form>
+                {% else %}
+                <button class="btn-action btn-disabled" disabled style="flex: 1;">
+                    <i class="fas fa-check-circle"></i> 1a Paga
+                </button>
+                {% endif %}
+
+                {% if entry.first_installment_paid and not entry.second_installment_paid %}
+                <form action="{{ url_for('rh.decimo_terceiro_pagar_segunda', id=entry.id) }}" method="POST" style="flex: 1;">
+                    <input type="hidden" name="method" value="transfer">
+                    <button type="submit" class="btn-action btn-pay-second" style="width: 100%;">
+                        <i class="fas fa-check"></i> Pagar 2a
+                    </button>
+                </form>
+                {% elif entry.second_installment_paid %}
+                <button class="btn-action btn-disabled" disabled style="flex: 1;">
+                    <i class="fas fa-check-circle"></i> 2a Paga
+                </button>
+                {% else %}
+                <button class="btn-action btn-disabled" disabled style="flex: 1;">
+                    <i class="fas fa-lock"></i> Pagar 1a Antes
+                </button>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty-state">
+            <i class="fas fa-gift fa-3x" style="margin-bottom: 16px; color: #444;"></i>
+            <p>Nenhum 13o gerado para {{ year }}</p>
+            <p style="font-size: 0.85rem; color: #555; margin-top: 8px;">
+                Clique em "Gerar {{ year }}" para criar automaticamente
+            </p>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+function changeYear() {
+    const year = document.getElementById('yearSelect').value;
+    window.location.href = '{{ url_for("rh.decimo_terceiro_list") }}?year=' + year;
+}
+</script>
+{% endblock %}

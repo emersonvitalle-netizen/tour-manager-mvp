@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Emitir NFSe - Financeiro{% endblock %}
+{% block title %}Emitir NFSe - {{ invoice.code }}{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -12,7 +12,7 @@
     }
 
     .page-header {
-        background: linear-gradient(135deg, rgba(99,102,241,0.3) 0%, rgba(26,26,26,0.95) 100%);
+        background: linear-gradient(135deg, rgba(16,185,129,0.3) 0%, rgba(26,26,26,0.95) 100%);
         padding: 20px 16px;
         display: flex;
         align-items: center;
@@ -28,48 +28,102 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        color: #d4a574;
+        color: #10b981;
         text-decoration: none;
     }
 
     .page-title h1 {
-        font-size: 1.5rem;
+        font-size: 1.3rem;
         font-weight: 700;
         color: #f5f5f5;
         margin-bottom: 4px;
+    }
+
+    .page-title p {
+        color: #888;
+        font-size: 0.85rem;
+    }
+
+    .info-card {
+        margin: 16px;
+        background: #1a1a1a;
+        border-radius: 12px;
+        padding: 16px;
+        border: 1px solid #2a2a2a;
+    }
+
+    .info-card h3 {
+        color: #10b981;
+        font-size: 0.9rem;
+        margin-bottom: 12px;
+    }
+
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid #2a2a2a;
+    }
+
+    .info-row:last-child {
+        border-bottom: none;
+    }
+
+    .info-label {
+        color: #888;
+    }
+
+    .info-value {
+        color: #f5f5f5;
+        font-weight: 600;
+    }
+
+    .info-value.total {
+        color: #10b981;
+        font-size: 1.2rem;
     }
 
     .form-card {
         margin: 16px;
         background: #1a1a1a;
         border-radius: 12px;
-        padding: 20px;
+        padding: 16px;
         border: 1px solid #2a2a2a;
+    }
+
+    .form-card h3 {
+        color: #f5f5f5;
+        font-size: 1rem;
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
     }
 
     .form-group {
         margin-bottom: 16px;
     }
 
-    .form-row {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 12px;
+    .form-label {
+        display: block;
+        color: #888;
+        font-size: 0.85rem;
+        margin-bottom: 6px;
     }
 
     .form-control {
         width: 100%;
+        padding: 12px;
         background: #252525;
         border: 1px solid #333;
         border-radius: 8px;
-        padding: 12px;
-        color: #fff;
+        color: #f5f5f5;
         font-size: 0.95rem;
     }
 
     .form-control:focus {
         outline: none;
-        border-color: #6366f1;
+        border-color: #10b981;
     }
 
     textarea.form-control {
@@ -77,17 +131,158 @@
         resize: vertical;
     }
 
+    .tax-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+    }
+
+    .tax-item {
+        background: #252525;
+        padding: 12px;
+        border-radius: 8px;
+    }
+
+    .tax-item label {
+        display: block;
+        color: #888;
+        font-size: 0.75rem;
+        margin-bottom: 4px;
+    }
+
+    .tax-item input {
+        width: 100%;
+        padding: 8px;
+        background: #1a1a1a;
+        border: 1px solid #333;
+        border-radius: 4px;
+        color: #f5f5f5;
+        font-size: 0.9rem;
+    }
+
+    .checkbox-group {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px;
+        background: #252525;
+        border-radius: 8px;
+        margin-top: 12px;
+    }
+
+    .checkbox-group input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+        accent-color: #10b981;
+    }
+
+    .checkbox-group label {
+        color: #f5f5f5;
+        font-size: 0.9rem;
+    }
+
     .btn-emitir {
         width: 100%;
-        background: #10b981;
-        color: #fff;
         padding: 16px;
-        border-radius: 8px;
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
         border: none;
-        font-weight: 700;
+        border-radius: 12px;
+        color: white;
         font-size: 1rem;
+        font-weight: 600;
         cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 20px;
+    }
+
+    .btn-emitir:hover {
+        opacity: 0.9;
+    }
+
+    .btn-emitir:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .alert-info {
+        background: rgba(59, 130, 246, 0.1);
+        border: 1px solid #3b82f6;
+        border-radius: 8px;
+        padding: 12px;
+        margin: 16px;
+        color: #93c5fd;
+        font-size: 0.85rem;
+    }
+
+    .alert-warning {
+        background: rgba(245, 158, 11, 0.1);
+        border: 1px solid #f59e0b;
+        border-radius: 8px;
+        padding: 12px;
+        margin: 16px;
+        color: #fcd34d;
+        font-size: 0.85rem;
+    }
+
+    .service-select {
+        position: relative;
+    }
+
+    .service-list {
+        max-height: 200px;
+        overflow-y: auto;
+        background: #252525;
+        border: 1px solid #333;
+        border-radius: 8px;
         margin-top: 8px;
+    }
+
+    .service-item {
+        padding: 12px;
+        border-bottom: 1px solid #333;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .service-item:hover {
+        background: #333;
+    }
+
+    .service-item:last-child {
+        border-bottom: none;
+    }
+
+    .service-code {
+        color: #10b981;
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+
+    .service-name {
+        color: #f5f5f5;
+        font-size: 0.9rem;
+        margin-top: 4px;
+    }
+
+    .selected-service {
+        background: rgba(16, 185, 129, 0.1);
+        border: 1px solid #10b981;
+        border-radius: 8px;
+        padding: 12px;
+        margin-top: 8px;
+    }
+
+    .selected-service .label {
+        color: #888;
+        font-size: 0.75rem;
+    }
+
+    .selected-service .value {
+        color: #10b981;
+        font-weight: 600;
     }
 </style>
 {% endblock %}
@@ -95,46 +290,179 @@
 {% block content %}
 <div class="page-container">
     <div class="page-header">
-        <a href="{{ url_for('financial.index') }}" class="back-btn">
+        <a href="{{ url_for('financial.view_invoice', id=invoice.id) }}" class="back-btn">
             <i class="fas fa-arrow-left"></i>
         </a>
         <div class="page-title">
-            <h1><i class="fas fa-file-alt"></i> Emitir NFSe</h1>
+            <h1><i class="fas fa-file-invoice"></i> Emitir NFSe</h1>
+            <p>{{ invoice.code }}</p>
         </div>
     </div>
 
-    <div class="form-card">
-        <form method="POST">
+    <!-- Info da Fatura -->
+    <div class="info-card">
+        <h3><i class="fas fa-receipt"></i> Dados da Fatura</h3>
+        <div class="info-row">
+            <span class="info-label">Cliente</span>
+            <span class="info-value">{{ invoice.client_name }}</span>
+        </div>
+        {% if invoice.client_document %}
+        <div class="info-row">
+            <span class="info-label">CPF/CNPJ</span>
+            <span class="info-value">{{ invoice.client_document }}</span>
+        </div>
+        {% endif %}
+        <div class="info-row">
+            <span class="info-label">Valor</span>
+            <span class="info-value total">R$ {{ "%.2f"|format(invoice.total|float) }}</span>
+        </div>
+    </div>
+
+    {% if not invoice.client_document %}
+    <div class="alert-warning">
+        <i class="fas fa-exclamation-triangle"></i>
+        <strong>Atencao:</strong> O CPF/CNPJ do cliente nao esta preenchido. 
+        Algumas prefeituras exigem este dado para emissao da NFSe.
+    </div>
+    {% endif %}
+
+    <div class="alert-info">
+        <i class="fas fa-info-circle"></i>
+        A NFSe sera agendada e emitida automaticamente pelo Asaas. 
+        Voce pode acompanhar o status na tela da fatura.
+    </div>
+
+    <form method="POST" id="nfseForm">
+        <!-- Servico Municipal -->
+        <div class="form-card">
+            <h3><i class="fas fa-list-alt"></i> Servico Municipal</h3>
+
+            {% if services %}
             <div class="form-group">
-                <input type="text" class="form-control" name="razao_social" placeholder="Nome/Razao Social">
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <input type="text" class="form-control" name="cpf_cnpj" placeholder="CPF/CNPJ">
-                </div>
-                <div class="form-group">
-                    <input type="text" class="form-control" name="insc_municipal" placeholder="Insc. Municipal">
-                </div>
-            </div>
-            <div class="form-group">
-                <textarea class="form-control" name="descricao" placeholder="Descricao do servico"></textarea>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <input type="number" class="form-control" name="valor" placeholder="Valor Total" step="0.01">
-                </div>
-                <div class="form-group">
-                    <input type="number" class="form-control" name="aliquota" placeholder="Aliquota ISS (%)" step="0.01">
-                </div>
-            </div>
-            <div class="form-group">
-                <select class="form-control" name="provedor">
-                    <option value="focus">Focus NFe</option>
-                    <option value="manual">Manual</option>
+                <label class="form-label">Selecione o servico</label>
+                <select name="service_id" id="serviceSelect" class="form-control" onchange="updateServiceInfo()">
+                    <option value="">-- Selecione --</option>
+                    {% for service in services %}
+                    <option value="{{ service.id }}" 
+                            data-code="{{ service.code }}" 
+                            data-name="{{ service.description }}">
+                        {{ service.code }} - {{ service.description }}
+                    </option>
+                    {% endfor %}
                 </select>
             </div>
-            <button type="submit" class="btn-emitir">Emitir NFSe</button>
-        </form>
-    </div>
+            <input type="hidden" name="service_code" id="serviceCode">
+            <input type="hidden" name="service_name" id="serviceName">
+
+            <div id="selectedServiceInfo" class="selected-service" style="display: none;">
+                <div class="label">Servico selecionado:</div>
+                <div class="value" id="selectedServiceText"></div>
+            </div>
+            {% else %}
+            <div class="alert-warning" style="margin: 0;">
+                <i class="fas fa-exclamation-circle"></i>
+                Nenhum servico municipal encontrado. Configure os servicos no painel do Asaas 
+                ou informe o codigo manualmente abaixo.
+            </div>
+
+            <div class="form-group" style="margin-top: 16px;">
+                <label class="form-label">Codigo do servico (manual)</label>
+                <input type="text" name="service_code" class="form-control" 
+                       placeholder="Ex: 1.01, 7.02">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Nome do servico</label>
+                <input type="text" name="service_name" class="form-control" 
+                       placeholder="Ex: Analise e desenvolvimento de sistemas">
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Descricao -->
+        <div class="form-card">
+            <h3><i class="fas fa-align-left"></i> Descricao do Servico</h3>
+
+            <div class="form-group">
+                <label class="form-label">Discriminacao dos servicos</label>
+                <textarea name="service_description" class="form-control" required
+                          placeholder="Descreva os servicos prestados...">{{ invoice.description or ('Servicos de locacao de equipamentos conforme fatura ' + invoice.code) }}</textarea>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Observacoes (opcional)</label>
+                <textarea name="observations" class="form-control" 
+                          placeholder="Informacoes adicionais..."></textarea>
+            </div>
+        </div>
+
+        <!-- Impostos -->
+        <div class="form-card">
+            <h3><i class="fas fa-calculator"></i> Impostos (%)</h3>
+
+            <div class="tax-grid">
+                <div class="tax-item">
+                    <label>ISS</label>
+                    <input type="number" name="iss" step="0.01" value="{{ invoice.tax_percent or 5 }}" min="0" max="100">
+                </div>
+                <div class="tax-item">
+                    <label>COFINS</label>
+                    <input type="number" name="cofins" step="0.01" value="0" min="0" max="100">
+                </div>
+                <div class="tax-item">
+                    <label>CSLL</label>
+                    <input type="number" name="csll" step="0.01" value="0" min="0" max="100">
+                </div>
+                <div class="tax-item">
+                    <label>INSS</label>
+                    <input type="number" name="inss" step="0.01" value="0" min="0" max="100">
+                </div>
+                <div class="tax-item">
+                    <label>IR</label>
+                    <input type="number" name="ir" step="0.01" value="0" min="0" max="100">
+                </div>
+                <div class="tax-item">
+                    <label>PIS</label>
+                    <input type="number" name="pis" step="0.01" value="0" min="0" max="100">
+                </div>
+            </div>
+
+            <div class="checkbox-group">
+                <input type="checkbox" name="retain_iss" id="retainIss">
+                <label for="retainIss">Reter ISS na fonte</label>
+            </div>
+        </div>
+
+        <div style="padding: 0 16px 16px;">
+            <button type="submit" class="btn-emitir" id="btnEmitir">
+                <i class="fas fa-file-invoice"></i>
+                Emitir NFSe
+            </button>
+        </div>
+    </form>
 </div>
+
+<script>
+function updateServiceInfo() {
+    const select = document.getElementById('serviceSelect');
+    const option = select.options[select.selectedIndex];
+
+    if (option.value) {
+        document.getElementById('serviceCode').value = option.dataset.code;
+        document.getElementById('serviceName').value = option.dataset.name;
+        document.getElementById('selectedServiceText').textContent = option.dataset.code + ' - ' + option.dataset.name;
+        document.getElementById('selectedServiceInfo').style.display = 'block';
+    } else {
+        document.getElementById('serviceCode').value = '';
+        document.getElementById('serviceName').value = '';
+        document.getElementById('selectedServiceInfo').style.display = 'none';
+    }
+}
+
+document.getElementById('nfseForm').addEventListener('submit', function(e) {
+    const btn = document.getElementById('btnEmitir');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Emitindo...';
+});
+</script>
 {% endblock %}

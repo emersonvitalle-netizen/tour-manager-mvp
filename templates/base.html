@@ -469,6 +469,15 @@
         .gap-sm { gap: var(--spacing-sm); }
         .gap-md { gap: var(--spacing-md); }
         .gap-lg { gap: var(--spacing-lg); }
+
+        /* ===== PRINT ===== */
+        @media print {
+            .fab,
+            .bottom-nav,
+            .alert {
+                display: none !important;
+            }
+        }
     </style>
 
     {% block extra_css %}{% endblock %}
@@ -500,7 +509,7 @@
     <nav class="bottom-nav">
         <a href="{{ url_for('dashboard') }}" class="bottom-nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
             <i class="fas fa-home bottom-nav-icon"></i>
-            <span>Início</span>
+            <span>InÃ­cio</span>
         </a>
         <a href="{{ url_for('equipment.index') }}" class="bottom-nav-item {% if 'equipment' in request.endpoint %}active{% endif %}">
             <i class="fas fa-box bottom-nav-icon"></i>
@@ -531,10 +540,10 @@
 
     <!-- Bootstrap JS (for modals) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
+
     <!-- Wizard Controller -->
     <script src="{{ url_for('static', filename='js/wizard.js') }}?v=20260102d"></script>
-    
+
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
 

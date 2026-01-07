@@ -40,6 +40,10 @@
         margin-bottom: 12px;
     }
 
+    .section-label.danger {
+        color: #ef4444;
+    }
+
     .form-group {
         margin-bottom: 16px;
     }
@@ -98,6 +102,33 @@
         display: block;
         text-align: center;
     }
+
+    /* Secao de desligamento */
+    .desligamento-section {
+        display: none;
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid #ef4444;
+        border-radius: 8px;
+        padding: 16px;
+        margin-top: 16px;
+    }
+
+    .desligamento-section.visible {
+        display: block;
+    }
+
+    .desligamento-warning {
+        color: #ef4444;
+        font-size: 0.85rem;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .desligamento-warning i {
+        font-size: 1.2rem;
+    }
 </style>
 {% endblock %}
 
@@ -113,7 +144,7 @@
     <form method="POST" class="form-card">
         <div class="form-section">
             <div class="section-label">Dados Pessoais</div>
-            
+
             <div class="form-group">
                 <label class="form-label">Nome Completo *</label>
                 <input type="text" name="name" class="form-control" value="{{ employee.name if employee else '' }}" required>
@@ -138,7 +169,7 @@
 
         <div class="form-section">
             <div class="section-label">Contato</div>
-            
+
             <div class="form-group">
                 <label class="form-label">Email</label>
                 <input type="email" name="email" class="form-control" value="{{ employee.email if employee else '' }}">
@@ -157,7 +188,7 @@
 
         <div class="form-section">
             <div class="section-label">Dados Profissionais</div>
-            
+
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label">Cargo *</label>
@@ -183,20 +214,103 @@
             {% if employee %}
             <div class="form-group">
                 <label class="form-label">Status</label>
-                <select name="status" class="form-control">
+                <select name="status" id="statusSelect" class="form-control" onchange="toggleDesligamento()">
                     <option value="active" {% if employee.status == 'active' %}selected{% endif %}>Ativo</option>
                     <option value="inactive" {% if employee.status == 'inactive' %}selected{% endif %}>Inativo</option>
                     <option value="vacation" {% if employee.status == 'vacation' %}selected{% endif %}>Ferias</option>
                 </select>
             </div>
+
+            <!-- Secao de Desligamento - aparece quando status = inactive -->
+            <div id="desligamentoSection" class="desligamento-section {% if employee.status == 'inactive' %}visible{% endif %}">
+                <div class="section-label danger">Dados do Desligamento</div>
+
+                <div class="desligamento-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span>Ao inativar, folhas e contas pendentes serao removidas automaticamente.</span>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Motivo</label>
+                        <select name="motivo_desligamento" class="form-control">
+                            <option value="demissao">Demissao (sem justa causa)</option>
+                            <option value="pedido">Pedido de demissao</option>
+                            <option value="justa_causa">Demissao por justa causa</option>
+                            <option value="acordo">Acordo entre partes</option>
+                            <option value="termino_contrato">Termino de contrato</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Data Desligamento</label>
+                        <input type="date" name="data_desligamento" class="form-control" id="data_desligamento">
+                    </div>
+                </div>
+            </div>
             {% endif %}
         </div>
+
+        {% if employee %}
+        <div class="form-section">
+            <div class="section-label">Beneficios</div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Vale Transporte (R$)</label>
+                    <input type="number" name="vt_value" class="form-control" step="0.01" value="{{ employee.vt_value if employee else '0' }}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Vale Refeicao (R$)</label>
+                    <input type="number" name="vr_value" class="form-control" step="0.01" value="{{ employee.vr_value if employee else '0' }}">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Vale Alimentacao (R$)</label>
+                    <input type="number" name="va_value" class="form-control" step="0.01" value="{{ employee.va_value if employee else '0' }}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Plano de Saude (R$)</label>
+                    <input type="number" name="health_insurance" class="form-control" step="0.01" value="{{ employee.health_insurance if employee else '0' }}">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Numero de Dependentes (IRRF)</label>
+                <input type="number" name="dependents_count" class="form-control" min="0" value="{{ employee.dependents_count if employee else '0' }}">
+            </div>
+        </div>
+        {% endif %}
 
         <button type="submit" class="btn-submit">
             <i class="fas fa-save"></i> Salvar
         </button>
-        
+
         <a href="{{ url_for('rh.employees') }}" class="btn-cancel">Cancelar</a>
     </form>
 </div>
+
+<script>
+function toggleDesligamento() {
+    const status = document.getElementById('statusSelect').value;
+    const section = document.getElementById('desligamentoSection');
+    const dataInput = document.getElementById('data_desligamento');
+
+    if (status === 'inactive') {
+        section.classList.add('visible');
+        // Preencher data atual se vazio
+        if (!dataInput.value) {
+            dataInput.value = new Date().toISOString().split('T')[0];
+        }
+    } else {
+        section.classList.remove('visible');
+    }
+}
+
+// Executar ao carregar para verificar estado inicial
+document.addEventListener('DOMContentLoaded', function() {
+    toggleDesligamento();
+});
+</script>
 {% endblock %}
