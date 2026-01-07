@@ -1,0 +1,455 @@
+{% extends "base.html" %}
+
+{% block title %}RH - Rescisao - {{ termination.employee.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .termination-view-container {
+        padding: 16px;
+        padding-bottom: 100px;
+        background: #0a0a0a;
+        min-height: 100vh;
+    }
+
+    .page-header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .btn-back {
+        background: #333;
+        color: white;
+        border: none;
+        padding: 10px 16px;
+        border-radius: 8px;
+        text-decoration: none;
+    }
+
+    .page-title {
+        color: #f5f5f5;
+        font-size: 1.2rem;
+        font-weight: 600;
+        flex: 1;
+    }
+
+    .status-badge {
+        padding: 6px 12px;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .status-calculated { background: #ff9800; color: #000; }
+    .status-approved { background: #2196f3; color: #fff; }
+    .status-paid { background: #4caf50; color: #fff; }
+
+    .section-card {
+        background: #1a1a1a;
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 16px;
+    }
+
+    .section-title {
+        color: #888;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        margin-bottom: 12px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid #333;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+
+    .info-item {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .info-item.full {
+        grid-column: span 2;
+    }
+
+    .info-label {
+        color: #666;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+    }
+
+    .info-value {
+        color: #f5f5f5;
+        font-size: 1rem;
+        font-weight: 500;
+    }
+
+    .termination-type-badge {
+        display: inline-block;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    .type-sem_justa_causa { background: #c62828; color: #fff; }
+    .type-pedido_demissao { background: #1565c0; color: #fff; }
+    .type-justa_causa { background: #4a148c; color: #fff; }
+    .type-acordo_mutuo { background: #00695c; color: #fff; }
+
+    .values-table {
+        width: 100%;
+    }
+
+    .values-table tr {
+        border-bottom: 1px solid #333;
+    }
+
+    .values-table tr:last-child {
+        border-bottom: none;
+    }
+
+    .values-table td {
+        padding: 10px 0;
+        color: #f5f5f5;
+    }
+
+    .values-table td:first-child {
+        color: #888;
+    }
+
+    .values-table td:last-child {
+        text-align: right;
+        font-weight: 600;
+    }
+
+    .values-table tr.subtotal td {
+        padding-top: 12px;
+        border-top: 1px solid #444;
+    }
+
+    .values-table tr.discount td:last-child {
+        color: #f44336;
+    }
+
+    .values-table tr.total td {
+        color: #4caf50;
+        font-size: 1.2rem;
+        font-weight: 700;
+        padding-top: 16px;
+        border-top: 2px solid #444;
+    }
+
+    .fgts-card {
+        background: linear-gradient(135deg, #1a237e 0%, #0d47a1 100%);
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 16px;
+    }
+
+    .fgts-title {
+        color: #90caf9;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        margin-bottom: 12px;
+    }
+
+    .fgts-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+
+    .fgts-item {
+        text-align: center;
+    }
+
+    .fgts-label {
+        color: #90caf9;
+        font-size: 0.7rem;
+    }
+
+    .fgts-value {
+        color: #fff;
+        font-size: 1.1rem;
+        font-weight: 700;
+    }
+
+    .seguro-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 16px;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-top: 12px;
+    }
+
+    .seguro-yes {
+        background: #1b5e20;
+        color: #fff;
+    }
+
+    .seguro-no {
+        background: #333;
+        color: #888;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 12px;
+        margin-top: 24px;
+    }
+
+    .btn-action {
+        flex: 1;
+        padding: 14px;
+        border-radius: 10px;
+        border: none;
+        font-size: 1rem;
+        font-weight: 600;
+        text-decoration: none;
+        text-align: center;
+        cursor: pointer;
+    }
+
+    .btn-approve {
+        background: linear-gradient(135deg, #1976d2 0%, #0d47a1 100%);
+        color: #fff;
+    }
+
+    .btn-pay {
+        background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%);
+        color: #fff;
+    }
+
+    .btn-print {
+        background: #333;
+        color: #fff;
+    }
+
+    .reason-box {
+        background: #0a0a0a;
+        border-radius: 8px;
+        padding: 12px;
+        color: #aaa;
+        font-style: italic;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="termination-view-container">
+    <div class="page-header">
+        <a href="{{ url_for('rh.rescisoes_list') }}" class="btn-back">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <h1 class="page-title">Rescisao</h1>
+        <span class="status-badge status-{{ termination.status }}">
+            {% if termination.status == 'calculated' %}CALCULADO
+            {% elif termination.status == 'approved' %}APROVADO
+            {% elif termination.status == 'paid' %}PAGO
+            {% else %}{{ termination.status|upper }}{% endif %}
+        </span>
+    </div>
+
+    <!-- Funcionario -->
+    <div class="section-card">
+        <div class="section-title"><i class="fas fa-user"></i> Funcionario</div>
+        <div class="info-grid">
+            <div class="info-item full">
+                <span class="info-label">Nome</span>
+                <span class="info-value">{{ termination.employee.name }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Cargo</span>
+                <span class="info-value">{{ termination.employee.position or '-' }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Salario Base</span>
+                <span class="info-value">R$ {{ '{:,.2f}'.format(termination.base_salary or 0).replace(',', 'X').replace('.', ',').replace('X', '.') }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Admissao</span>
+                <span class="info-value">{{ termination.admission_date.strftime('%d/%m/%Y') if termination.admission_date else '-' }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Tempo de Servico</span>
+                <span class="info-value">{{ termination.years_worked }} anos</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tipo de Rescisao -->
+    <div class="section-card">
+        <div class="section-title"><i class="fas fa-file-contract"></i> Tipo de Rescisao</div>
+        <div class="info-grid">
+            <div class="info-item">
+                <span class="info-label">Tipo</span>
+                <span class="termination-type-badge type-{{ termination.termination_type }}">
+                    {% if termination.termination_type == 'sem_justa_causa' %}Sem Justa Causa
+                    {% elif termination.termination_type == 'pedido_demissao' %}Pedido de Demissao
+                    {% elif termination.termination_type == 'justa_causa' %}Justa Causa
+                    {% elif termination.termination_type == 'acordo_mutuo' %}Acordo Mutuo
+                    {% else %}{{ termination.termination_type }}{% endif %}
+                </span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Data Desligamento</span>
+                <span class="info-value">{{ termination.termination_date.strftime('%d/%m/%Y') }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Aviso Previo</span>
+                <span class="info-value">{{ termination.notice_type or 'Indenizado' }} ({{ termination.notice_days or 30 }} dias)</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Verbas Rescisorias -->
+    <div class="section-card">
+        <div class="section-title"><i class="fas fa-dollar-sign"></i> Verbas Rescisorias</div>
+        <table class="values-table">
+            <tr>
+                <td>Saldo de Salario</td>
+                <td>R$ {{ '{:,.2f}'.format(termination.salary_balance or 0).replace(',', 'X').replace('.', ',').replace('X', '.') }}</td>
+            </tr>
+            {% if termination.notice_value and termination.notice_value > 0 %}
+            <tr>
+                <td>Aviso Previo Indenizado</td>
+                <td>R$ {{ '{:,.2f}'.format(termination.notice_value).replace(',', 'X').replace('.', ',').replace('X', '.') }}</td>
+            </tr>
+            {% endif %}
+            {% if termination.thirteenth_prop and termination.thirteenth_prop > 0 %}
+            <tr>
+                <td>13o Proporcional</td>
+                <td>R$ {{ '{:,.2f}'.format(termination.thirteenth_prop).replace(',', 'X').replace('.', ',').replace('X', '.') }}</td>
+            </tr>
+            {% endif %}
+            {% if termination.vacation_overdue and termination.vacation_overdue > 0 %}
+            <tr>
+                <td>Ferias Vencidas</td>
+                <td>R$ {{ '{:,.2f}'.format(termination.vacation_overdue).replace(',', 'X').replace('.', ',').replace('X', '.') }}</td>
+            </tr>
+            <tr>
+                <td>1/3 Ferias Vencidas</td>
+                <td>R$ {{ '{:,.2f}'.format(termination.vacation_overdue_bonus or 0).replace(',', 'X').replace('.', ',').replace('X', '.') }}</td>
+            </tr>
+            {% endif %}
+            {% if termination.vacation_prop and termination.vacation_prop > 0 %}
+            <tr>
+                <td>Ferias Proporcionais</td>
+                <td>R$ {{ '{:,.2f}'.format(termination.vacation_prop).replace(',', 'X').replace('.', ',').replace('X', '.') }}</td>
+            </tr>
+            <tr>
+                <td>1/3 Ferias Proporcionais</td>
+                <td>R$ {{ '{:,.2f}'.format(termination.vacation_prop_bonus or 0).replace(',', 'X').replace('.', ',').replace('X', '.') }}</td>
+            </tr>
+            {% endif %}
+            <tr class="subtotal">
+                <td><strong>Total Bruto</strong></td>
+                <td><strong>R$ {{ '{:,.2f}'.format(termination.gross_total or 0).replace(',', 'X').replace('.', ',').replace('X', '.') }}</strong></td>
+            </tr>
+            <tr class="discount">
+                <td>(-) INSS</td>
+                <td>R$ {{ '{:,.2f}'.format(termination.inss_discount or 0).replace(',', 'X').replace('.', ',').replace('X', '.') }}</td>
+            </tr>
+            <tr class="discount">
+                <td>(-) IRRF</td>
+                <td>R$ {{ '{:,.2f}'.format(termination.irrf_discount or 0).replace(',', 'X').replace('.', ',').replace('X', '.') }}</td>
+            </tr>
+            <tr class="total">
+                <td>VALOR LIQUIDO</td>
+                <td>R$ {{ '{:,.2f}'.format(termination.net_total or 0).replace(',', 'X').replace('.', ',').replace('X', '.') }}</td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- FGTS -->
+    {% if termination.fgts_balance and termination.fgts_balance > 0 %}
+    <div class="fgts-card">
+        <div class="fgts-title"><i class="fas fa-piggy-bank"></i> FGTS</div>
+        <div class="fgts-grid">
+            <div class="fgts-item">
+                <div class="fgts-label">Saldo Depositado</div>
+                <div class="fgts-value">R$ {{ '{:,.2f}'.format(termination.fgts_balance).replace(',', 'X').replace('.', ',').replace('X', '.') }}</div>
+            </div>
+            <div class="fgts-item">
+                <div class="fgts-label">Multa ({{ termination.fgts_fine_percent or 0 }}%)</div>
+                <div class="fgts-value">R$ {{ '{:,.2f}'.format(termination.fgts_fine or 0).replace(',', 'X').replace('.', ',').replace('X', '.') }}</div>
+            </div>
+            <div class="fgts-item" style="grid-column: span 2;">
+                <div class="fgts-label">Total a Sacar</div>
+                <div class="fgts-value" style="font-size: 1.4rem;">R$ {{ '{:,.2f}'.format(termination.fgts_total_withdraw or 0).replace(',', 'X').replace('.', ',').replace('X', '.') }}</div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Seguro Desemprego -->
+    <div class="section-card">
+        <div class="section-title"><i class="fas fa-shield-alt"></i> Seguro Desemprego</div>
+        {% if termination.seguro_desemprego %}
+        <span class="seguro-badge seguro-yes">
+            <i class="fas fa-check-circle"></i> Tem direito ao Seguro Desemprego
+        </span>
+        {% else %}
+        <span class="seguro-badge seguro-no">
+            <i class="fas fa-times-circle"></i> Nao tem direito ao Seguro Desemprego
+        </span>
+        {% endif %}
+    </div>
+
+    <!-- Motivo -->
+    {% if termination.reason %}
+    <div class="section-card">
+        <div class="section-title"><i class="fas fa-comment-alt"></i> Motivo</div>
+        <div class="reason-box">{{ termination.reason }}</div>
+    </div>
+    {% endif %}
+
+    <!-- Pagamento -->
+    {% if termination.status == 'paid' %}
+    <div class="section-card">
+        <div class="section-title"><i class="fas fa-check-circle"></i> Pagamento</div>
+        <div class="info-grid">
+            <div class="info-item">
+                <span class="info-label">Data Pagamento</span>
+                <span class="info-value">{{ termination.paid_at.strftime('%d/%m/%Y') if termination.paid_at else '-' }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Metodo</span>
+                <span class="info-value">{{ termination.payment_method or 'Transferencia' }}</span>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Acoes -->
+    <div class="action-buttons">
+        {% if termination.status == 'calculated' %}
+        <form action="{{ url_for('rh.rescisao_aprovar', id=termination.id) }}" method="POST" style="flex: 1;">
+            <button type="submit" class="btn-action btn-approve" style="width: 100%;">
+                <i class="fas fa-check"></i> Aprovar Rescisao
+            </button>
+        </form>
+        {% elif termination.status == 'approved' %}
+        <form action="{{ url_for('rh.rescisao_pagar', id=termination.id) }}" method="POST" style="flex: 1;">
+            <input type="hidden" name="method" value="transfer">
+            <button type="submit" class="btn-action btn-pay" style="width: 100%;">
+                <i class="fas fa-dollar-sign"></i> Confirmar Pagamento
+            </button>
+        </form>
+        {% elif termination.status == 'paid' %}
+        <a href="#" class="btn-action btn-print" onclick="window.print()">
+            <i class="fas fa-print"></i> Imprimir TRCT
+        </a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

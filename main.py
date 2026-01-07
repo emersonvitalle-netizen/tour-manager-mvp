@@ -5,21 +5,21 @@ from extensions import db, login_manager, bcrypt
 import os
 
 def create_models():
-    """Importa todos os models na ordem correta - ORDEM BASEADA EM DEPENDÊNCIAS"""
+    """Importa todos os models na ordem correta - ORDEM BASEADA EM DEPENDENCIAS"""
 
-    # NÍVEL 1 - Base (sem dependências externas)
+    # NIVEL 1 - Base (sem dependencias externas)
     from models.company import Company
     from models.category import Category
 
-    # NÍVEL 2 - Dependem só de Nível 1
+    # NIVEL 2 - Dependem so de Nivel 1
     from models.user import User, TourAccess
     from models.equipment_type import EquipmentType
     from models.material_stock import MaterialStock, MaterialMovement
 
-    # NÍVEL 3 - Dependem de Nível 1 e 2
+    # NIVEL 3 - Dependem de Nivel 1 e 2
     from models.equipment_model import EquipmentModel
 
-    # NÍVEL 4 - Dependem de níveis anteriores
+    # NIVEL 4 - Dependem de niveis anteriores
     from models.equipment import Equipment
     from models.tour import Tour, Show, TourRequirement, TourEquipment, EquipmentCheckpoint, EquipmentTransfer, EquipmentReplacement
     from models.commercial import Lead, LeadInteraction, LeadReactivation
@@ -27,17 +27,17 @@ def create_models():
                            AccountPayable, FreelancerPayment, BankAccount, CostCenter, AccountReceivable,
                            Supplier, Client, Vehicle, Consumable, ContractTemplate, CashRegister, CashEntry)
 
-    # NÍVEL 5 - Dependem de Equipment/Tour
+    # NIVEL 5 - Dependem de Equipment/Tour
     from models.maintenance import Maintenance
     from models.kit import Kit, KitRequirement
     from models.separation_list import SeparationList, SeparationListItem
     from models.work_list import WorkList, WorkListItem
     from models.financial import Quote, QuoteItem, Contract, Invoice, Payment
 
-    # NÍVEL 6 - Dependem de Quote/Invoice/Payment
+    # NIVEL 6 - Dependem de Quote/Invoice/Payment
     from models.financial_expanded import FinancialProvision, PaymentStrategy, CashFlowProjection, TaxCalculation, FinancialAlert
 
-    # NÍVEL 7 - Fabricação
+    # NIVEL 7 - Fabricacao
     from models.fabrication import FabricationTemplate, FabricationRecord
 
 def migrate_database():
@@ -102,6 +102,30 @@ def migrate_database():
         'ALTER TABLE account_payable ADD COLUMN receipt_url VARCHAR(500)',
         'ALTER TABLE account_payable ADD COLUMN origin_type VARCHAR(50)',
         'ALTER TABLE account_payable ADD COLUMN origin_id INTEGER',
+
+        # ============================================
+        # INTEGRACAO ASAAS - PIX/Boleto
+        # ============================================
+        'ALTER TABLE company ADD COLUMN asaas_api_key VARCHAR(200)',
+        'ALTER TABLE company ADD COLUMN asaas_sandbox BOOLEAN DEFAULT 1',
+        'ALTER TABLE company ADD COLUMN asaas_webhook_token VARCHAR(64)',
+        'ALTER TABLE company ADD COLUMN asaas_enabled BOOLEAN DEFAULT 0',
+
+        # ============================================
+        # NFSE - NOTA FISCAL DE SERVICO
+        # ============================================
+        'ALTER TABLE invoice ADD COLUMN nfse_id VARCHAR(100)',
+        'ALTER TABLE invoice ADD COLUMN nfse_number VARCHAR(50)',
+        'ALTER TABLE invoice ADD COLUMN nfse_status VARCHAR(30)',
+        'ALTER TABLE invoice ADD COLUMN nfse_url VARCHAR(500)',
+        'ALTER TABLE invoice ADD COLUMN nfse_xml_url VARCHAR(500)',
+
+        # ============================================
+        # PAYMENT - Campos adicionais Asaas
+        # ============================================
+        'ALTER TABLE payment ADD COLUMN external_id VARCHAR(100)',
+        'ALTER TABLE payment ADD COLUMN provider VARCHAR(30)',
+        'ALTER TABLE payment ADD COLUMN provider_data TEXT',
     ]
 
     for migration in migrations:
@@ -229,8 +253,6 @@ def project_docs():
         return redirect(url_for('auth.login'))
     return render_template('docs/project_overview.html')
 
-# COMENTADO TEMPORARIAMENTE PARA RODAR MIGRATION
-# DESCOMENTAR DEPOIS DE RODAR migrate_all.py
 with app.app_context():
     create_models()
     db.create_all()

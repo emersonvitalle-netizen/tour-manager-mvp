@@ -1,242 +1,491 @@
 {% extends "base.html" %}
 
-{% block title %}RH - Folha de Pagamento{% endblock %}
+{% block title %}Folha de Pagamento - {{ month }}/{{ year }}{% endblock %}
 
 {% block extra_css %}
 <style>
-    .payroll-container {
-        padding: 16px;
-        padding-bottom: 100px;
-        background: #0a0a0a;
+    .page-container {
+        padding: 0;
         min-height: 100vh;
+        padding-bottom: 100px;
+        background: #000;
     }
 
     .page-header {
+        background: linear-gradient(135deg, rgba(52, 152, 219, 0.3) 0%, rgba(41, 128, 185, 0.2) 100%);
+        padding: 20px 16px;
         display: flex;
-        justify-content: space-between;
         align-items: center;
-        margin-bottom: 24px;
+        gap: 12px;
     }
 
-    .page-title {
+    .back-btn {
         color: #f5f5f5;
         font-size: 1.3rem;
-        font-weight: 600;
-    }
-
-    .month-selector {
+        text-decoration: none;
+        width: 40px;
+        height: 40px;
         display: flex;
-        gap: 8px;
         align-items: center;
+        justify-content: center;
     }
 
-    .month-selector select {
-        background: #252525;
-        border: 1px solid #333;
-        border-radius: 8px;
-        padding: 8px 12px;
+    .page-title h1 {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #f5f5f5;
+        margin: 0;
+    }
+
+    .page-title p {
+        font-size: 0.8rem;
+        color: #888;
+        margin: 4px 0 0;
+    }
+
+    /* Navegação de meses */
+    .month-nav {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 20px;
+        padding: 16px;
+        background: #0a0a0a;
+        border-bottom: 1px solid #1a1a1a;
+    }
+
+    .month-nav a {
+        color: #888;
+        text-decoration: none;
+        font-size: 1.5rem;
+        width: 44px;
+        height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: #1a1a1a;
+    }
+
+    .month-nav a:active {
+        background: #2a2a2a;
+    }
+
+    .month-nav .current-month {
+        font-size: 1.1rem;
+        font-weight: 600;
         color: #f5f5f5;
     }
 
-    .total-card {
-        background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%);
-        border-radius: 12px;
-        padding: 20px;
-        margin-bottom: 24px;
-        text-align: center;
-    }
-
-    .total-value {
-        font-size: 2rem;
-        font-weight: 700;
-        color: white;
-    }
-
-    .total-label {
-        color: rgba(255,255,255,0.8);
-        font-size: 0.85rem;
-    }
-
-    .action-bar {
-        display: flex;
-        gap: 12px;
-        margin-bottom: 24px;
-    }
-
-    .btn-generate {
-        flex: 1;
-        background: #7b1fa2;
-        color: white;
-        border: none;
-        padding: 12px;
-        border-radius: 8px;
-        font-weight: 600;
-        cursor: pointer;
-    }
-
-    .payroll-card {
+    /* Botão Gerar */
+    .form-card {
+        margin: 16px;
         background: #1a1a1a;
         border-radius: 12px;
         padding: 16px;
-        margin-bottom: 12px;
+        border: 1px solid #2a2a2a;
     }
 
-    .payroll-header {
+    .btn-generate {
+        width: 100%;
+        background: #f1c40f;
+        color: #000;
+        border: none;
+        padding: 14px;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    /* Lista de folhas */
+    .section-title {
+        padding: 16px;
+        color: #888;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+    }
+
+    .list-card {
+        margin: 0 16px;
+        background: #1a1a1a;
+        border-radius: 12px;
+        border: 1px solid #2a2a2a;
+    }
+
+    .list-item {
+        padding: 16px;
+        border-bottom: 1px solid #2a2a2a;
+    }
+
+    .list-item:last-child {
+        border-bottom: none;
+    }
+
+    .list-header {
         display: flex;
+        justify-content: space-between;
         align-items: center;
         margin-bottom: 12px;
     }
 
-    .payroll-name {
-        flex: 1;
-        color: #f5f5f5;
+    .employee-name {
         font-weight: 600;
+        color: #f5f5f5;
+        font-size: 1rem;
     }
 
-    .payroll-status {
-        padding: 4px 10px;
-        border-radius: 10px;
+    .status-badge {
+        padding: 4px 12px;
+        border-radius: 15px;
         font-size: 0.7rem;
         font-weight: 600;
     }
 
-    .status-pending { background: #e65100; color: white; }
-    .status-approved { background: #1565c0; color: white; }
-    .status-paid { background: #2e7d32; color: white; }
+    .status-pending { background: #f39c12; color: #000; }
+    .status-approved { background: #3498db; color: #fff; }
+    .status-paid { background: #27ae60; color: #fff; }
 
-    .payroll-values {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 12px;
-        text-align: center;
-        padding-top: 12px;
-        border-top: 1px solid #2a2a2a;
+    /* Valores em linha */
+    .values-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
     }
 
     .value-item {
-        
+        text-align: center;
+        flex: 1;
     }
 
-    .value-amount {
-        color: #f5f5f5;
-        font-weight: 600;
+    .value-item .label {
+        font-size: 0.65rem;
+        color: #666;
+        text-transform: uppercase;
+        display: block;
+        margin-bottom: 2px;
+    }
+
+    .value-item .amount {
         font-size: 0.95rem;
+        font-weight: 600;
+        color: #f5f5f5;
     }
 
-    .value-amount.green { color: #2e7d32; }
-    .value-amount.red { color: #c62828; }
+    .value-item .amount.green { color: #27ae60; }
+    .value-item .amount.red { color: #e74c3c; }
 
-    .value-label {
-        color: #888;
-        font-size: 0.7rem;
-    }
-
-    .payroll-actions {
+    /* Botões de ação */
+    .list-actions {
         display: flex;
+        justify-content: flex-end;
         gap: 8px;
-        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px dashed #2a2a2a;
     }
 
     .btn-action {
-        flex: 1;
-        padding: 8px;
-        border-radius: 6px;
-        font-size: 0.8rem;
-        font-weight: 600;
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
         border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         cursor: pointer;
+        text-decoration: none;
+        font-size: 1rem;
     }
 
-    .btn-approve { background: #1565c0; color: white; }
-    .btn-pay { background: #2e7d32; color: white; }
+    .btn-action.view {
+        background: #3b82f6;
+        color: white;
+    }
+
+    .btn-action.print {
+        background: #f59e0b;
+        color: white;
+    }
+
+    .btn-action.approve {
+        background: #3498db;
+        color: white;
+    }
+
+    .btn-action.pay {
+        background: #10b981;
+        color: white;
+    }
+
+    .btn-action.paid-icon {
+        background: #27ae60;
+        color: white;
+        cursor: default;
+    }
+
+    /* Resumo do mês */
+    .summary-section {
+        margin: 16px;
+        background: #1a1a1a;
+        border-radius: 12px;
+        padding: 16px;
+        border: 1px solid #2a2a2a;
+    }
+
+    .summary-title {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #f59e0b;
+        margin-bottom: 12px;
+    }
+
+    .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+
+    .summary-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px;
+        background: #0a0a0a;
+        border-radius: 8px;
+    }
+
+    .summary-item .label {
+        font-size: 0.8rem;
+        color: #888;
+    }
+
+    .summary-item .value {
+        font-weight: 600;
+        font-size: 0.85rem;
+        color: #f5f5f5;
+    }
 
     .empty-state {
+        padding: 40px;
         text-align: center;
         color: #666;
-        padding: 60px 20px;
+    }
+
+    .empty-state i {
+        font-size: 2.5rem;
+        margin-bottom: 12px;
+        display: block;
+        color: #444;
+    }
+
+    /* Cards resumo topo */
+    .top-summary {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        padding: 16px;
+    }
+
+    .top-card {
+        background: #1a1a1a;
+        border-radius: 12px;
+        padding: 14px;
+        text-align: center;
+        border: 1px solid #2a2a2a;
+    }
+
+    .top-card.liquido {
+        background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+        border: none;
+    }
+
+    .top-card.custo {
+        background: linear-gradient(135deg, #8e44ad 0%, #9b59b6 100%);
+        border: none;
+    }
+
+    .top-card .label {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        opacity: 0.8;
+        color: #888;
+    }
+
+    .top-card.liquido .label,
+    .top-card.custo .label {
+        color: rgba(255,255,255,0.8);
+    }
+
+    .top-card .value {
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin-top: 4px;
+        color: #f5f5f5;
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="payroll-container">
+<div class="page-container">
     <div class="page-header">
-        <h1 class="page-title"><i class="fas fa-money-check-alt"></i> Folha de Pagamento</h1>
-        <form class="month-selector" method="GET">
-            <select name="month" onchange="this.form.submit()">
-                {% for m in range(1, 13) %}
-                <option value="{{ m }}" {% if m == month %}selected{% endif %}>
-                    {{ ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'][m-1] }}
-                </option>
-                {% endfor %}
-            </select>
-            <select name="year" onchange="this.form.submit()">
-                {% for y in range(2024, 2027) %}
-                <option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>
-                {% endfor %}
-            </select>
+        <a href="{{ url_for('rh.index') }}" class="back-btn">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <div class="page-title">
+            <h1><i class="fas fa-file-invoice-dollar"></i> Folha de Pagamento</h1>
+            <p>Holerites CLT</p>
+        </div>
+    </div>
+
+    <!-- Navegação de meses -->
+    <div class="month-nav">
+        {% set prev_month = month - 1 if month > 1 else 12 %}
+        {% set prev_year = year if month > 1 else year - 1 %}
+        {% set next_month = month + 1 if month < 12 else 1 %}
+        {% set next_year = year if month < 12 else year + 1 %}
+
+        <a href="{{ url_for('rh.payroll', month=prev_month, year=prev_year) }}">
+            <i class="fas fa-chevron-left"></i>
+        </a>
+        <span class="current-month">
+            {{ ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'][month-1] }} / {{ year }}
+        </span>
+        <a href="{{ url_for('rh.payroll', month=next_month, year=next_year) }}">
+            <i class="fas fa-chevron-right"></i>
+        </a>
+    </div>
+
+    <!-- Cards resumo topo -->
+    <div class="top-summary">
+        <div class="top-card liquido">
+            <div class="label">Total Líquido</div>
+            <div class="value">R$ {{ "%.2f"|format(total_liquido) }}</div>
+        </div>
+        <div class="top-card custo">
+            <div class="label">Custo Total</div>
+            <div class="value">R$ {{ "%.2f"|format(total_custo) }}</div>
+        </div>
+        <div class="top-card">
+            <div class="label">INSS Total</div>
+            <div class="value">R$ {{ "%.2f"|format(total_inss) }}</div>
+        </div>
+        <div class="top-card">
+            <div class="label">FGTS Total</div>
+            <div class="value">R$ {{ "%.2f"|format(total_fgts) }}</div>
+        </div>
+    </div>
+
+    <!-- Botão gerar -->
+    <div class="form-card">
+        <form method="POST" action="{{ url_for('rh.generate_payroll') }}">
+            <input type="hidden" name="month" value="{{ month }}">
+            <input type="hidden" name="year" value="{{ year }}">
+            <button type="submit" class="btn-generate">
+                📋 Gerar Folhas do Mês
+            </button>
         </form>
     </div>
 
-    <div class="total-card">
-        <div class="total-value">R$ {{ '{:,.2f}'.format(total).replace(',', 'X').replace('.', ',').replace('X', '.') }}</div>
-        <div class="total-label">Total Folha {{ month }}/{{ year }}</div>
+    <!-- Lista de holerites -->
+    <div class="section-title">Folhas do Mês</div>
+
+    <div class="list-card">
+        {% if entries %}
+            {% for entry in entries %}
+            <div class="list-item">
+                <div class="list-header">
+                    <span class="employee-name">{{ entry.employee.name }}</span>
+                    <span class="status-badge status-{{ entry.status }}">
+                        {% if entry.status == 'pending' %}Pendente
+                        {% elif entry.status == 'approved' %}Aprovado
+                        {% else %}Pago{% endif %}
+                    </span>
+                </div>
+
+                <div class="values-row">
+                    <div class="value-item">
+                        <span class="label">Bruto</span>
+                        <span class="amount">R$ {{ "%.0f"|format(entry.gross_salary|float) }}</span>
+                    </div>
+                    <div class="value-item">
+                        <span class="label">Descontos</span>
+                        <span class="amount red">- R$ {{ "%.0f"|format(entry.deductions|float) }}</span>
+                    </div>
+                    <div class="value-item">
+                        <span class="label">Líquido</span>
+                        <span class="amount green">R$ {{ "%.0f"|format(entry.net_salary|float) }}</span>
+                    </div>
+                </div>
+
+                <div class="list-actions">
+                    <!-- Ver holerite -->
+                    <a href="{{ url_for('rh.view_payroll', id=entry.id) }}" class="btn-action view" title="Ver Holerite">
+                        <i class="fas fa-eye"></i>
+                    </a>
+
+                    <!-- Imprimir -->
+                    <a href="{{ url_for('rh.view_payroll', id=entry.id) }}" target="_blank" class="btn-action print" title="Imprimir">
+                        <i class="fas fa-print"></i>
+                    </a>
+
+                    {% if entry.status == 'pending' %}
+                    <!-- Aprovar -->
+                    <form method="POST" action="{{ url_for('rh.approve_payroll', id=entry.id) }}" style="display:inline; margin:0;">
+                        <button type="submit" class="btn-action approve" title="Aprovar">
+                            <i class="fas fa-check"></i>
+                        </button>
+                    </form>
+                    {% elif entry.status == 'approved' %}
+                    <!-- Pagar -->
+                    <form method="POST" action="{{ url_for('rh.pay_payroll', id=entry.id) }}" style="display:inline; margin:0;">
+                        <button type="submit" class="btn-action pay" title="Registrar Pagamento">
+                            <i class="fas fa-dollar-sign"></i>
+                        </button>
+                    </form>
+                    {% else %}
+                    <!-- Já pago -->
+                    <span class="btn-action paid-icon" title="Pago">
+                        <i class="fas fa-check-double"></i>
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-file-invoice-dollar"></i>
+                <p>Nenhuma folha para este mês</p>
+                <p style="font-size: 0.85rem; margin-top: 8px;">Clique em "Gerar Folhas" para criar</p>
+            </div>
+        {% endif %}
     </div>
 
-    <form method="POST" action="{{ url_for('rh.generate_payroll') }}" class="action-bar">
-        <input type="hidden" name="month" value="{{ month }}">
-        <input type="hidden" name="year" value="{{ year }}">
-        <button type="submit" class="btn-generate">
-            <i class="fas fa-sync"></i> Gerar Folhas do Mes
-        </button>
-    </form>
-
+    <!-- Resumo do mês -->
     {% if entries %}
-        {% for entry in entries %}
-        <div class="payroll-card">
-            <div class="payroll-header">
-                <span class="payroll-name">{{ entry.employee.name if entry.employee else 'Funcionario' }}</span>
-                <span class="payroll-status status-{{ entry.status }}">
-                    {{ entry.status|upper }}
-                </span>
+    <div class="summary-section">
+        <div class="summary-title">📊 Resumo do Mês</div>
+        <div class="summary-grid">
+            <div class="summary-item">
+                <span class="label">IRRF</span>
+                <span class="value">R$ {{ "%.2f"|format(total_irrf) }}</span>
             </div>
-            <div class="payroll-values">
-                <div class="value-item">
-                    <div class="value-amount">R$ {{ '{:,.2f}'.format(entry.base_salary).replace(',', 'X').replace('.', ',').replace('X', '.') if entry.base_salary else '0,00' }}</div>
-                    <div class="value-label">Salario Base</div>
-                </div>
-                <div class="value-item">
-                    <div class="value-amount red">- R$ {{ '{:,.2f}'.format(entry.deductions).replace(',', 'X').replace('.', ',').replace('X', '.') if entry.deductions else '0,00' }}</div>
-                    <div class="value-label">Descontos</div>
-                </div>
-                <div class="value-item">
-                    <div class="value-amount green">R$ {{ '{:,.2f}'.format(entry.net_salary).replace(',', 'X').replace('.', ',').replace('X', '.') if entry.net_salary else '0,00' }}</div>
-                    <div class="value-label">Liquido</div>
-                </div>
+            <div class="summary-item">
+                <span class="label">Folhas</span>
+                <span class="value">{{ entries|length }}</span>
             </div>
-            
-            {% if entry.status == 'pending' %}
-            <form method="POST" action="{{ url_for('rh.approve_payroll', id=entry.id) }}" class="payroll-actions">
-                <button type="submit" class="btn-action btn-approve">
-                    <i class="fas fa-check"></i> Aprovar
-                </button>
-            </form>
-            {% elif entry.status == 'approved' %}
-            <form method="POST" action="{{ url_for('rh.pay_payroll', id=entry.id) }}" class="payroll-actions">
-                <input type="hidden" name="method" value="transfer">
-                <button type="submit" class="btn-action btn-pay">
-                    <i class="fas fa-money-bill"></i> Registrar Pagamento
-                </button>
-            </form>
-            {% endif %}
+            <div class="summary-item">
+                <span class="label">Pendentes</span>
+                <span class="value">{{ entries|selectattr('status', 'equalto', 'pending')|list|length }}</span>
+            </div>
+            <div class="summary-item">
+                <span class="label">Pagas</span>
+                <span class="value">{{ entries|selectattr('status', 'equalto', 'paid')|list|length }}</span>
+            </div>
         </div>
-        {% endfor %}
-    {% else %}
-        <div class="empty-state">
-            <i class="fas fa-file-invoice-dollar fa-3x" style="margin-bottom: 16px; color: #444;"></i>
-            <p>Nenhuma folha para este mes</p>
-            <p style="font-size: 0.85rem; margin-top: 8px;">Clique em "Gerar Folhas" para criar</p>
-        </div>
+    </div>
     {% endif %}
 </div>
 {% endblock %}

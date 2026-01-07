@@ -90,13 +90,17 @@
         padding: 16px;
         margin-bottom: 12px;
         border-left: 4px solid;
-        text-decoration: none;
-        display: block;
+        position: relative;
     }
 
     .fatura-card.status-pago { border-left-color: #10b981; }
     .fatura-card.status-pendente { border-left-color: #f59e0b; }
     .fatura-card.status-atrasado { border-left-color: #ef4444; }
+
+    .fatura-link {
+        text-decoration: none;
+        display: block;
+    }
 
     .fatura-header {
         display: flex;
@@ -137,9 +141,47 @@
     .fatura-footer {
         display: flex;
         justify-content: space-between;
+        align-items: center;
         color: #666;
         font-size: 0.75rem;
         margin-top: 8px;
+    }
+
+    .fatura-actions {
+        display: flex;
+        gap: 8px;
+    }
+
+    .btn-action {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        font-size: 0.85rem;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .btn-edit {
+        background: rgba(59, 130, 246, 0.2);
+        color: #3b82f6;
+    }
+
+    .btn-edit:hover {
+        background: rgba(59, 130, 246, 0.4);
+    }
+
+    .btn-delete {
+        background: rgba(239, 68, 68, 0.2);
+        color: #ef4444;
+    }
+
+    .btn-delete:hover {
+        background: rgba(239, 68, 68, 0.4);
     }
 
     .empty-state {
@@ -178,24 +220,33 @@
     <div class="list-section">
         {% if faturas %}
             {% for fatura in faturas %}
-            <a href="{{ url_for('financial.view_invoice', id=fatura.id) }}" class="fatura-card status-{{ 'pago' if fatura.status == 'paid' else 'atrasado' if fatura.due_date < today else 'pendente' }}">
-                <div class="fatura-header">
-                    <div>
-                        <div class="fatura-code">{{ fatura.code }}</div>
-                        <div class="fatura-cliente">{{ fatura.client_name }}</div>
+            <div class="fatura-card status-{{ 'pago' if fatura.status == 'paid' else 'atrasado' if fatura.due_date < today else 'pendente' }}">
+                <a href="{{ url_for('financial.view_invoice', id=fatura.id) }}" class="fatura-link">
+                    <div class="fatura-header">
+                        <div>
+                            <div class="fatura-code">{{ fatura.code }}</div>
+                            <div class="fatura-cliente">{{ fatura.client_name }}</div>
+                        </div>
+                        <div>
+                            <div class="fatura-valor">R$ {{ "%.2f"|format(fatura.total|float) }}</div>
+                            <span class="fatura-status {{ 'pago' if fatura.status == 'paid' else 'atrasado' if fatura.due_date < today else 'pendente' }}">
+                                {{ 'PAGO' if fatura.status == 'paid' else 'ATRASADO' if fatura.due_date < today else 'PENDENTE' }}
+                            </span>
+                        </div>
                     </div>
-                    <div>
-                        <div class="fatura-valor">R$ {{ "%.2f"|format(fatura.total|float) }}</div>
-                        <span class="fatura-status {{ 'pago' if fatura.status == 'paid' else 'atrasado' if fatura.due_date < today else 'pendente' }}">
-                            {{ 'PAGO' if fatura.status == 'paid' else 'ATRASADO' if fatura.due_date < today else 'PENDENTE' }}
-                        </span>
-                    </div>
-                </div>
+                </a>
                 <div class="fatura-footer">
                     <span>Venc: {{ fatura.due_date.strftime('%d/%m') if fatura.due_date else '-' }}</span>
-                    <span>NFSe: {{ 'Sim' if fatura.nfse_number else 'Nao' }}</span>
+                    <div class="fatura-actions">
+                        <a href="{{ url_for('financial.edit_invoice', id=fatura.id) }}" class="btn-action btn-edit" title="Editar">
+                            <i class="fas fa-pen"></i>
+                        </a>
+                        <button type="button" class="btn-action btn-delete" title="Excluir" onclick="confirmDelete({{ fatura.id }}, '{{ fatura.code }}')">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
                 </div>
-            </a>
+            </div>
             {% endfor %}
         {% else %}
             <div class="empty-state">
@@ -206,4 +257,18 @@
         {% endif %}
     </div>
 </div>
+
+<!-- Form oculto para delete -->
+<form id="deleteForm" method="POST" style="display: none;">
+</form>
+
+<script>
+function confirmDelete(id, code) {
+    if (confirm('Excluir fatura ' + code + '?\n\nEsta acao nao pode ser desfeita.')) {
+        const form = document.getElementById('deleteForm');
+        form.action = '/financial/invoices/' + id + '/delete';
+        form.submit();
+    }
+}
+</script>
 {% endblock %}

@@ -16,7 +16,7 @@ from models.financial_expanded import FinancialAlert, CashFlowProjection
 import json
 
 class AutomationService:
-    
+
     @staticmethod
     def monday_morning_task(company_id):
         """
@@ -24,556 +24,577 @@ class AutomationService:
         Envia notificacao segunda 07:00
         """
         from models.equipment import Equipment
-        
+
         # 1. Manutencoes do fim de semana
         friday = datetime.now() - timedelta(days=3)
-        
-        maintenances = Maintenance.query.filter(
+
+        weekend_maintenances = Maintenance.query.filter(
             Maintenance.company_id == company_id,
-            Maintenance.reported_at >= friday,
-            Maintenance.status.in_(['pending', 'in_progress'])
+            Maintenance.status.in_(['pending', 'in_progress']),
+            Maintenance.created_at >= friday
         ).all()
-        
-        # 2. Verificar estoque
-        low_stock_items = MaterialStock.query.filter(
-            MaterialStock.company_id == company_id,
-            MaterialStock.quantity < MaterialStock.minimum_quantity,
-            MaterialStock.is_active == True
+
+        # 2. Equipamentos que precisam atencao
+        equipment_alerts = Equipment.query.filter(
+            Equipment.company_id == company_id,
+            Equipment.status.in_(['maintenance', 'damaged'])
         ).all()
-        
-        # 3. Fabricacoes pendentes (buscar do historico de requisicoes)
-        pending_fabrications = []  # TODO: Implementar logica
-        
-        # 4. Manutencoes preventivas vencidas
-        # TODO: Consultar MaintenanceSchedule
-        
-        # Montar relatorio
+
+        # 3. Gerar relatorio
         report = {
-            'maintenances': {
-                'total': len(maintenances),
-                'urgent': len([m for m in maintenances if m.priority == 'urgent']),
-                'items': [
-                    {
-                        'equipment_code': m.equipment.code,
-                        'priority': m.priority,
-                        'problem': m.problem_description[:100]
-                    }
-                    for m in maintenances[:10]  # Top 10
-                ]
-            },
-            'low_stock': {
-                'total': len(low_stock_items),
-                'items': [
-                    {
-                        'name': item.name,
-                        'current': float(item.quantity),
-                        'minimum': float(item.minimum_quantity),
-                        'unit': item.unit
-                    }
-                    for item in low_stock_items
-                ]
-            },
-            'fabrications': pending_fabrications
+            'weekend_maintenances': len(weekend_maintenances),
+            'equipment_needing_attention': len(equipment_alerts),
+            'generated_at': datetime.now().isoformat(),
+            'details': {
+                'maintenances': [{'id': m.id, 'equipment': m.equipment_id, 'type': m.maintenance_type} for m in weekend_maintenances],
+                'equipment': [{'id': e.id, 'name': e.name, 'status': e.status} for e in equipment_alerts]
+            }
         }
-        
+
         return report
-    
+
     @staticmethod
     def check_low_stock_alerts(company_id):
-        """Verifica estoque baixo e cria alertas"""
-        low_items = MaterialStock.query.filter(
+        """Verifica estoque baixo e gera alertas"""
+
+        # Buscar materiais com estoque baixo
+        low_stock_items = MaterialStock.query.filter(
             MaterialStock.company_id == company_id,
-            MaterialStock.quantity < MaterialStock.minimum_quantity,
-            MaterialStock.is_active == True
+            MaterialStock.quantity <= MaterialStock.min_quantity
         ).all()
-        
-        for item in low_items:
-            # Verifica se ja existe alerta ativo
-            existing = FinancialAlert.query.filter_by(
-                company_id=company_id,
-                alert_type='low_stock',
-                reference_type='material_stock',
-                reference_id=item.id,
-                status='active'
+
+        alerts_created = 0
+        for item in low_stock_items:
+            # Verificar se ja existe alerta ativo para este item
+            existing_alert = FinancialAlert.query.filter(
+                FinancialAlert.company_id == company_id,
+                FinancialAlert.alert_type == 'low_stock',
+                FinancialAlert.reference_type == 'material_stock',
+                FinancialAlert.reference_id == item.id,
+                FinancialAlert.status == 'active'
             ).first()
-            
-            if not existing:
+
+            if not existing_alert:
                 alert = FinancialAlert(
                     company_id=company_id,
                     alert_type='low_stock',
-                    severity='medium' if item.quantity > 0 else 'high',
+                    severity='medium',
                     title=f'Estoque baixo: {item.name}',
-                    message=f'Estoque de {item.name} está em {item.quantity}{item.unit}. Mínimo: {item.minimum_quantity}{item.unit}',
-                    suggested_action=f'Realizar pedido de {item.name}',
+                    message=f'O material {item.name} esta com apenas {item.quantity} unidades. Minimo recomendado: {item.min_quantity}',
+                    suggested_action=f'Solicitar compra de pelo menos {item.min_quantity - item.quantity} unidades',
                     reference_type='material_stock',
                     reference_id=item.id
                 )
                 db.session.add(alert)
-        
+                alerts_created += 1
+
         db.session.commit()
-    
+        return {'alerts_created': alerts_created}
+
     @staticmethod
     def generate_financial_projections(company_id):
-        """Gera projecoes financeiras para proximos 6 meses"""
-        from models.quote import Quote
-        from models.invoice import Invoice
-        from models.financial import Payment
-        
-        today = datetime.now().date()
-        
-        for months_ahead in range(1, 7):
-            target_date = today + timedelta(days=30 * months_ahead)
-            month = target_date.month
-            year = target_date.year
-            
-            # Verificar se ja existe projecao
-            existing = CashFlowProjection.query.filter_by(
-                company_id=company_id,
-                projection_month=month,
-                projection_year=year
+        """Gera projecoes de fluxo de caixa para os proximos 3 meses"""
+        from models.rh import AccountReceivable, AccountPayable
+
+        today = date.today()
+        projections_created = 0
+
+        for month_offset in range(1, 4):
+            projection_date = today + relativedelta(months=month_offset)
+            projection_month = projection_date.month
+            projection_year = projection_date.year
+
+            # Verificar se ja existe projecao para este mes
+            existing = CashFlowProjection.query.filter(
+                CashFlowProjection.company_id == company_id,
+                CashFlowProjection.projection_month == projection_month,
+                CashFlowProjection.projection_year == projection_year
             ).first()
-            
+
             if existing:
                 continue
-            
-            # Calcular receitas projetadas (quotes aprovados)
-            projected_revenue = db.session.query(
-                db.func.sum(Quote.total_amount)
-            ).filter(
-                Quote.company_id == company_id,
-                Quote.status == 'approved',
-                Quote.event_date >= target_date,
-                Quote.event_date < target_date + timedelta(days=30)
+
+            # Calcular receitas projetadas (baseado em historico)
+            # Por enquanto, usar media dos ultimos 3 meses
+            tres_meses_atras = today - relativedelta(months=3)
+
+            receitas_historico = db.session.query(db.func.avg(AccountReceivable.amount)).filter(
+                AccountReceivable.company_id == company_id,
+                AccountReceivable.status == 'received',
+                AccountReceivable.received_at >= tres_meses_atras
             ).scalar() or 0
-            
-            # Calcular despesas projetadas
-            projected_expenses = 0  # TODO: Somar custos fixos + variaveis
-            
+
+            despesas_historico = db.session.query(db.func.avg(AccountPayable.amount)).filter(
+                AccountPayable.company_id == company_id,
+                AccountPayable.status == 'paid',
+                AccountPayable.paid_at >= datetime.combine(tres_meses_atras, datetime.min.time())
+            ).scalar() or 0
+
             projection = CashFlowProjection(
                 company_id=company_id,
-                projection_date=target_date,
-                projection_month=month,
-                projection_year=year,
-                projected_revenue=projected_revenue,
-                projected_expenses=projected_expenses,
-                projected_balance=projected_revenue - projected_expenses,
-                confidence_level=70  # TODO: Calcular com IA
+                projection_date=projection_date.replace(day=1),
+                projection_month=projection_month,
+                projection_year=projection_year,
+                projected_revenue=float(receitas_historico) * 30,  # Estimativa mensal
+                projected_expenses=float(despesas_historico) * 30,
+                projected_balance=(float(receitas_historico) - float(despesas_historico)) * 30,
+                confidence_level=60  # Confianca media para projecao baseada em historico
             )
-            
             db.session.add(projection)
-        
+            projections_created += 1
+
         db.session.commit()
-    
+        return {'projections_created': projections_created}
+
     @staticmethod
     def suggest_lead_reactivations(company_id):
-        """Sugere reativacoes de leads inativos (IA)"""
-        from models.commercial import LeadReactivation
-        
-        # Buscar leads inativos ha mais de 30 dias
-        cutoff_date = datetime.now() - timedelta(days=30)
-        
+        """Sugere leads para reativacao (inativos ha mais de 30 dias)"""
+
+        trinta_dias_atras = datetime.now() - timedelta(days=30)
+
+        # Leads inativos
         inactive_leads = Lead.query.filter(
             Lead.company_id == company_id,
-            Lead.status == 'active',
-            Lead.stage.in_(['contacted', 'qualified']),
-            Lead.last_contact_at < cutoff_date
+            Lead.status.in_(['cold', 'lost']),
+            Lead.updated_at < trinta_dias_atras
         ).all()
-        
+
+        suggestions = []
         for lead in inactive_leads:
-            # Verificar se ja tem sugestao pendente
-            existing = LeadReactivation.query.filter_by(
-                lead_id=lead.id,
-                status='pending'
+            # Verificar se ja tem sugestao ativa
+            existing = FinancialAlert.query.filter(
+                FinancialAlert.company_id == company_id,
+                FinancialAlert.alert_type == 'lead_reactivation',
+                FinancialAlert.reference_type == 'lead',
+                FinancialAlert.reference_id == lead.id,
+                FinancialAlert.status == 'active'
             ).first()
-            
-            if existing:
-                continue
-            
-            # Definir estrategia (simplificado - depois usar IA)
-            days_inactive = (datetime.now() - lead.last_contact_at).days
-            
-            if days_inactive > 90:
-                strategy = 'discount'
-                message = f"Olá {lead.name}! Temos uma oferta especial para você..."
-                confidence = 60
-            elif days_inactive > 60:
-                strategy = 'new_service'
-                message = f"Oi {lead.name}! Lançamos novos serviços que podem te interessar..."
-                confidence = 70
-            else:
-                strategy = 'event_reminder'
-                message = f"{lead.name}, seu evento está se aproximando?"
-                confidence = 80
-            
-            reactivation = LeadReactivation(
-                lead_id=lead.id,
-                company_id=company_id,
-                strategy=strategy,
-                message_suggestion=message,
-                confidence_score=confidence
-            )
-            
-            db.session.add(reactivation)
-        
+
+            if not existing:
+                alert = FinancialAlert(
+                    company_id=company_id,
+                    alert_type='lead_reactivation',
+                    severity='low',
+                    title=f'Reativar lead: {lead.name}',
+                    message=f'O lead {lead.name} esta inativo ha mais de 30 dias. Considere fazer contato.',
+                    suggested_action='Enviar email de follow-up ou ligar',
+                    reference_type='lead',
+                    reference_id=lead.id
+                )
+                db.session.add(alert)
+                suggestions.append(lead.id)
+
         db.session.commit()
-    
+        return {'leads_suggested': len(suggestions)}
+
     @staticmethod
-    def run_daily_automations(company_id):
-        """Executa todas as automacoes diarias"""
-        print(f"[{datetime.now()}] Iniciando automações para company {company_id}")
-        
+    def run_all_automations(company_id):
+        """Executa todas as automacoes"""
+        results = {}
+
         try:
-            # 1. Alertas de estoque
-            AutomationService.check_low_stock_alerts(company_id)
-            print("  ✓ Alertas de estoque verificados")
-            
-            # 2. Projeções financeiras
-            AutomationService.generate_financial_projections(company_id)
-            print("  ✓ Projeções financeiras atualizadas")
-            
-            # 3. Sugestões de reativação de leads
-            AutomationService.suggest_lead_reactivations(company_id)
-            print("  ✓ Sugestões de reativação geradas")
-            
-            print(f"[{datetime.now()}] Automações concluídas")
-            
+            results['stock_alerts'] = AutomationService.check_low_stock_alerts(company_id)
         except Exception as e:
-            print(f"  ✗ Erro nas automações: {e}")
-            db.session.rollback()
-    
+            results['stock_alerts'] = {'error': str(e)}
+
+        try:
+            results['projections'] = AutomationService.generate_financial_projections(company_id)
+        except Exception as e:
+            results['projections'] = {'error': str(e)}
+
+        try:
+            results['lead_reactivations'] = AutomationService.suggest_lead_reactivations(company_id)
+        except Exception as e:
+            results['lead_reactivations'] = {'error': str(e)}
+
+        return results
+
     @staticmethod
-    def run_monday_morning(company_id):
-        """Executa tarefa especifica de segunda-feira"""
+    def get_automation_report(company_id):
+        """Gera relatorio completo de automacoes"""
         report = AutomationService.monday_morning_task(company_id)
-        
-        # TODO: Enviar push notification
-        # TODO: Enviar email
-        
+
+        # Adicionar alertas ativos
+        active_alerts = FinancialAlert.query.filter(
+            FinancialAlert.company_id == company_id,
+            FinancialAlert.status == 'active'
+        ).count()
+
+        report['active_alerts'] = active_alerts
+
         return report
-    
+
+    # ============================================
+    # AUTOMACAO: APROVAR ORCAMENTO
+    # ============================================
     @staticmethod
     def approve_quote(quote_id, company_id):
-        from models.financial import Quote
+        """Aprova orcamento e retorna dados para proximos passos"""
+        from models.commercial import Quote
+
         quote = Quote.query.filter_by(id=quote_id, company_id=company_id).first()
         if not quote:
-            return {'success': False, 'message': 'Orçamento não encontrado'}
-        
+            return {'success': False, 'message': 'Orcamento nao encontrado'}
+
         quote.status = 'approved'
+        quote.approved_at = datetime.utcnow()
         db.session.commit()
-        return {'success': True, 'data': {'quote_id': quote.id}}
-    
+
+        return {
+            'success': True,
+            'data': {
+                'quote_id': quote.id,
+                'client_name': quote.client_name,
+                'total': float(quote.total or 0)
+            }
+        }
+
+    # ============================================
+    # AUTOMACAO: CRIAR CONTRATO
+    # ============================================
     @staticmethod
-    def create_contract_from_quote(quote_id, company_id, user_id):
-        from models.financial import Contract
-        from models.separation_list import SeparationList
-        from datetime import date
-        
-        sep_list = SeparationList.query.filter_by(id=quote_id, company_id=company_id).first()
-        if not sep_list:
-            return {'success': False, 'message': 'Orçamento não encontrado'}
-        
-        existing = Contract.query.filter_by(company_id=company_id).count()
-        code = f"CTR-{company_id}-{date.today().year}-{existing + 1:04d}"
-        
+    def create_contract_from_quote(quote_id, company_id, user_id, contract_type='rental', duration_months=12):
+        from models.commercial import Quote, Contract
+
+        quote = Quote.query.filter_by(id=quote_id, company_id=company_id).first()
+        if not quote:
+            return {'success': False, 'message': 'Orcamento nao encontrado'}
+
+        # Verificar se ja existe contrato para este orcamento
+        existing_contract = Contract.query.filter_by(quote_id=quote_id).first()
+        if existing_contract:
+            return {'success': False, 'message': 'Ja existe contrato para este orcamento'}
+
+        start_date = date.today()
+        end_date = start_date + relativedelta(months=int(duration_months))
+
         contract = Contract(
-            code=code,
             company_id=company_id,
-            client_name=sep_list.client_name or 'Cliente',
-            title=f"Contrato - {sep_list.name}",
-            total_value=sep_list.calculated_total or sep_list.total_value or 0,
-            start_date=sep_list.event_date or date.today(),
-            end_date=sep_list.event_date or date.today(),
-            status='draft',
+            quote_id=quote_id,
+            client_name=quote.client_name,
+            client_email=quote.client_email,
+            client_phone=quote.client_phone,
+            contract_type=contract_type,
+            start_date=start_date,
+            end_date=end_date,
+            total_value=quote.total,
+            status='active',
             created_by=user_id
         )
+
         db.session.add(contract)
         db.session.commit()
-        return {'success': True, 'data': {'contract_id': contract.id}}
-    
+
+        return {
+            'success': True,
+            'data': {
+                'contract_id': contract.id,
+                'client_name': contract.client_name,
+                'start_date': start_date.isoformat(),
+                'end_date': end_date.isoformat()
+            }
+        }
+
+    # ============================================
+    # AUTOMACAO: CRIAR CONTAS A RECEBER
+    # ============================================
     @staticmethod
-    def create_receivables_from_quote(quote_id, company_id, user_id, installments=1, first_due_date=None):
+    def create_receivables_from_quote(quote_id, company_id, user_id, 
+                                       installments=1, first_due_date=None):
+        from models.commercial import Quote
         from models.rh import AccountReceivable
-        from models.separation_list import SeparationList
-        
-        sep_list = SeparationList.query.filter_by(id=quote_id, company_id=company_id).first()
-        if not sep_list:
-            return {'success': False, 'message': 'Orçamento não encontrado'}
-        
+
+        quote = Quote.query.filter_by(id=quote_id, company_id=company_id).first()
+        if not quote:
+            return {'success': False, 'message': 'Orcamento nao encontrado'}
+
         if first_due_date is None:
             first_due_date = date.today() + timedelta(days=30)
         elif isinstance(first_due_date, str):
             first_due_date = date.fromisoformat(first_due_date)
-        
-        total = float(sep_list.calculated_total or sep_list.total_value or 0)
-        installment_value = total / installments if installments > 0 else total
-        
+
+        total = float(quote.total or 0)
+        installment_value = total / int(installments)
+
         created = []
-        for i in range(installments):
+        for i in range(int(installments)):
             due_date = first_due_date + relativedelta(months=i)
-            
+
             receivable = AccountReceivable(
                 company_id=company_id,
-                description=f"{sep_list.name} - Parcela {i+1}/{installments}",
+                description=f"{quote.client_name} - Parcela {i+1}/{installments}",
+                category='locacao',
+                client_name=quote.client_name,
                 amount=installment_value,
                 due_date=due_date,
                 status='pending',
+                quote_id=quote_id,
                 installment_number=i+1,
-                total_installments=installments,
-                client_name=sep_list.client_name,
-                origin_type='quote'
+                total_installments=int(installments),
+                created_by=user_id
             )
             db.session.add(receivable)
             created.append(receivable)
-        
+
         db.session.commit()
         return {'success': True, 'data': {'receivables_created': len(created)}}
-    
+
+    # ============================================
+    # AUTOMACAO: DESPESAS AUTOMATICAS FUNCIONARIO
+    # ============================================
     @staticmethod
     def create_employee_auto_expenses(employee_id, company_id, user_id, 
                                        auto_salary=True, auto_benefits=False,
                                        vt_value=0, vr_value=0):
-        from models.rh import Employee
-        from models.financial import AccountPayable
+        from models.rh import Employee, AccountPayable
+
         employee = Employee.query.filter_by(id=employee_id, company_id=company_id).first()
         if not employee:
             return {'success': False, 'message': 'Funcionário não encontrado'}
-        
+
+        # ========== VALIDAÇÃO: FUNCIONÁRIO ATIVO ==========
+        if employee.status != 'active':
+            return {'success': False, 'message': 'Funcionário inativo não pode ter despesas automáticas'}
+
         created = []
+        skipped = 0
         today = date.today()
-        
+
         if auto_salary and employee.salary:
             for month_offset in range(12):
                 due_date = date(today.year, today.month, 5) + relativedelta(months=month_offset)
-                
+
+                # ========== VALIDAÇÃO: VERIFICAR DUPLICIDADE ==========
+                existing = AccountPayable.query.filter(
+                    AccountPayable.employee_id == employee.id,
+                    AccountPayable.category == 'folha_pagamento',
+                    db.func.strftime('%Y-%m', AccountPayable.due_date) == due_date.strftime('%Y-%m')
+                ).first()
+
+                if existing:
+                    skipped += 1
+                    continue
+
                 payable = AccountPayable(
                     company_id=company_id,
                     description=f"Salário - {employee.name} ({due_date.strftime('%m/%Y')})",
                     category='folha_pagamento',
-                    value=float(employee.salary),
+                    amount=float(employee.salary),
                     due_date=due_date,
                     status='pending',
-                    recurrence='monthly',
+                    is_recurring=True,
+                    recurrence_type='monthly',
                     employee_id=employee.id,
                     created_by=user_id
                 )
                 db.session.add(payable)
                 created.append(payable)
-        
+
         if auto_benefits:
             if vt_value and float(vt_value) > 0:
                 for month_offset in range(12):
                     due_date = date(today.year, today.month, 1) + relativedelta(months=month_offset)
+
+                    # Verificar duplicidade VT
+                    existing = AccountPayable.query.filter(
+                        AccountPayable.employee_id == employee.id,
+                        AccountPayable.category == 'beneficios',
+                        AccountPayable.description.like(f'VT - {employee.name}%'),
+                        db.func.strftime('%Y-%m', AccountPayable.due_date) == due_date.strftime('%Y-%m')
+                    ).first()
+
+                    if existing:
+                        skipped += 1
+                        continue
+
                     payable = AccountPayable(
                         company_id=company_id,
                         description=f"VT - {employee.name} ({due_date.strftime('%m/%Y')})",
                         category='beneficios',
-                        value=float(vt_value),
+                        amount=float(vt_value),
                         due_date=due_date,
                         status='pending',
-                        recurrence='monthly',
+                        is_recurring=True,
+                        recurrence_type='monthly',
                         employee_id=employee.id,
                         created_by=user_id
                     )
                     db.session.add(payable)
                     created.append(payable)
-            
+
             if vr_value and float(vr_value) > 0:
                 for month_offset in range(12):
                     due_date = date(today.year, today.month, 1) + relativedelta(months=month_offset)
+
+                    # Verificar duplicidade VR
+                    existing = AccountPayable.query.filter(
+                        AccountPayable.employee_id == employee.id,
+                        AccountPayable.category == 'beneficios',
+                        AccountPayable.description.like(f'VR - {employee.name}%'),
+                        db.func.strftime('%Y-%m', AccountPayable.due_date) == due_date.strftime('%Y-%m')
+                    ).first()
+
+                    if existing:
+                        skipped += 1
+                        continue
+
                     payable = AccountPayable(
                         company_id=company_id,
                         description=f"VR - {employee.name} ({due_date.strftime('%m/%Y')})",
                         category='beneficios',
-                        value=float(vr_value),
+                        amount=float(vr_value),
                         due_date=due_date,
                         status='pending',
-                        recurrence='monthly',
+                        is_recurring=True,
+                        recurrence_type='monthly',
                         employee_id=employee.id,
                         created_by=user_id
                     )
                     db.session.add(payable)
                     created.append(payable)
-        
+
         db.session.commit()
-        return {'success': True, 'data': {'expenses_created': len(created)}}
-    
+        return {
+            'success': True, 
+            'data': {
+                'expenses_created': len(created),
+                'expenses_skipped': skipped,
+                'message': f'{len(created)} despesas criadas, {skipped} já existiam'
+            }
+        }
+
+    # ============================================
+    # AUTOMACAO: CRIAR PAGAVEL FREELANCER
+    # ============================================
     @staticmethod
     def create_freelancer_payable(freelancer_id, company_id, user_id, 
                                    value, event_name='', payment_date=None):
-        from models.rh import Freelancer
-        from models.financial import AccountPayable
+        from models.rh import Freelancer, AccountPayable
+
         freelancer = Freelancer.query.filter_by(id=freelancer_id, company_id=company_id).first()
         if not freelancer:
             return {'success': False, 'message': 'Freelancer não encontrado'}
-        
+
         if payment_date is None:
             payment_date = date.today()
         elif isinstance(payment_date, str):
             payment_date = date.fromisoformat(payment_date)
-        
+
         payable = AccountPayable(
             company_id=company_id,
             description=f"Freelancer - {freelancer.name}" + (f" ({event_name})" if event_name else ""),
             category='freelancer',
-            value=float(value),
+            amount=float(value),
             due_date=payment_date,
             status='pending',
-            freelancer_id=freelancer.id,
             created_by=user_id
         )
         db.session.add(payable)
         db.session.commit()
-        
+
         return {'success': True, 'data': {'payable_id': payable.id}}
-    
+
+    # ============================================
+    # AUTOMACAO: CRIAR PARCELAS DE VEICULO
+    # ============================================
     @staticmethod
-    def create_vehicle_installments(vehicle_id, company_id, user_id,
-                                     total_value, installments, first_due_date=None):
-        from models.financial import AccountPayable
+    def create_vehicle_installments(company_id, user_id, vehicle_name, 
+                                      total_value, installments, first_due_date=None):
+        from models.rh import AccountPayable
+
         if first_due_date is None:
-            first_due_date = date.today()
+            first_due_date = date.today() + relativedelta(months=1)
         elif isinstance(first_due_date, str):
             first_due_date = date.fromisoformat(first_due_date)
-        
-        installment_value = float(total_value) / installments
+
+        installment_value = float(total_value) / int(installments)
+
         created = []
-        
-        for i in range(installments):
+        for i in range(int(installments)):
             due_date = first_due_date + relativedelta(months=i)
-            
+
             payable = AccountPayable(
                 company_id=company_id,
-                description=f"Aluguel Veículo - Parcela {i+1}/{installments}",
+                description=f"Veículo {vehicle_name} - Parcela {i+1}/{installments}",
                 category='veiculos',
-                value=installment_value,
+                amount=installment_value,
                 due_date=due_date,
                 status='pending',
                 installment_number=i+1,
-                total_installments=installments,
+                total_installments=int(installments),
                 created_by=user_id
             )
             db.session.add(payable)
             created.append(payable)
-        
+
         db.session.commit()
         return {'success': True, 'data': {'installments_created': len(created)}}
-    
+
+    # ============================================
+    # AUTOMACAO: CRIAR WORK LIST A PARTIR DO ORCAMENTO
+    # ============================================
     @staticmethod
-    def create_worklist_from_quote(quote_id, company_id, user_id, 
-                                    event_date=None, event_location=None, assigned_to=None):
-        """Cria WorkList a partir do orçamento aprovado (sem preços)"""
-        import secrets
-        from models.separation_list import SeparationList
-        from models.work_list import WorkList, WorkListItem
-        
-        sep_list = SeparationList.query.filter_by(id=quote_id, company_id=company_id).first()
-        if not sep_list:
-            return {'success': False, 'message': 'Orçamento não encontrado'}
-        
-        if sep_list.status != 'approved':
-            return {'success': False, 'message': 'Orçamento precisa estar aprovado'}
-        
-        if event_date and isinstance(event_date, str):
-            event_date = date.fromisoformat(event_date)
-        
-        share_token = secrets.token_urlsafe(32)
-        
-        work_list = WorkList(
-            company_id=company_id,
-            separation_list_id=sep_list.id,
-            name=f"Separação - {sep_list.name}",
-            description=f"Lista de separação para {sep_list.client_name or 'Cliente'}",
-            client_name=sep_list.client_name,
-            event_date=event_date or sep_list.event_date,
-            event_location=event_location or sep_list.event_location,
-            share_token=share_token,
-            status='pending',
-            created_by=user_id,
-            assigned_to=assigned_to
-        )
-        db.session.add(work_list)
-        db.session.flush()
-        
-        for item in sep_list.items:
-            work_item = WorkListItem(
-                work_list_id=work_list.id,
-                item_name=item.item_name or item.item_description or 'Item',
-                quantity=item.quantity,
-                separated=False
-            )
-            db.session.add(work_item)
-        
-        db.session.commit()
-        
-        items_list = list(sep_list.items)
-        return {
-            'success': True, 
-            'data': {
-                'work_list_id': work_list.id,
-                'items_count': len(items_list),
-                'share_token': share_token
-            }
-        }
-    
-    @staticmethod
-    def create_event_from_quote(quote_id, company_id, user_id, name=None, artist=None, start_date=None):
-        """Cria evento/tour a partir do orçamento aprovado com requisitos de equipamentos"""
-        from models.separation_list import SeparationList
-        from models.tour import Tour, TourRequirement
-        
-        sep_list = SeparationList.query.filter_by(id=quote_id, company_id=company_id).first()
-        if not sep_list:
-            return {'success': False, 'message': 'Orcamento nao encontrado'}
-        
-        event_name = name or sep_list.name
-        
-        existing = Tour.query.filter_by(company_id=company_id, name=event_name).first()
+    def create_worklist_from_quote(quote_id, company_id, user_id):
+        from models.commercial import Quote
+        from models.work_list import WorkList
+
+        quote = Quote.query.filter_by(id=quote_id, company_id=company_id).first()
+        if not quote:
+            return {'success': False, 'message': 'Orcamento não encontrado'}
+
+        # Verificar se ja existe work list para este orcamento
+        existing = WorkList.query.filter_by(quote_id=quote_id).first()
         if existing:
-            return {
-                'success': True,
-                'data': {
-                    'tour_id': existing.id,
-                    'tour_name': existing.name,
-                    'already_exists': True
-                }
-            }
-        
-        if start_date and isinstance(start_date, str):
-            start_date = date.fromisoformat(start_date)
-        
+            return {'success': False, 'message': 'Já existe Work List para este orçamento', 'data': {'worklist_id': existing.id}}
+
+        worklist = WorkList(
+            company_id=company_id,
+            quote_id=quote_id,
+            title=f"WL - {quote.client_name}",
+            description=f"Work List gerada a partir do orçamento #{quote_id}",
+            status='pending',
+            created_by=user_id
+        )
+
+        db.session.add(worklist)
+        db.session.commit()
+
+        return {'success': True, 'data': {'worklist_id': worklist.id}}
+
+    # ============================================
+    # AUTOMACAO: CRIAR EVENTO A PARTIR DO ORCAMENTO
+    # ============================================
+    @staticmethod
+    def create_event_from_quote(quote_id, company_id, user_id, event_date=None):
+        from models.commercial import Quote
+        from models.tour import Tour
+
+        quote = Quote.query.filter_by(id=quote_id, company_id=company_id).first()
+        if not quote:
+            return {'success': False, 'message': 'Orcamento não encontrado'}
+
+        # Verificar se ja existe evento/tour para este orcamento
+        existing = Tour.query.filter_by(quote_id=quote_id).first()
+        if existing:
+            return {'success': False, 'message': 'Já existe Evento para este orçamento', 'data': {'tour_id': existing.id}}
+
+        if event_date is None:
+            event_date = date.today() + timedelta(days=7)
+        elif isinstance(event_date, str):
+            event_date = date.fromisoformat(event_date)
+
         tour = Tour(
             company_id=company_id,
-            name=event_name,
-            artist=artist or sep_list.client_name,
-            start_date=start_date or sep_list.event_date,
-            status='planned',
-            created_by=user_id,
-            is_active=True
+            quote_id=quote_id,
+            name=f"Evento - {quote.client_name}",
+            client_name=quote.client_name,
+            start_date=event_date,
+            end_date=event_date,
+            status='planning',
+            created_by=user_id
         )
+
         db.session.add(tour)
-        db.session.flush()
-        
-        equipment_count = 0
-        items_list = sep_list.items.all() if hasattr(sep_list.items, 'all') else sep_list.items
-        for item in items_list:
-            item_name = item.item_name or item.item_description or 'Item'
-            tour_req = TourRequirement(
-                tour_id=tour.id,
-                equipment_name=item_name,
-                brand=getattr(item, 'brand', None),
-                model=getattr(item, 'model', None),
-                quantity=item.quantity or 1
-            )
-            db.session.add(tour_req)
-            equipment_count += 1
-        
         db.session.commit()
-        
-        return {
-            'success': True,
-            'data': {
-                'tour_id': tour.id,
-                'tour_name': tour.name,
-                'equipment_count': equipment_count
-            }
-        }
+
+        return {'success': True, 'data': {'tour_id': tour.id}}

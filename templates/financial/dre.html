@@ -44,97 +44,6 @@
         font-size: 0.85rem;
     }
 
-    .dre-card {
-        margin: 16px;
-        background: #1a1a1a;
-        border-radius: 12px;
-        padding: 20px;
-        border: 1px solid #2a2a2a;
-    }
-
-    .dre-section {
-        margin-bottom: 20px;
-    }
-
-    .dre-section-title {
-        color: #10b981;
-        font-weight: 700;
-        margin-bottom: 12px;
-        font-size: 0.9rem;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .dre-section-title.despesas {
-        color: #ef4444;
-    }
-
-    .dre-item {
-        display: flex;
-        justify-content: space-between;
-        padding: 12px;
-        background: #252525;
-        border-radius: 8px;
-        margin-bottom: 8px;
-    }
-
-    .dre-item .label {
-        color: #a0a0a0;
-    }
-
-    .dre-item .value {
-        color: #f5f5f5;
-        font-weight: 600;
-    }
-
-    .dre-item .value.receita {
-        color: #10b981;
-    }
-
-    .dre-item .value.despesa {
-        color: #ef4444;
-    }
-
-    .dre-item.pendente {
-        background: rgba(245,158,11,0.1);
-        border: 1px dashed #f59e0b;
-    }
-
-    .dre-item.pendente .label {
-        color: #f59e0b;
-    }
-
-    .dre-total {
-        border-top: 2px solid #333;
-        padding-top: 16px;
-        margin-top: 16px;
-    }
-
-    .dre-total .dre-item {
-        background: transparent;
-        padding: 0;
-    }
-
-    .dre-total .label {
-        color: #60a5fa;
-        font-weight: 700;
-        font-size: 1.1rem;
-    }
-
-    .dre-total .value {
-        font-weight: 700;
-        font-size: 1.2rem;
-    }
-
-    .dre-total .value.positivo {
-        color: #10b981;
-    }
-
-    .dre-total .value.negativo {
-        color: #ef4444;
-    }
-
     .summary-cards {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
@@ -173,6 +82,139 @@
         color: #f5f5f5;
     }
 
+    .dre-card {
+        margin: 16px;
+        background: #1a1a1a;
+        border-radius: 12px;
+        padding: 20px;
+        border: 1px solid #2a2a2a;
+    }
+
+    .dre-section {
+        margin-bottom: 20px;
+    }
+
+    .dre-section-title {
+        color: #10b981;
+        font-weight: 700;
+        margin-bottom: 12px;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .dre-section-title.despesas {
+        color: #ef4444;
+    }
+
+    .dre-section-title.pessoal {
+        color: #8b5cf6;
+    }
+
+    .dre-section-title.impostos {
+        color: #f59e0b;
+    }
+
+    .dre-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px;
+        background: #252525;
+        border-radius: 8px;
+        margin-bottom: 8px;
+    }
+
+    .dre-item .label {
+        color: #a0a0a0;
+    }
+
+    .dre-item .value {
+        color: #f5f5f5;
+        font-weight: 600;
+    }
+
+    .dre-item .value.receita {
+        color: #10b981;
+    }
+
+    .dre-item .value.despesa {
+        color: #ef4444;
+    }
+
+    .dre-item.pendente {
+        background: rgba(245,158,11,0.1);
+        border: 1px dashed #f59e0b;
+    }
+
+    .dre-item.pendente .label {
+        color: #f59e0b;
+    }
+
+    .dre-item.sub-item {
+        margin-left: 16px;
+        padding: 10px 12px;
+        background: #1e1e1e;
+    }
+
+    .dre-item.sub-item .label {
+        font-size: 0.85rem;
+        color: #888;
+    }
+
+    .dre-item.sub-item .value {
+        font-size: 0.9rem;
+    }
+
+    .dre-subtotal {
+        border-top: 1px solid #333;
+        margin-top: 4px;
+        padding-top: 8px;
+    }
+
+    .dre-subtotal .dre-item {
+        background: rgba(139, 92, 246, 0.1);
+    }
+
+    .dre-subtotal .label {
+        color: #8b5cf6;
+        font-weight: 600;
+    }
+
+    .dre-subtotal .value {
+        color: #8b5cf6;
+    }
+
+    .dre-total {
+        border-top: 2px solid #333;
+        padding-top: 16px;
+        margin-top: 16px;
+    }
+
+    .dre-total .dre-item {
+        background: transparent;
+        padding: 0;
+    }
+
+    .dre-total .label {
+        color: #60a5fa;
+        font-weight: 700;
+        font-size: 1.1rem;
+    }
+
+    .dre-total .value {
+        font-weight: 700;
+        font-size: 1.2rem;
+    }
+
+    .dre-total .value.positivo {
+        color: #10b981;
+    }
+
+    .dre-total .value.negativo {
+        color: #ef4444;
+    }
+
     .empty-message {
         text-align: center;
         padding: 40px;
@@ -209,6 +251,7 @@
     </div>
 
     <div class="dre-card">
+        <!-- RECEITAS -->
         <div class="dre-section">
             <div class="dre-section-title">
                 <i class="fas fa-arrow-up"></i> RECEITAS
@@ -225,40 +268,115 @@
             {% endif %}
         </div>
 
+        <!-- CUSTOS COM PESSOAL -->
         <div class="dre-section">
-            <div class="dre-section-title despesas">
-                <i class="fas fa-arrow-down"></i> DESPESAS
+            <div class="dre-section-title pessoal">
+                <i class="fas fa-users"></i> CUSTOS COM PESSOAL
             </div>
+
             {% if despesas_folha > 0 %}
             <div class="dre-item">
-                <span class="label">Folha de Pagamento</span>
+                <span class="label">Salarios (Folha CLT)</span>
                 <span class="value despesa">R$ {{ "%.2f"|format(despesas_folha) }}</span>
             </div>
             {% endif %}
-            {% if despesas_contas > 0 %}
-            <div class="dre-item">
-                <span class="label">Contas Pagas</span>
-                <span class="value despesa">R$ {{ "%.2f"|format(despesas_contas) }}</span>
+
+            {% if despesas_adiantamento is defined and despesas_adiantamento > 0 %}
+            <div class="dre-item sub-item">
+                <span class="label">Adiantamentos pagos</span>
+                <span class="value despesa">R$ {{ "%.2f"|format(despesas_adiantamento) }}</span>
             </div>
             {% endif %}
+
+            {% if despesas_13 is defined and despesas_13 > 0 %}
+            <div class="dre-item sub-item">
+                <span class="label">13o Salario</span>
+                <span class="value despesa">R$ {{ "%.2f"|format(despesas_13) }}</span>
+            </div>
+            {% endif %}
+
+            {% if despesas_ferias is defined and despesas_ferias > 0 %}
+            <div class="dre-item sub-item">
+                <span class="label">Ferias</span>
+                <span class="value despesa">R$ {{ "%.2f"|format(despesas_ferias) }}</span>
+            </div>
+            {% endif %}
+
             {% if despesas_freelancers > 0 %}
             <div class="dre-item">
                 <span class="label">Freelancers</span>
                 <span class="value despesa">R$ {{ "%.2f"|format(despesas_freelancers) }}</span>
             </div>
             {% endif %}
+
+            {% set total_pessoal = (despesas_folha|float) + (despesas_freelancers|float) + (despesas_adiantamento|default(0)|float) + (despesas_13|default(0)|float) + (despesas_ferias|default(0)|float) %}
+            {% if total_pessoal > 0 %}
+            <div class="dre-subtotal">
+                <div class="dre-item">
+                    <span class="label">Subtotal Pessoal</span>
+                    <span class="value">R$ {{ "%.2f"|format(total_pessoal) }}</span>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- IMPOSTOS E ENCARGOS -->
+        {% if despesas_inss is defined or despesas_fgts is defined or despesas_irrf is defined %}
+        <div class="dre-section">
+            <div class="dre-section-title impostos">
+                <i class="fas fa-landmark"></i> IMPOSTOS E ENCARGOS
+            </div>
+
+            {% if despesas_inss is defined and despesas_inss > 0 %}
+            <div class="dre-item">
+                <span class="label">INSS</span>
+                <span class="value despesa">R$ {{ "%.2f"|format(despesas_inss) }}</span>
+            </div>
+            {% endif %}
+
+            {% if despesas_fgts is defined and despesas_fgts > 0 %}
+            <div class="dre-item">
+                <span class="label">FGTS</span>
+                <span class="value despesa">R$ {{ "%.2f"|format(despesas_fgts) }}</span>
+            </div>
+            {% endif %}
+
+            {% if despesas_irrf is defined and despesas_irrf > 0 %}
+            <div class="dre-item">
+                <span class="label">IRRF</span>
+                <span class="value despesa">R$ {{ "%.2f"|format(despesas_irrf) }}</span>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- OUTRAS DESPESAS -->
+        <div class="dre-section">
+            <div class="dre-section-title despesas">
+                <i class="fas fa-arrow-down"></i> OUTRAS DESPESAS
+            </div>
+
+            {% if despesas_contas > 0 %}
+            <div class="dre-item">
+                <span class="label">Contas Pagas</span>
+                <span class="value despesa">R$ {{ "%.2f"|format(despesas_contas) }}</span>
+            </div>
+            {% endif %}
+
             {% if despesas_manutencao is defined and despesas_manutencao > 0 %}
             <div class="dre-item">
                 <span class="label">Manutencao</span>
                 <span class="value despesa">R$ {{ "%.2f"|format(despesas_manutencao) }}</span>
             </div>
             {% endif %}
+
             {% if despesas_pendentes > 0 %}
             <div class="dre-item pendente">
                 <span class="label">Pendente de pagamento</span>
                 <span class="value">R$ {{ "%.2f"|format(despesas_pendentes) }}</span>
             </div>
             {% endif %}
+
             {% if despesas_folha == 0 and despesas_contas == 0 and despesas_freelancers == 0 and (despesas_manutencao is not defined or despesas_manutencao == 0) %}
             <div class="dre-item">
                 <span class="label">Nenhuma despesa registrada</span>
@@ -267,6 +385,7 @@
             {% endif %}
         </div>
 
+        <!-- RESULTADO -->
         <div class="dre-total">
             <div class="dre-item">
                 <span class="label">RESULTADO DO MES</span>

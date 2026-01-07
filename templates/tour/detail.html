@@ -90,103 +90,83 @@
 
     .checkpoint-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: var(--spacing-sm);
-        background-color: var(--bg-tertiary);
-        padding: var(--spacing-lg);
-        border-radius: var(--radius-md);
+        grid-template-columns: 1fr 1fr;
+        gap: var(--spacing-md);
     }
 
     .checkpoint-btn {
-        padding: var(--spacing-md);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: var(--spacing-lg);
         border-radius: var(--radius-md);
         text-decoration: none;
         text-align: center;
         font-weight: var(--font-weight-semibold);
         transition: all 0.3s ease;
-        display: block;
-    }
-
-    .checkpoint-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: var(--shadow-sm);
     }
 
     .checkpoint-load {
-        background-color: #007bff;
+        background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
         color: white;
     }
 
     .checkpoint-unload {
-        background-color: #28a745;
+        background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
         color: white;
     }
 
     .checkpoint-load-return {
-        background-color: #ffc107;
-        color: var(--bg-primary);
-    }
-
-    .checkpoint-final {
-        background-color: #dc3545;
+        background: linear-gradient(135deg, #f39c12 0%, #d68910 100%);
         color: white;
     }
 
-    .show-list,
-    .requirement-list,
-    .equipment-list {
-        display: grid;
+    .checkpoint-final {
+        background: linear-gradient(135deg, #27ae60 0%, #1e8449 100%);
+        color: white;
+    }
+
+    .checkpoint-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .show-list, .requirement-list, .equipment-list {
+        display: flex;
+        flex-direction: column;
         gap: var(--spacing-sm);
     }
 
-    .show-item,
-    .requirement-item,
-    .equipment-item {
+    .show-item, .requirement-item, .equipment-item {
         background-color: var(--bg-tertiary);
         padding: var(--spacing-md);
         border-radius: var(--radius-md);
-        border-left: 4px solid var(--accent-gold);
-    }
-
-    .show-item {
-        border-left-color: #007bff;
-    }
-
-    .requirement-item {
-        border-left-color: #ffc107;
-    }
-
-    .equipment-item {
-        border-left-color: #28a745;
     }
 
     .item-header {
         display: flex;
         justify-content: space-between;
-        align-items: start;
-        flex-wrap: wrap;
-        gap: var(--spacing-xs);
+        align-items: center;
         margin-bottom: var(--spacing-xs);
     }
 
     .item-title {
-        font-size: 1rem;
         font-weight: var(--font-weight-semibold);
         color: var(--text-primary);
     }
 
     .item-info {
-        font-size: 0.9rem;
+        font-size: 0.85rem;
         color: var(--text-secondary);
-        margin-top: var(--spacing-xs);
     }
 
     .form-container {
-        display: none;
         background-color: var(--bg-tertiary);
         padding: var(--spacing-lg);
         border-radius: var(--radius-md);
         margin-bottom: var(--spacing-md);
+        display: none;
     }
 
     .form-container.show {
@@ -392,9 +372,12 @@
             <div class="equipment-list">
                 {% for alloc in allocated_equipment %}
                 <div class="equipment-item">
-                    <span class="item-title">{{ alloc.equipment.code }}</span> - {{ alloc.equipment.name }}
+                    <span class="item-title">{{ alloc.equipment.name }}</span>
                     {% if alloc.equipment.brand %}
                     <span style="color: var(--text-secondary);"> | {{ alloc.equipment.brand }}</span>
+                    {% endif %}
+                    {% if alloc.equipment.model %}
+                    <span style="color: var(--text-tertiary);"> {{ alloc.equipment.model }}</span>
                     {% endif %}
                     <div class="item-info">
                         Status: {{ alloc.current_status }} | 📅 {{ alloc.allocated_at.strftime('%d/%m/%Y %H:%M') }}
@@ -427,7 +410,7 @@ function toggleForm(formId) {
         form.classList.remove('show');
     } else {
         document.querySelectorAll('.form-container').forEach(f => f.classList.remove('show'));
-        form.classList.add('show');
+        form.classList.add(show');
     }
 }
 </script>
