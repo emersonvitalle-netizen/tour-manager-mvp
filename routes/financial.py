@@ -995,50 +995,19 @@ def freelancers():
 @login_required
 @admin_required
 def contas_pagar():
-    """Contas a pagar - lista com filtros"""
+    """Contas a pagar - pastas mensais colapsaveis (12 meses rolling)"""
     from models.rh import AccountPayable
     from sqlalchemy import func
+    from dateutil.relativedelta import relativedelta
+    from collections import OrderedDict
 
+    hoje = date.today()
+    mes_atual = date(hoje.year, hoje.month, 1)
+    
+    # Filtros
     status_filter = request.args.get('status', 'pending')
     categoria_filter = request.args.get('categoria', '')
-
-    query = AccountPayable.query.filter_by(company_id=current_user.company_id)
-
-    if status_filter == 'pending':
-        query = query.filter_by(status='pending')
-    elif status_filter == 'paid':
-        query = query.filter_by(status='paid')
-    elif status_filter == 'overdue':
-        query = query.filter(
-            AccountPayable.status == 'pending',
-            AccountPayable.due_date < date.today()
-        )
-
-    if categoria_filter:
-        query = query.filter_by(category=categoria_filter)
-
-    contas = query.order_by(AccountPayable.due_date).all()
-
-    total_vencidas = db.session.query(func.sum(AccountPayable.amount)).filter(
-        AccountPayable.company_id == current_user.company_id,
-        AccountPayable.status == 'pending',
-        AccountPayable.due_date < date.today()
-    ).scalar() or 0
-
-    total_7_dias = db.session.query(func.sum(AccountPayable.amount)).filter(
-        AccountPayable.company_id == current_user.company_id,
-        AccountPayable.status == 'pending',
-        AccountPayable.due_date >= date.today(),
-        AccountPayable.due_date <= date.today() + timedelta(days=7)
-    ).scalar() or 0
-
-    current_month = date.today().strftime('%Y-%m')
-    total_mes = db.session.query(func.sum(AccountPayable.amount)).filter(
-        AccountPayable.company_id == current_user.company_id,
-        AccountPayable.status == 'pending',
-        func.strftime('%Y-%m', AccountPayable.due_date) == current_month
-    ).scalar() or 0
-
+    
     # LISTA EXPANDIDA DE CATEGORIAS (24 categorias)
     categorias = [
         'folha_clt', 'freelancers', 'manutencao',
@@ -1051,12 +1020,111 @@ def contas_pagar():
         'materiais_consumo', 'ferramentas',
         'parcelamentos', 'outros'
     ]
+    
+    # Gerar 12 meses a partir do mes atual
+    meses_rolling = []
+    for i in range(12):
+        mes = mes_atual + relativedelta(months=i)
+        meses_rolling.append({
+            'key': mes.strftime('%Y-%m'),
+            'label': mes.strftime('%b/%Y').capitalize(),
+            'inicio': mes,
+            'fim': mes + relativedelta(months=1, days=-1)
+        })
+    
+    # Base query com filtros
+    query = AccountPayable.query.filter(AccountPayable.company_id == current_user.company_id)
+    
+    if status_filter == 'pending':
+        query = query.filter(AccountPayable.status.in_(['pending', 'partial']))
+    elif status_filter == 'paid':
+        query = query.filter(AccountPayable.status == 'paid')
+    elif status_filter == 'overdue':
+        query = query.filter(
+            AccountPayable.status.in_(['pending', 'partial']),
+            AccountPayable.due_date < hoje
+        )
+    elif status_filter == 'all':
+        pass  # sem filtro de status
+    
+    if categoria_filter:
+        query = query.filter(AccountPayable.category == categoria_filter)
+    
+    contas_todas = query.order_by(AccountPayable.due_date).all()
+    
+    # Agrupar contas por mes
+    pastas = OrderedDict()
+    contas_vencidas = []
+    
+    for m in meses_rolling:
+        pastas[m['key']] = {
+            'label': m['label'],
+            'inicio': m['inicio'],
+            'fim': m['fim'],
+            'contas': [],
+            'total': Decimal('0'),
+            'qtd': 0
+        }
+    
+    for conta in contas_todas:
+        if conta.due_date:
+            mes_key = conta.due_date.strftime('%Y-%m')
+            
+            # Verificar se vencida (antes de hoje) - apenas para status pendentes/partial
+            # Nao mostrar vencidas quando filtrando por pagas
+            # Quando status=overdue, todas as contas ja sao vencidas, mostrar nas pastas
+            is_vencida = conta.due_date < hoje and conta.status in ['pending', 'partial']
+            
+            if is_vencida and status_filter not in ['paid', 'overdue']:
+                contas_vencidas.append(conta)
+            elif mes_key in pastas:
+                pastas[mes_key]['contas'].append(conta)
+                pastas[mes_key]['total'] += conta.amount or Decimal('0')
+                pastas[mes_key]['qtd'] += 1
+            else:
+                # Contas fora dos 12 meses rolling (ex: vencidas de meses anteriores quando status=overdue)
+                # Colocar em vencidas se for overdue
+                if is_vencida:
+                    contas_vencidas.append(conta)
+    
+    # KPIs derivados do mesmo dataset filtrado (contas_todas)
+    # Quando status=overdue, todas as contas visíveis são vencidas
+    if status_filter == 'overdue':
+        # Todas as contas_todas já são vencidas pelo filtro, calcular total delas
+        total_vencidas = sum(float(c.amount or 0) for c in contas_todas)
+        qtd_vencidas = len(contas_todas)
+    else:
+        total_vencidas = sum(float(c.amount or 0) for c in contas_vencidas)
+        qtd_vencidas = len(contas_vencidas)
+    
+    # KPI de 7 dias - calculado a partir do dataset ja filtrado
+    total_7_dias = sum(
+        float(c.amount or 0) for c in contas_todas 
+        if c.due_date and hoje <= c.due_date <= hoje + timedelta(days=7)
+    )
+    
+    # KPI mes atual - ja calculado nas pastas
+    total_mes_atual = float(pastas[mes_atual.strftime('%Y-%m')]['total']) if mes_atual.strftime('%Y-%m') in pastas else 0
+    
+    # Contar repositorios (anos com contas pagas)
+    anos_repositorio = db.session.query(
+        func.strftime('%Y', AccountPayable.due_date)
+    ).filter(
+        AccountPayable.company_id == current_user.company_id,
+        AccountPayable.status == 'paid'
+    ).distinct().all()
+    anos_repositorio = [a[0] for a in anos_repositorio if a[0]]
 
     return render_template('financial/contas_pagar.html',
-                          contas=contas,
+                          pastas=pastas,
+                          contas_vencidas=contas_vencidas,
                           total_vencidas=total_vencidas,
+                          qtd_vencidas=qtd_vencidas,
                           total_7_dias=total_7_dias,
-                          total_mes=total_mes,
+                          total_mes=total_mes_atual,
+                          anos_repositorio=anos_repositorio,
+                          mes_atual_key=mes_atual.strftime('%Y-%m'),
+                          today=hoje,
                           categorias=categorias,
                           status_filter=status_filter,
                           categoria_filter=categoria_filter)
@@ -1121,6 +1189,70 @@ def nova_conta_pagar():
 
     cost_centers = CostCenter.query.filter_by(company_id=current_user.company_id, is_active=True).order_by(CostCenter.name).all()
     return render_template('financial/conta_pagar_form.html', conta=None, cost_centers=cost_centers)
+
+
+@financial_bp.route('/contas-pagar/repositorio')
+@login_required
+@admin_required
+def repositorio_contas():
+    """Repositorio de contas pagas por exercicio (ano)"""
+    from models.rh import AccountPayable
+    from sqlalchemy import func
+    from collections import OrderedDict
+
+    ano_filtro = request.args.get('ano', str(date.today().year))
+    
+    # Buscar contas pagas do ano
+    contas_pagas = AccountPayable.query.filter(
+        AccountPayable.company_id == current_user.company_id,
+        AccountPayable.status == 'paid',
+        func.strftime('%Y', AccountPayable.due_date) == ano_filtro
+    ).order_by(AccountPayable.due_date).all()
+    
+    # Agrupar por mes
+    meses_nomes = {
+        '01': 'Janeiro', '02': 'Fevereiro', '03': 'Marco', '04': 'Abril',
+        '05': 'Maio', '06': 'Junho', '07': 'Julho', '08': 'Agosto',
+        '09': 'Setembro', '10': 'Outubro', '11': 'Novembro', '12': 'Dezembro'
+    }
+    
+    pastas = OrderedDict()
+    for m in range(1, 13):
+        mes_key = f"{m:02d}"
+        pastas[mes_key] = {
+            'label': f"{meses_nomes[mes_key]}/{ano_filtro}",
+            'contas': [],
+            'total': Decimal('0'),
+            'qtd': 0
+        }
+    
+    for conta in contas_pagas:
+        if conta.due_date:
+            mes_key = conta.due_date.strftime('%m')
+            if mes_key in pastas:
+                pastas[mes_key]['contas'].append(conta)
+                pastas[mes_key]['total'] += conta.amount or Decimal('0')
+                pastas[mes_key]['qtd'] += 1
+    
+    # Total geral do ano
+    total_ano = sum(float(p['total']) for p in pastas.values())
+    qtd_total = sum(p['qtd'] for p in pastas.values())
+    
+    # Anos disponiveis
+    anos_disponiveis = db.session.query(
+        func.strftime('%Y', AccountPayable.due_date)
+    ).filter(
+        AccountPayable.company_id == current_user.company_id,
+        AccountPayable.status == 'paid'
+    ).distinct().order_by(func.strftime('%Y', AccountPayable.due_date).desc()).all()
+    anos_disponiveis = [a[0] for a in anos_disponiveis if a[0]]
+
+    return render_template('financial/repositorio_contas.html',
+                          pastas=pastas,
+                          ano_filtro=ano_filtro,
+                          anos_disponiveis=anos_disponiveis,
+                          total_ano=total_ano,
+                          qtd_total=qtd_total)
 
 
 @financial_bp.route('/contas-pagar/<int:id>/editar', methods=['GET', 'POST'])
