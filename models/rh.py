@@ -634,6 +634,13 @@ class AccountPayable(db.Model):
         return f'<AccountPayable {self.description}>'
 
     @property
+    def days_until_due(self):
+        if self.due_date:
+            from datetime import date
+            return (self.due_date - date.today()).days
+        return 0
+
+    @property
     def formatted_amount(self):
         if self.amount:
             return f"R$ {self.amount:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.')
