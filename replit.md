@@ -111,6 +111,14 @@ The system is built using a Flask (Python) backend with SQLAlchemy for ORM and J
 
 ## Recent Changes (Jan/2026)
 
+- **Contas a Pagar - Pastas Mensais Dinâmicas:**
+  - Pastas colapsáveis por mês usando padrão HARDCASE (toggleFolder)
+  - Meses vencidos aparecem com efeito "breathing" vermelho (animação sutil)
+  - Badge "Vencida" em pastas com contas atrasadas
+  - Suporte a múltiplos meses vencidos simultâneos (Jan, Fev, Mar...)
+  - Transição automática para Repositório quando mês é 100% pago
+  - KPIs sincronizados com dados visíveis (derivados do mesmo dataset)
+  - Helper classify_folder_state() para estados: on_track, overdue, archivable
 - Centro de Custos ativado em Contas a Pagar (CostCenter model + select dropdown)
 - Novo relatório de Custo Total por Funcionário (/rh/relatorio/custo-funcionario) com:
   - Salário base, INSS patronal (20%), FGTS (8%)
