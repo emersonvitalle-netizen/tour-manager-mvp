@@ -2514,6 +2514,34 @@ def centros_custo():
             maior_valor = total_centro
             maior_centro = c.name
     
+    # Pendentes mes a mes (proximos 6 meses)
+    from datetime import date
+    from dateutil.relativedelta import relativedelta
+    
+    hoje = date.today()
+    pendentes_mes = []
+    labels_mes = []
+    
+    for i in range(6):
+        mes_inicio = date(hoje.year, hoje.month, 1) + relativedelta(months=i)
+        mes_fim = mes_inicio + relativedelta(months=1, days=-1)
+        
+        total_mes = db.session.query(
+            func.sum(case(
+                (AccountPayable.status == 'paid', 0),
+                (AccountPayable.status == 'partial', func.coalesce(AccountPayable.amount, 0) - func.coalesce(AccountPayable.paid_amount, 0)),
+                else_=func.coalesce(AccountPayable.amount, 0)
+            ))
+        ).filter(
+            AccountPayable.company_id == current_user.company_id,
+            AccountPayable.status.notin_(['paid', 'cancelled']),
+            AccountPayable.due_date >= mes_inicio,
+            AccountPayable.due_date <= mes_fim
+        ).scalar() or 0
+        
+        pendentes_mes.append(float(total_mes))
+        labels_mes.append(mes_inicio.strftime('%b/%y'))
+    
     return render_template('financial/centros_custo.html', 
         centros=centros_data,
         total_pago=float(total_geral_pago),
@@ -2521,7 +2549,9 @@ def centros_custo():
         total_geral=float(total_geral),
         sem_centro_pago=float(sem_centro_pago),
         sem_centro_pendente=float(sem_centro_pendente),
-        maior_centro=maior_centro
+        maior_centro=maior_centro,
+        pendentes_mes=pendentes_mes,
+        labels_mes=labels_mes
     )
 
 
