@@ -143,6 +143,36 @@
         min-height: 100px;
         resize: vertical;
     }
+
+    .btn-add-cc {
+        width: 48px;
+        height: 48px;
+        background: #d4a574;
+        color: #000;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 1rem;
+    }
+
+    .btn-save-cc {
+        background: #10b981;
+        color: #fff;
+        border: none;
+        padding: 10px 16px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+    }
+
+    .btn-cancel-cc {
+        background: #333;
+        color: #fff;
+        border: none;
+        padding: 10px 16px;
+        border-radius: 8px;
+        cursor: pointer;
+    }
 </style>
 {% endblock %}
 
@@ -279,14 +309,33 @@
 
             <div class="form-group">
                 <label class="form-label">Centro de Custo</label>
-                <select name="cost_center_id" class="form-select">
-                    <option value="">Sem centro de custo</option>
-                    {% for cc in cost_centers %}
-                    <option value="{{ cc.id }}" {{ 'selected' if conta and conta.cost_center_id == cc.id else '' }}>
-                        {{ cc.code ~ ' - ' if cc.code else '' }}{{ cc.name }}
-                    </option>
-                    {% endfor %}
-                </select>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <select name="cost_center_id" id="cost_center_select" class="form-select" style="flex: 1;">
+                        <option value="">Sem centro de custo</option>
+                        {% for cc in cost_centers %}
+                        <option value="{{ cc.id }}" {{ 'selected' if conta and conta.cost_center_id == cc.id else '' }}>
+                            {{ cc.code ~ ' - ' if cc.code else '' }}{{ cc.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <button type="button" onclick="toggleNewCostCenter()" class="btn-add-cc" title="Adicionar novo">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+                <div id="new-cc-inline" style="display: none; margin-top: 12px; padding: 16px; background: rgba(212,165,116,0.1); border-radius: 10px; border: 1px solid #d4a574;">
+                    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                        <input type="text" id="new_cc_code" class="form-control" placeholder="Codigo (ex: MKT)" style="width: 100px; text-transform: uppercase;">
+                        <input type="text" id="new_cc_name" class="form-control" placeholder="Nome do centro de custo" style="flex: 1;">
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button type="button" onclick="createCostCenter()" class="btn-save-cc">
+                            <i class="fas fa-check"></i> Criar
+                        </button>
+                        <button type="button" onclick="toggleNewCostCenter()" class="btn-cancel-cc">
+                            Cancelar
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <div class="form-group">
@@ -339,6 +388,48 @@ function toggleCustomCategory() {
     } else {
         customGroup.style.display = 'none';
     }
+}
+
+function toggleNewCostCenter() {
+    var panel = document.getElementById('new-cc-inline');
+    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+    if (panel.style.display === 'block') {
+        document.getElementById('new_cc_code').focus();
+    }
+}
+
+function createCostCenter() {
+    var code = document.getElementById('new_cc_code').value.trim().toUpperCase();
+    var name = document.getElementById('new_cc_name').value.trim();
+    
+    if (!code || !name) {
+        alert('Preencha codigo e nome do centro de custo');
+        return;
+    }
+    
+    fetch('/financial/api/centro-custo', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({code: code, name: name})
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            var select = document.getElementById('cost_center_select');
+            var option = document.createElement('option');
+            option.value = data.id;
+            option.text = code + ' - ' + name;
+            option.selected = true;
+            select.appendChild(option);
+            
+            document.getElementById('new_cc_code').value = '';
+            document.getElementById('new_cc_name').value = '';
+            document.getElementById('new-cc-inline').style.display = 'none';
+        } else {
+            alert('Erro: ' + (data.error || 'Falha ao criar'));
+        }
+    })
+    .catch(e => alert('Erro de conexao'));
 }
 </script>
 {% endblock %}

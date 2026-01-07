@@ -2519,3 +2519,31 @@ def excluir_centro_custo(id):
         flash(f'Erro ao excluir: {str(e)}', 'danger')
     
     return redirect(url_for('financial.centros_custo'))
+
+
+@financial_bp.route('/api/centro-custo', methods=['POST'])
+@login_required
+def api_criar_centro_custo():
+    """API para criar centro de custo inline"""
+    from models.rh import CostCenter
+    
+    data = request.get_json()
+    code = data.get('code', '').strip().upper()
+    name = data.get('name', '').strip()
+    
+    if not code or not name:
+        return jsonify({'success': False, 'error': 'Codigo e nome obrigatorios'})
+    
+    try:
+        centro = CostCenter(
+            company_id=current_user.company_id,
+            code=code,
+            name=name,
+            is_active=True
+        )
+        db.session.add(centro)
+        db.session.commit()
+        return jsonify({'success': True, 'id': centro.id, 'code': centro.code, 'name': centro.name})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)})
