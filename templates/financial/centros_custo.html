@@ -238,6 +238,31 @@
         font-size: 0.9rem;
     }
 
+    .chart-card {
+        background: #1a1a1a;
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 20px;
+    }
+
+    .chart-title {
+        color: #f5f5f5;
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .chart-title i {
+        color: #f59e0b;
+    }
+
+    #pendentes-chart {
+        height: 160px !important;
+    }
+
     @media (min-width: 768px) {
         .container {
             max-width: 800px;
@@ -245,6 +270,9 @@
         }
         .kpi-grid {
             grid-template-columns: repeat(4, 1fr);
+        }
+        #pendentes-chart {
+            height: 200px !important;
         }
     }
 </style>
@@ -280,6 +308,11 @@
             <div class="kpi-label">Maior Centro</div>
             <div class="kpi-value" style="color: #d4a574; font-size: 0.9rem;">{{ maior_centro or '-' }}</div>
         </div>
+    </div>
+
+    <div class="chart-card">
+        <h4 class="chart-title"><i class="fas fa-calendar-alt"></i> Pendentes Mes a Mes</h4>
+        <canvas id="pendentes-chart"></canvas>
     </div>
 
     {% if sem_centro_pago > 0 or sem_centro_pendente > 0 %}
@@ -353,4 +386,55 @@
         </div>
     {% endif %}
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const ctx = document.getElementById('pendentes-chart').getContext('2d');
+new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: {{ labels_mes|tojson }},
+        datasets: [{
+            label: 'Pendente',
+            data: {{ pendentes_mes|tojson }},
+            backgroundColor: 'rgba(245, 158, 11, 0.7)',
+            borderColor: '#f59e0b',
+            borderWidth: 1,
+            borderRadius: 4
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { display: false },
+            tooltip: {
+                backgroundColor: '#1a1a1a',
+                titleColor: '#fff',
+                bodyColor: '#f59e0b',
+                borderColor: '#333',
+                borderWidth: 1,
+                callbacks: {
+                    label: ctx => 'R$ ' + ctx.parsed.y.toLocaleString('pt-BR')
+                }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                grid: { color: '#1a1a1a' },
+                ticks: {
+                    color: '#555',
+                    font: { size: 10 },
+                    callback: v => 'R$ ' + (v/1000).toFixed(0) + 'k'
+                }
+            },
+            x: {
+                grid: { display: false },
+                ticks: { color: '#666', font: { size: 10 } }
+            }
+        }
+    }
+});
+</script>
 {% endblock %}
