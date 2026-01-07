@@ -620,6 +620,9 @@ class AccountPayable(db.Model):
     origin_type = db.Column(db.String(50))  # payroll, vacation, thirteenth, termination, maintenance, etc
     origin_id = db.Column(db.Integer)
 
+    # Centro de Custo
+    cost_center_id = db.Column(db.Integer, db.ForeignKey('cost_center.id'))
+
     notes = db.Column(db.Text)
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -629,6 +632,7 @@ class AccountPayable(db.Model):
     supplier = db.relationship('Supplier')
     bank_account = db.relationship('BankAccount')
     creator = db.relationship('User')
+    cost_center = db.relationship('CostCenter')
 
     def __repr__(self):
         return f'<AccountPayable {self.description}>'
