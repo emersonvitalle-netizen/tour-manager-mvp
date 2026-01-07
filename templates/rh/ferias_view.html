@@ -1,0 +1,357 @@
+{% extends "base.html" %}
+
+{% block title %}RH - Ferias - {{ vacation.employee.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .vacation-view-container {
+        padding: 16px;
+        padding-bottom: 100px;
+        background: #0a0a0a;
+        min-height: 100vh;
+    }
+
+    .page-header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .btn-back {
+        background: #333;
+        color: white;
+        border: none;
+        padding: 10px 16px;
+        border-radius: 8px;
+        text-decoration: none;
+    }
+
+    .page-title {
+        color: #f5f5f5;
+        font-size: 1.2rem;
+        font-weight: 600;
+        flex: 1;
+    }
+
+    .status-badge {
+        padding: 6px 12px;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .status-pending { background: #ff9800; color: #000; }
+    .status-scheduled { background: #2196f3; color: #fff; }
+    .status-paid { background: #4caf50; color: #fff; }
+    .status-overdue { background: #f44336; color: #fff; }
+
+    .section-card {
+        background: #1a1a1a;
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 16px;
+    }
+
+    .section-title {
+        color: #888;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        margin-bottom: 12px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid #333;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+
+    .info-item {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .info-item.full {
+        grid-column: span 2;
+    }
+
+    .info-label {
+        color: #666;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+    }
+
+    .info-value {
+        color: #f5f5f5;
+        font-size: 1rem;
+        font-weight: 500;
+    }
+
+    .info-value.highlight {
+        color: #4caf50;
+        font-size: 1.3rem;
+        font-weight: 700;
+    }
+
+    .values-table {
+        width: 100%;
+    }
+
+    .values-table tr {
+        border-bottom: 1px solid #333;
+    }
+
+    .values-table tr:last-child {
+        border-bottom: none;
+    }
+
+    .values-table td {
+        padding: 10px 0;
+        color: #f5f5f5;
+    }
+
+    .values-table td:first-child {
+        color: #888;
+    }
+
+    .values-table td:last-child {
+        text-align: right;
+        font-weight: 600;
+    }
+
+    .values-table tr.total td {
+        color: #4caf50;
+        font-size: 1.1rem;
+        font-weight: 700;
+        padding-top: 12px;
+    }
+
+    .values-table tr.discount td:last-child {
+        color: #f44336;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 12px;
+        margin-top: 24px;
+    }
+
+    .btn-action {
+        flex: 1;
+        padding: 14px;
+        border-radius: 10px;
+        border: none;
+        font-size: 1rem;
+        font-weight: 600;
+        text-decoration: none;
+        text-align: center;
+        cursor: pointer;
+    }
+
+    .btn-schedule {
+        background: linear-gradient(135deg, #7b1fa2 0%, #4a148c 100%);
+        color: #fff;
+    }
+
+    .btn-pay {
+        background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%);
+        color: #fff;
+    }
+
+    .btn-print {
+        background: #333;
+        color: #fff;
+    }
+
+    .alert-box {
+        background: #331100;
+        border: 1px solid #ff9800;
+        border-radius: 8px;
+        padding: 12px;
+        margin-bottom: 16px;
+    }
+
+    .alert-box.danger {
+        background: #330000;
+        border-color: #f44336;
+    }
+
+    .alert-box i {
+        margin-right: 8px;
+    }
+
+    .alert-box span {
+        color: #ff9800;
+        font-size: 0.9rem;
+    }
+
+    .alert-box.danger span {
+        color: #f44336;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="vacation-view-container">
+    <div class="page-header">
+        <a href="{{ url_for('rh.ferias_list') }}" class="btn-back">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <h1 class="page-title">Ferias</h1>
+        <span class="status-badge status-{{ 'overdue' if vacation.is_overdue else vacation.status }}">
+            {% if vacation.is_overdue %}VENCIDAS
+            {% elif vacation.status == 'pending' %}PENDENTE
+            {% elif vacation.status == 'scheduled' %}AGENDADA
+            {% elif vacation.status == 'paid' %}PAGA
+            {% else %}{{ vacation.status|upper }}{% endif %}
+        </span>
+    </div>
+
+    {% if vacation.is_overdue %}
+    <div class="alert-box danger">
+        <i class="fas fa-exclamation-triangle"></i>
+        <span>ATENCAO: Ferias vencidas! Periodo concessivo expirou em {{ vacation.concession_end.strftime('%d/%m/%Y') }}</span>
+    </div>
+    {% elif vacation.status == 'pending' and vacation.concession_end %}
+    <div class="alert-box">
+        <i class="fas fa-clock"></i>
+        <span>Prazo limite para concessao: {{ vacation.concession_end.strftime('%d/%m/%Y') }}</span>
+    </div>
+    {% endif %}
+
+    <!-- Funcionario -->
+    <div class="section-card">
+        <div class="section-title"><i class="fas fa-user"></i> Funcionario</div>
+        <div class="info-grid">
+            <div class="info-item full">
+                <span class="info-label">Nome</span>
+                <span class="info-value">{{ vacation.employee.name }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Cargo</span>
+                <span class="info-value">{{ vacation.employee.position or '-' }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Admissao</span>
+                <span class="info-value">{{ vacation.employee.admission_date.strftime('%d/%m/%Y') if vacation.employee.admission_date else '-' }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Periodos -->
+    <div class="section-card">
+        <div class="section-title"><i class="fas fa-calendar-alt"></i> Periodos</div>
+        <div class="info-grid">
+            <div class="info-item">
+                <span class="info-label">Periodo Aquisitivo</span>
+                <span class="info-value">{{ vacation.acquisition_start.strftime('%d/%m/%Y') }} - {{ vacation.acquisition_end.strftime('%d/%m/%Y') }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Limite Concessao</span>
+                <span class="info-value">{{ vacation.concession_end.strftime('%d/%m/%Y') if vacation.concession_end else '-' }}</span>
+            </div>
+            {% if vacation.vacation_start %}
+            <div class="info-item">
+                <span class="info-label">Inicio Ferias</span>
+                <span class="info-value">{{ vacation.vacation_start.strftime('%d/%m/%Y') }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Fim Ferias</span>
+                <span class="info-value">{{ vacation.vacation_end.strftime('%d/%m/%Y') if vacation.vacation_end else '-' }}</span>
+            </div>
+            {% endif %}
+            <div class="info-item">
+                <span class="info-label">Dias de Gozo</span>
+                <span class="info-value">{{ vacation.days_taken or 30 }} dias</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Dias Vendidos (Abono)</span>
+                <span class="info-value">{{ vacation.days_sold or 0 }} dias</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Valores -->
+    {% if vacation.gross_value %}
+    <div class="section-card">
+        <div class="section-title"><i class="fas fa-dollar-sign"></i> Valores</div>
+        <table class="values-table">
+            <tr>
+                <td>Ferias ({{ vacation.days_taken or 30 }} dias)</td>
+                <td>R$ {{ '{:,.2f}'.format(vacation.vacation_value or 0).replace(',', 'X').replace('.', ',').replace('X', '.') }}</td>
+            </tr>
+            <tr>
+                <td>1/3 Constitucional</td>
+                <td>R$ {{ '{:,.2f}'.format(vacation.bonus_value or 0).replace(',', 'X').replace('.', ',').replace('X', '.') }}</td>
+            </tr>
+            {% if vacation.sold_value and vacation.sold_value > 0 %}
+            <tr>
+                <td>Abono Pecuniario ({{ vacation.days_sold }} dias)</td>
+                <td>R$ {{ '{:,.2f}'.format(vacation.sold_value).replace(',', 'X').replace('.', ',').replace('X', '.') }}</td>
+            </tr>
+            <tr>
+                <td>1/3 sobre Abono</td>
+                <td>R$ {{ '{:,.2f}'.format(vacation.sold_bonus or 0).replace(',', 'X').replace('.', ',').replace('X', '.') }}</td>
+            </tr>
+            {% endif %}
+            <tr>
+                <td><strong>Total Bruto</strong></td>
+                <td><strong>R$ {{ '{:,.2f}'.format(vacation.gross_value).replace(',', 'X').replace('.', ',').replace('X', '.') }}</strong></td>
+            </tr>
+            <tr class="discount">
+                <td>(-) INSS</td>
+                <td>R$ {{ '{:,.2f}'.format(vacation.inss_discount or 0).replace(',', 'X').replace('.', ',').replace('X', '.') }}</td>
+            </tr>
+            <tr class="discount">
+                <td>(-) IRRF</td>
+                <td>R$ {{ '{:,.2f}'.format(vacation.irrf_discount or 0).replace(',', 'X').replace('.', ',').replace('X', '.') }}</td>
+            </tr>
+            <tr class="total">
+                <td>VALOR LIQUIDO</td>
+                <td>R$ {{ '{:,.2f}'.format(vacation.net_value or 0).replace(',', 'X').replace('.', ',').replace('X', '.') }}</td>
+            </tr>
+        </table>
+    </div>
+    {% endif %}
+
+    <!-- Pagamento -->
+    {% if vacation.status == 'paid' %}
+    <div class="section-card">
+        <div class="section-title"><i class="fas fa-check-circle"></i> Pagamento</div>
+        <div class="info-grid">
+            <div class="info-item">
+                <span class="info-label">Data Pagamento</span>
+                <span class="info-value">{{ vacation.paid_at.strftime('%d/%m/%Y') if vacation.paid_at else '-' }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Metodo</span>
+                <span class="info-value">{{ vacation.payment_method or 'Transferencia' }}</span>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Acoes -->
+    <div class="action-buttons">
+        {% if vacation.status == 'pending' %}
+        <a href="{{ url_for('rh.ferias_agendar', id=vacation.id) }}" class="btn-action btn-schedule">
+            <i class="fas fa-calendar-plus"></i> Agendar Ferias
+        </a>
+        {% elif vacation.status == 'scheduled' %}
+        <form action="{{ url_for('rh.ferias_pagar', id=vacation.id) }}" method="POST" style="flex: 1;">
+            <input type="hidden" name="method" value="transfer">
+            <button type="submit" class="btn-action btn-pay" style="width: 100%;">
+                <i class="fas fa-check"></i> Confirmar Pagamento
+            </button>
+        </form>
+        {% elif vacation.status == 'paid' %}
+        <a href="#" class="btn-action btn-print" onclick="window.print()">
+            <i class="fas fa-print"></i> Imprimir Recibo
+        </a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

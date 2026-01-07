@@ -1,9 +1,10 @@
-"""Rotas do módulo financeiro - apenas admin"""
+"""Rotas do modulo financeiro - apenas admin"""
 from flask import Blueprint, render_template, redirect, url_for, request, flash, jsonify
 from flask_login import login_required, current_user
 from extensions import db
 from sqlalchemy import func
 from models.financial import Quote, QuoteItem, Contract, Invoice, Payment
+from models.company import Company
 from models.tour import Tour
 from datetime import datetime, date, timedelta
 from decimal import Decimal
@@ -24,7 +25,7 @@ def admin_required(f):
 
 
 def generate_code(prefix: str) -> str:
-    """Gera código sequencial para documentos (inclui company_id para unicidade global)"""
+    """Gera cÃ³digo sequencial para documentos (inclui company_id para unicidade global)"""
     year = datetime.now().year
     company_id = current_user.company_id
     code_prefix = f'{prefix}-{company_id}-{year}'
@@ -68,7 +69,7 @@ def index():
     mes_atual = hoje.replace(day=1)
     mes_fim = (mes_atual + timedelta(days=32)).replace(day=1)
 
-    # ========== FATURAMENTO MÊS ==========
+    # ========== FATURAMENTO MÃŠS ==========
     faturamento_mes = float(db.session.query(func.sum(AccountReceivable.received_amount)).filter(
         AccountReceivable.company_id == company_id,
         AccountReceivable.status == 'received',
@@ -76,7 +77,7 @@ def index():
         func.date(AccountReceivable.received_at) < mes_fim
     ).scalar() or 0)
 
-    # ========== DESPESAS MÊS ==========
+    # ========== DESPESAS MÃŠS ==========
     despesas_folha = float(db.session.query(func.sum(PayrollEntry.net_salary)).filter(
         PayrollEntry.company_id == company_id,
         PayrollEntry.reference_month == hoje.month,
@@ -176,7 +177,7 @@ def index():
 
         fluxo_despesas.append(desp_f + desp_c + desp_fl)
 
-    # ========== MÉTRICAS AUXILIARES ==========
+    # ========== MÃ‰TRICAS AUXILIARES ==========
     quotes_pending = Quote.query.filter_by(
         company_id=company_id,
         status='sent',
@@ -212,6 +213,16 @@ def index():
         is_active=True
     ).order_by(Invoice.created_at.desc()).limit(5).all()
 
+    # Cobrancas Asaas pendentes (PIX/Boleto)
+    cobrancas_pendentes = Payment.query.join(Invoice).filter(
+        Invoice.company_id == company_id,
+        Payment.status == 'pending',
+        Payment.provider == 'asaas'
+    ).all()
+
+    cobrancas_qtd = len(cobrancas_pendentes)
+    cobrancas_total = sum(float(p.amount) for p in cobrancas_pendentes)
+
     return render_template('financial/index.html',
                           # KPIs principais
                           faturamento_mes=faturamento_mes,
@@ -224,13 +235,16 @@ def index():
                           fluxo_labels=fluxo_labels,
                           fluxo_receitas=fluxo_receitas,
                           fluxo_despesas=fluxo_despesas,
-                          # Métricas auxiliares
+                          # Metricas auxiliares
                           quotes_pending=quotes_pending,
                           invoices_pending=invoices_pending,
                           invoices_overdue=invoices_overdue,
                           contracts_active=contracts_active,
                           recent_quotes=recent_quotes,
                           recent_invoices=recent_invoices,
+                          # Cobrancas Asaas
+                          cobrancas_qtd=cobrancas_qtd,
+                          cobrancas_total=cobrancas_total,
                           # Helper para template
                           date=date)
 
@@ -239,7 +253,7 @@ def index():
 @login_required
 @admin_required
 def quotes():
-    """Lista de orçamentos"""
+    """Lista de orÃ§amentos"""
     status = request.args.get('status', 'all')
 
     query = Quote.query.filter_by(
@@ -259,7 +273,7 @@ def quotes():
 @login_required
 @admin_required
 def new_quote():
-    """Criar novo orçamento"""
+    """Criar novo orÃ§amento"""
     if request.method == 'POST':
         quote = Quote(
             code=generate_code('ORC'),
@@ -285,7 +299,7 @@ def new_quote():
         db.session.add(quote)
         db.session.commit()
 
-        flash('Orçamento criado! Adicione os itens.', 'success')
+        flash('OrÃ§amento criado! Adicione os itens.', 'success')
         return redirect(url_for('financial.edit_quote', id=quote.id))
 
     tours = Tour.query.filter_by(
@@ -300,7 +314,7 @@ def new_quote():
 @login_required
 @admin_required
 def view_quote(id):
-    """Visualizar orçamento"""
+    """Visualizar orÃ§amento"""
     quote = Quote.query.filter_by(
         id=id,
         company_id=current_user.company_id
@@ -313,7 +327,7 @@ def view_quote(id):
 @login_required
 @admin_required
 def edit_quote(id):
-    """Editar orçamento"""
+    """Editar orÃ§amento"""
     quote = Quote.query.filter_by(
         id=id,
         company_id=current_user.company_id
@@ -338,7 +352,7 @@ def edit_quote(id):
         recalculate_quote_totals(quote)
 
         db.session.commit()
-        flash('Orçamento atualizado!', 'success')
+        flash('OrÃ§amento atualizado!', 'success')
         return redirect(url_for('financial.view_quote', id=quote.id))
 
     tours = Tour.query.filter_by(
@@ -353,7 +367,7 @@ def edit_quote(id):
 @login_required
 @admin_required
 def add_quote_item(id):
-    """Adicionar item ao orçamento"""
+    """Adicionar item ao orÃ§amento"""
     quote = Quote.query.filter_by(
         id=id,
         company_id=current_user.company_id
@@ -379,7 +393,7 @@ def add_quote_item(id):
 @login_required
 @admin_required
 def delete_quote_item(id, item_id):
-    """Remover item do orçamento"""
+    """Remover item do orÃ§amento"""
     quote = Quote.query.filter_by(
         id=id,
         company_id=current_user.company_id
@@ -398,7 +412,7 @@ def delete_quote_item(id, item_id):
 @login_required
 @admin_required
 def send_quote(id):
-    """Marcar orçamento como enviado"""
+    """Marcar orÃ§amento como enviado"""
     quote = Quote.query.filter_by(
         id=id,
         company_id=current_user.company_id
@@ -407,7 +421,7 @@ def send_quote(id):
     quote.status = 'sent'
     db.session.commit()
 
-    flash('Orçamento marcado como enviado!', 'success')
+    flash('OrÃ§amento marcado como enviado!', 'success')
     return redirect(url_for('financial.view_quote', id=quote.id))
 
 
@@ -415,7 +429,7 @@ def send_quote(id):
 @login_required
 @admin_required
 def approve_quote(id):
-    """Aprovar orçamento"""
+    """Aprovar orÃ§amento"""
     quote = Quote.query.filter_by(
         id=id,
         company_id=current_user.company_id
@@ -426,7 +440,7 @@ def approve_quote(id):
     quote.approved_by = current_user.id
     db.session.commit()
 
-    flash('Orçamento aprovado!', 'success')
+    flash('OrÃ§amento aprovado!', 'success')
     return redirect(url_for('financial.view_quote', id=quote.id))
 
 
@@ -679,11 +693,62 @@ def register_payment(id):
 
 
 def recalculate_quote_totals(quote):
-    """Recalcula totais do orçamento"""
+    """Recalcula totais do orÃ§amento"""
     subtotal = sum(item.total for item in quote.items)
     quote.subtotal = subtotal
     quote.discount_value = subtotal * (quote.discount_percent or 0) / 100
     quote.total = subtotal - quote.discount_value
+
+
+@financial_bp.route('/invoices/<int:id>/edit', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def edit_invoice(id):
+    """Editar fatura"""
+    invoice = Invoice.query.filter_by(
+        id=id,
+        company_id=current_user.company_id
+    ).first_or_404()
+
+    if request.method == 'POST':
+        invoice.client_name = request.form.get('client_name')
+        invoice.client_document = request.form.get('client_document')
+        invoice.client_email = request.form.get('client_email')
+        invoice.description = request.form.get('description')
+        invoice.subtotal = Decimal(request.form.get('subtotal', '0'))
+        invoice.total = Decimal(request.form.get('total', '0'))
+
+        due_date_str = request.form.get('due_date')
+        if due_date_str:
+            invoice.due_date = datetime.strptime(due_date_str, '%Y-%m-%d').date()
+
+        db.session.commit()
+        flash('Fatura atualizada!', 'success')
+        return redirect(url_for('financial.view_invoice', id=invoice.id))
+
+    return render_template('financial/invoice_form.html', invoice=invoice, edit=True)
+
+
+@financial_bp.route('/invoices/<int:id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def delete_invoice(id):
+    """Excluir fatura"""
+    invoice = Invoice.query.filter_by(
+        id=id,
+        company_id=current_user.company_id
+    ).first_or_404()
+
+    if invoice.status == 'paid':
+        flash('Nao e possivel excluir fatura paga.', 'danger')
+        return redirect(url_for('financial.receitas'))
+
+    # Soft delete
+    invoice.is_active = False
+    db.session.commit()
+
+    flash(f'Fatura {invoice.code} excluida.', 'success')
+    return redirect(url_for('financial.receitas'))
 
 
 @financial_bp.route('/receitas')
@@ -707,7 +772,7 @@ def receitas():
 
     faturas = query.order_by(Invoice.created_at.desc()).all()
 
-    return render_template('financial/receitas.html', faturas=faturas, status=status)
+    return render_template('financial/receitas.html', faturas=faturas, status=status, today=date.today())
 
 
 # ============================================
@@ -727,14 +792,14 @@ def despesas():
     mes_atual = hoje.replace(day=1)
     mes_fim = (mes_atual + timedelta(days=32)).replace(day=1)
 
-    # ========== FOLHA CLT (mês atual) ==========
+    # ========== FOLHA CLT (mÃªs atual) ==========
     folha_clt = float(db.session.query(func.sum(PayrollEntry.net_salary)).filter(
         PayrollEntry.company_id == company_id,
         PayrollEntry.reference_month == hoje.month,
         PayrollEntry.reference_year == hoje.year
     ).scalar() or 0)
 
-    # ========== CONTAS PAGAS (mês atual) ==========
+    # ========== CONTAS PAGAS (mÃªs atual) ==========
     contas_fixas = float(db.session.query(func.sum(AccountPayable.paid_amount)).filter(
         AccountPayable.company_id == company_id,
         AccountPayable.status == 'paid',
@@ -742,7 +807,7 @@ def despesas():
         func.date(AccountPayable.paid_at) < mes_fim
     ).scalar() or 0)
 
-    # ========== FREELANCERS (mês atual) ==========
+    # ========== FREELANCERS (mÃªs atual) ==========
     freelancers_total = float(db.session.query(func.sum(FreelancerPayment.amount)).filter(
         FreelancerPayment.company_id == company_id,
         FreelancerPayment.status == 'paid',
@@ -750,7 +815,7 @@ def despesas():
         func.date(FreelancerPayment.paid_at) < mes_fim
     ).scalar() or 0)
 
-    # ========== MANUTENÇÃO (mês atual) ==========
+    # ========== MANUTENÃ‡ÃƒO (mÃªs atual) ==========
     manutencao = float(db.session.query(func.sum(Maintenance.total_cost)).filter(
         Maintenance.company_id == company_id,
         Maintenance.status == 'completed',
@@ -758,10 +823,10 @@ def despesas():
         func.date(Maintenance.completed_at) < mes_fim
     ).scalar() or 0)
 
-    # ========== TOTAL MÊS ==========
+    # ========== TOTAL MÃŠS ==========
     total_mes = folha_clt + contas_fixas + freelancers_total + manutencao
 
-    # ========== ÚLTIMAS DESPESAS (10 mais recentes) ==========
+    # ========== ÃšLTIMAS DESPESAS (10 mais recentes) ==========
     ultimas_despesas = []
 
     # Contas pagas recentes
@@ -797,7 +862,7 @@ def despesas():
                 'data': fp.paid_at
             })
 
-    # Manutenções concluídas recentes
+    # ManutenÃ§Ãµes concluÃ­das recentes
     manutencoes_recentes = Maintenance.query.filter(
         Maintenance.company_id == company_id,
         Maintenance.status == 'completed',
@@ -1118,13 +1183,18 @@ def editar_conta_pagar(id):
 @login_required
 @admin_required
 def pagar_conta(id):
-    """Marcar conta como paga"""
-    from models.rh import AccountPayable
+    """Marcar conta como paga e sincronizar com RH se necessário"""
+    from models.rh import AccountPayable, PayrollEntry
 
     conta = AccountPayable.query.filter_by(
         id=id,
         company_id=current_user.company_id
     ).first_or_404()
+
+    # Verificar se já está paga
+    if conta.status == 'paid':
+        flash('Esta conta já foi paga!', 'warning')
+        return redirect(url_for('financial.contas_pagar'))
 
     valor_pago = request.form.get('paid_amount', '')
     if valor_pago:
@@ -1134,6 +1204,15 @@ def pagar_conta(id):
 
     conta.status = 'paid'
     conta.paid_at = datetime.utcnow()
+
+    # ========== SINCRONIZAÇÃO COM RH ==========
+    # Se for folha_pagamento, atualizar PayrollEntry
+    if conta.payroll_entry_id and conta.category == 'folha_pagamento':
+        entry = PayrollEntry.query.get(conta.payroll_entry_id)
+        if entry and entry.status != 'paid':
+            entry.status = 'paid'
+            entry.payment_date = date.today()
+            entry.financial_integrated = True
 
     db.session.commit()
 
@@ -1190,38 +1269,17 @@ def excluir_conta_pagar(id):
     return redirect(url_for('financial.contas_pagar'))
 
 
-@financial_bp.route('/emitir-nfse', methods=['GET', 'POST'])
+@financial_bp.route('/emitir-nfse')
 @login_required
 @admin_required
 def emitir_nfse():
-    """Emitir NFSe"""
-    if request.method == 'POST':
-        flash('NFSe seria emitida aqui (integracao pendente)', 'info')
-        return redirect(url_for('financial.emitir_nfse'))
-
-    return render_template('financial/emitir_nfse.html')
-
-
-@financial_bp.route('/gerar-pix', methods=['GET', 'POST'])
-@login_required
-@admin_required
-def gerar_pix():
-    """Gerar QR Code PIX"""
-    faturas = Invoice.query.filter_by(
-        company_id=current_user.company_id,
-        status='pending',
-        is_active=True
-    ).all()
-
-    if request.method == 'POST':
-        flash('QR Code PIX seria gerado aqui (integracao pendente)', 'info')
-        return redirect(url_for('financial.gerar_pix'))
-
-    return render_template('financial/gerar_pix.html', faturas=faturas)
+    """Redireciona para receitas - NFSe agora e emitida pela fatura"""
+    flash('Para emitir NFSe, acesse uma fatura PAGA e clique em "Emitir NFSe"', 'info')
+    return redirect(url_for('financial.receitas', status='paid'))
 
 
 # ============================================
-# DRE - CORRIGIDO COM MANUTENÇÃO
+# DRE - CORRIGIDO COM MANUTENCAO
 # ============================================
 
 @financial_bp.route('/dre')
@@ -1239,17 +1297,41 @@ def dre():
     mes_atual_fim = (mes_atual_inicio + timedelta(days=32)).replace(day=1)
 
     # ========== RECEITAS ==========
-    receitas_locacao = db.session.query(func.sum(AccountReceivable.received_amount)).filter(
+    # Contas a Receber (modelo antigo)
+    receitas_contas = db.session.query(func.sum(AccountReceivable.received_amount)).filter(
         AccountReceivable.company_id == current_user.company_id,
         AccountReceivable.status == 'received',
         func.strftime('%Y-%m', AccountReceivable.received_at) == current_month_str
     ).scalar() or 0
 
-    receitas_pendentes = db.session.query(func.sum(AccountReceivable.amount)).filter(
+    # Faturas pagas (Invoice) - NOVO
+    receitas_faturas = db.session.query(func.sum(Invoice.total)).filter(
+        Invoice.company_id == current_user.company_id,
+        Invoice.status == 'paid',
+        Invoice.is_active == True,
+        func.date(Invoice.paid_at) >= mes_atual_inicio,
+        func.date(Invoice.paid_at) < mes_atual_fim
+    ).scalar() or 0
+
+    # Total receitas = contas recebidas + faturas pagas
+    receitas_locacao = float(receitas_contas) + float(receitas_faturas)
+
+    # Pendentes (contas + faturas)
+    receitas_pendentes_contas = db.session.query(func.sum(AccountReceivable.amount)).filter(
         AccountReceivable.company_id == current_user.company_id,
         AccountReceivable.status == 'pending',
         func.strftime('%Y-%m', AccountReceivable.due_date) == current_month_str
     ).scalar() or 0
+
+    receitas_pendentes_faturas = db.session.query(func.sum(Invoice.total)).filter(
+        Invoice.company_id == current_user.company_id,
+        Invoice.status == 'pending',
+        Invoice.is_active == True,
+        func.date(Invoice.due_date) >= mes_atual_inicio,
+        func.date(Invoice.due_date) < mes_atual_fim
+    ).scalar() or 0
+
+    receitas_pendentes = float(receitas_pendentes_contas) + float(receitas_pendentes_faturas)
 
     # ========== DESPESAS ==========
     despesas_folha = db.session.query(func.sum(PayrollEntry.net_salary)).filter(
@@ -1258,9 +1340,30 @@ def dre():
         PayrollEntry.reference_year == current_year
     ).scalar() or 0
 
+    # ========== DESPESAS POR CATEGORIA (AccountPayable) ==========
+    # Funcao auxiliar para somar por categoria
+    def soma_categoria(categoria):
+        return db.session.query(func.sum(AccountPayable.paid_amount)).filter(
+            AccountPayable.company_id == current_user.company_id,
+            AccountPayable.status == 'paid',
+            AccountPayable.category == categoria,
+            func.strftime('%Y-%m', AccountPayable.paid_at) == current_month_str
+        ).scalar() or 0
+
+    # Categorias RH separadas
+    despesas_adiantamento = float(soma_categoria('adiantamento'))
+    despesas_13 = float(soma_categoria('13o_salario'))
+    despesas_ferias = float(soma_categoria('ferias'))
+    despesas_inss = float(soma_categoria('inss'))
+    despesas_fgts = float(soma_categoria('fgts'))
+    despesas_irrf = float(soma_categoria('irrf'))
+
+    # Contas pagas (excluindo categorias RH especificas para nao duplicar)
+    categorias_rh = ['adiantamento', '13o_salario', 'ferias', 'inss', 'fgts', 'irrf', 'folha_pagamento']
     despesas_contas = db.session.query(func.sum(AccountPayable.paid_amount)).filter(
         AccountPayable.company_id == current_user.company_id,
         AccountPayable.status == 'paid',
+        ~AccountPayable.category.in_(categorias_rh),
         func.strftime('%Y-%m', AccountPayable.paid_at) == current_month_str
     ).scalar() or 0
 
@@ -1276,7 +1379,7 @@ def dre():
         func.strftime('%Y-%m', FreelancerPayment.paid_at) == current_month_str
     ).scalar() or 0
 
-    # ========== MANUTENÇÃO (NOVO - consistente com relatorios.py) ==========
+    # ========== MANUTENCAO ==========
     despesas_manutencao = db.session.query(func.sum(Maintenance.total_cost)).filter(
         Maintenance.company_id == current_user.company_id,
         Maintenance.status == 'completed',
@@ -1286,7 +1389,18 @@ def dre():
 
     # ========== TOTAIS ==========
     total_receitas = float(receitas_locacao)
-    total_despesas = float(despesas_folha) + float(despesas_contas) + float(despesas_freelancers) + float(despesas_manutencao)
+    total_despesas = (
+        float(despesas_folha) + 
+        float(despesas_contas) + 
+        float(despesas_freelancers) + 
+        float(despesas_manutencao) +
+        despesas_adiantamento +
+        despesas_13 +
+        despesas_ferias +
+        despesas_inss +
+        despesas_fgts +
+        despesas_irrf
+    )
     lucro = total_receitas - total_despesas
 
     return render_template('financial/dre.html',
@@ -1297,6 +1411,14 @@ def dre():
                           despesas_pendentes=despesas_pendentes,
                           despesas_freelancers=despesas_freelancers,
                           despesas_manutencao=despesas_manutencao,
+                          # Novas categorias RH
+                          despesas_adiantamento=despesas_adiantamento,
+                          despesas_13=despesas_13,
+                          despesas_ferias=despesas_ferias,
+                          despesas_inss=despesas_inss,
+                          despesas_fgts=despesas_fgts,
+                          despesas_irrf=despesas_irrf,
+                          # Totais
                           total_receitas=total_receitas,
                           total_despesas=total_despesas,
                           lucro=lucro,
@@ -1417,7 +1539,7 @@ def nova_conta_receber():
 @login_required
 @admin_required
 def contas_receber_from_quote(quote_id):
-    """Gera contas a receber a partir de um orçamento aprovado (wizard automation)"""
+    """Gera contas a receber a partir de um orÃ§amento aprovado (wizard automation)"""
     from models.rh import AccountReceivable
     from models.separation_list import SeparationList
     from dateutil.relativedelta import relativedelta
@@ -1427,7 +1549,7 @@ def contas_receber_from_quote(quote_id):
         id=quote_id,
         company_id=current_user.company_id
     ).first()
-    
+
     if not quote:
         quote = Quote.query.filter_by(
             id=quote_id,
@@ -1449,9 +1571,9 @@ def contas_receber_from_quote(quote_id):
         valor_total = Decimal(str(quote.calculated_total))
     elif quote.total_value:
         valor_total = Decimal(str(quote.total_value))
-    
+
     valor_parcela = valor_total / num_parcelas if num_parcelas > 0 else valor_total
-    
+
     # SeparationList uses 'name', Quote uses 'code'
     quote_identifier = getattr(quote, 'code', None) or getattr(quote, 'name', f'#{quote.id}')
 
@@ -1461,14 +1583,14 @@ def contas_receber_from_quote(quote_id):
 
         conta = AccountReceivable(
             company_id=current_user.company_id,
-            description=f"Orçamento {quote_identifier} - Parcela {i+1}/{num_parcelas}" if num_parcelas > 1 else f"Orçamento {quote_identifier}",
+            description=f"OrÃ§amento {quote_identifier} - Parcela {i+1}/{num_parcelas}" if num_parcelas > 1 else f"OrÃ§amento {quote_identifier}",
             category='locacao',
             client_name=quote.client_name or '',
             amount=valor_parcela,
             due_date=due_date,
             installment_number=i + 1 if num_parcelas > 1 else None,
             total_installments=num_parcelas if num_parcelas > 1 else None,
-            notes=f"Gerado automaticamente do orçamento {quote_identifier}",
+            notes=f"Gerado automaticamente do orÃ§amento {quote_identifier}",
             status='pending',
             created_by=current_user.id
         )
@@ -1798,3 +1920,524 @@ def api_fluxo_caixa():
         'receitas': receitas,
         'despesas': despesas
     })
+
+# ============================================
+# INTEGRACAO ASAAS - COBRANCAS PIX E BOLETO
+# ============================================
+
+@financial_bp.route('/invoices/<int:id>/gerar-pix', methods=['POST'])
+@login_required
+@admin_required
+def gerar_pix_asaas(id):
+    """Gera cobranca PIX via Asaas para uma fatura"""
+    from models.company import Company
+    from services.payment_adapter import get_payment_provider
+
+    invoice = Invoice.query.filter_by(
+        id=id,
+        company_id=current_user.company_id
+    ).first_or_404()
+
+    if invoice.status == 'paid':
+        flash('Esta fatura ja esta paga.', 'warning')
+        return redirect(url_for('financial.view_invoice', id=invoice.id))
+
+    company = Company.query.get(current_user.company_id)
+
+    if not company.asaas_api_key:
+        flash('Configure a integracao Asaas nas configuracoes da empresa.', 'warning')
+        return redirect(url_for('financial.view_invoice', id=invoice.id))
+
+    provider = get_payment_provider(
+        "asaas",
+        api_key=company.asaas_api_key,
+        sandbox=company.asaas_sandbox
+    )
+
+    valor = float(invoice.amount_pending or invoice.total)
+
+    result = provider.create_pix(
+        invoice_id=str(invoice.id),
+        amount=valor,
+        description=f"Fatura {invoice.code} - {invoice.description or 'Servicos'}",
+        customer_name=invoice.client_name,
+        customer_document=invoice.client_document,
+        customer_email=invoice.client_email
+    )
+
+    if not result.get('success'):
+        flash(f"Erro ao gerar PIX: {result.get('error', 'Erro desconhecido')}", 'danger')
+        return redirect(url_for('financial.view_invoice', id=invoice.id))
+
+    payment = Payment(
+        invoice_id=invoice.id,
+        amount=Decimal(str(valor)),
+        method='pix',
+        status='pending',
+        transaction_id=result.get('transaction_id') or result.get('asaas_id'),
+        provider=result.get('provider', 'asaas'),
+        provider_data=result.get('raw_response'),
+        notes=f"PIX gerado via {result.get('provider', 'asaas')}",
+        company_id=current_user.company_id
+    )
+    db.session.add(payment)
+    db.session.commit()
+
+    return render_template('financial/cobranca_gerada.html',
+        invoice=invoice,
+        payment=payment,
+        tipo='pix',
+        pix_code=result.get('pix_code'),
+        pix_qr_base64=result.get('pix_qr_url'),
+        invoice_url=result.get('invoice_url'),
+        valor=valor
+    )
+
+
+@financial_bp.route('/invoices/<int:id>/gerar-boleto', methods=['POST'])
+@login_required
+@admin_required
+def gerar_boleto(id):
+    """Gera boleto via Asaas para uma fatura"""
+    from models.company import Company
+    from services.payment_adapter import get_payment_provider
+
+    invoice = Invoice.query.filter_by(
+        id=id,
+        company_id=current_user.company_id
+    ).first_or_404()
+
+    if invoice.status == 'paid':
+        flash('Esta fatura ja esta paga.', 'warning')
+        return redirect(url_for('financial.view_invoice', id=invoice.id))
+
+    company = Company.query.get(current_user.company_id)
+
+    if not company.asaas_api_key:
+        flash('Configure a integracao Asaas nas configuracoes da empresa.', 'warning')
+        return redirect(url_for('financial.view_invoice', id=invoice.id))
+
+    provider = get_payment_provider(
+        "asaas",
+        api_key=company.asaas_api_key,
+        sandbox=company.asaas_sandbox
+    )
+
+    valor = float(invoice.amount_pending or invoice.total)
+
+    result = provider.create_boleto(
+        invoice_id=str(invoice.id),
+        amount=valor,
+        due_date=invoice.due_date or date.today(),
+        description=f"Fatura {invoice.code} - {invoice.description or 'Servicos'}",
+        customer_name=invoice.client_name,
+        customer_document=invoice.client_document,
+        customer_email=invoice.client_email
+    )
+
+    if not result.get('success'):
+        flash(f"Erro ao gerar boleto: {result.get('error', 'Erro desconhecido')}", 'danger')
+        return redirect(url_for('financial.view_invoice', id=invoice.id))
+
+    payment = Payment(
+        invoice_id=invoice.id,
+        amount=Decimal(str(valor)),
+        method='boleto',
+        status='pending',
+        transaction_id=result.get('transaction_id') or result.get('asaas_id'),
+        provider=result.get('provider', 'asaas'),
+        provider_data=result.get('raw_response'),
+        notes=f"Boleto gerado via {result.get('provider', 'asaas')}",
+        company_id=current_user.company_id
+    )
+    db.session.add(payment)
+    db.session.commit()
+
+    return render_template('financial/cobranca_gerada.html',
+        invoice=invoice,
+        payment=payment,
+        tipo='boleto',
+        boleto_url=result.get('boleto_url'),
+        boleto_line=result.get('boleto_line'),
+        invoice_url=result.get('invoice_url'),
+        valor=valor,
+        vencimento=result.get('due_date') or invoice.due_date
+    )
+
+
+@financial_bp.route('/invoices/<int:id>/verificar-pagamento/<int:payment_id>')
+@login_required
+@admin_required
+def verificar_pagamento(id, payment_id):
+    """Verifica status de pagamento no Asaas"""
+    from models.company import Company
+    from services.payment_adapter import get_payment_provider
+
+    invoice = Invoice.query.filter_by(
+        id=id,
+        company_id=current_user.company_id
+    ).first_or_404()
+
+    payment = Payment.query.filter_by(
+        id=payment_id,
+        invoice_id=invoice.id
+    ).first_or_404()
+
+    if not payment.transaction_id:
+        flash('Pagamento sem ID de transacao.', 'warning')
+        return redirect(url_for('financial.view_invoice', id=invoice.id))
+
+    company = Company.query.get(current_user.company_id)
+
+    if not company.asaas_api_key:
+        flash('Configure a integracao Asaas nas configuracoes da empresa.', 'warning')
+        return redirect(url_for('financial.view_invoice', id=invoice.id))
+
+    provider = get_payment_provider(
+        "asaas",
+        api_key=company.asaas_api_key,
+        sandbox=company.asaas_sandbox
+    )
+
+    result = provider.check_payment_status(payment.transaction_id)
+
+    if result.get('success') and result.get('status') == 'confirmed':
+        payment.status = 'confirmed'
+        payment.paid_at = datetime.utcnow()
+        payment.confirmed_by = current_user.id
+
+        total_pago = sum(p.amount for p in invoice.payments if p.status == 'confirmed')
+        total_pago += payment.amount
+
+        if total_pago >= invoice.total:
+            invoice.status = 'paid'
+            invoice.paid_at = datetime.utcnow()
+        else:
+            invoice.status = 'partial'
+
+        db.session.commit()
+        flash('Pagamento confirmado!', 'success')
+    else:
+        flash(f"Status: {result.get('asaas_status', result.get('status', 'pendente'))}", 'info')
+
+    return redirect(url_for('financial.view_invoice', id=invoice.id))
+
+
+@financial_bp.route('/webhook/asaas', methods=['POST'])
+def webhook_asaas():
+    """Webhook para receber notificacoes do Asaas (Pagamentos e NFSe)"""
+    try:
+        data = request.get_json()
+
+        if not data:
+            return jsonify({'error': 'No data'}), 400
+
+        event = data.get('event')
+
+        # ============================================
+        # EVENTOS DE NFSE
+        # ============================================
+        if event and event.startswith('INVOICE_'):
+            invoice_data = data.get('invoice', {})
+            nfse_id = invoice_data.get('id')
+
+            if not nfse_id:
+                return jsonify({'error': 'No invoice id'}), 400
+
+            # Busca fatura pelo nfse_id
+            invoice = Invoice.query.filter_by(nfse_id=nfse_id).first()
+
+            if not invoice:
+                # Tenta buscar pelo payment vinculado
+                payment_id = invoice_data.get('payment')
+                if payment_id:
+                    payment = Payment.query.filter_by(external_id=payment_id).first()
+                    if payment:
+                        invoice = Invoice.query.get(payment.invoice_id)
+
+            if not invoice:
+                return jsonify({'error': 'Invoice not found for NFSe'}), 404
+
+            if event == 'INVOICE_AUTHORIZED':
+                # NFSe emitida com sucesso
+                invoice.nfse_status = 'AUTHORIZED'
+                invoice.nfse_number = invoice_data.get('number') or invoice.nfse_number
+                invoice.nfse_url = invoice_data.get('pdfUrl') or invoice.nfse_url
+                invoice.nfse_xml_url = invoice_data.get('xmlUrl')
+                db.session.commit()
+                return jsonify({'success': True, 'event': event, 'status': 'authorized'}), 200
+
+            elif event == 'INVOICE_ERROR':
+                # Erro na emissao
+                invoice.nfse_status = 'ERROR'
+                error_msg = invoice_data.get('errorMessage', 'Erro desconhecido')
+                # Salva erro nas observacoes ou campo especifico
+                db.session.commit()
+                return jsonify({'success': True, 'event': event, 'error': error_msg}), 200
+
+            elif event == 'INVOICE_CANCELED':
+                # NFSe cancelada
+                invoice.nfse_status = 'CANCELED'
+                db.session.commit()
+                return jsonify({'success': True, 'event': event, 'status': 'canceled'}), 200
+
+            elif event == 'INVOICE_CREATED':
+                # NFSe agendada/criada
+                invoice.nfse_status = 'SCHEDULED'
+                invoice.nfse_id = nfse_id
+                db.session.commit()
+                return jsonify({'success': True, 'event': event, 'status': 'scheduled'}), 200
+
+            elif event == 'INVOICE_SYNCHRONIZED':
+                # NFSe enviada para prefeitura
+                invoice.nfse_status = 'PROCESSING'
+                db.session.commit()
+                return jsonify({'success': True, 'event': event, 'status': 'processing'}), 200
+
+            elif event == 'INVOICE_UPDATED':
+                # Atualizacao na NFSe
+                invoice.nfse_number = invoice_data.get('number') or invoice.nfse_number
+                invoice.nfse_url = invoice_data.get('pdfUrl') or invoice.nfse_url
+                invoice.nfse_status = invoice_data.get('status') or invoice.nfse_status
+                db.session.commit()
+                return jsonify({'success': True, 'event': event}), 200
+
+            elif event in ['INVOICE_CANCELLATION_DENIED', 'INVOICE_PROCESSING_CANCELLATION']:
+                # Eventos de cancelamento
+                invoice.nfse_status = invoice_data.get('status', invoice.nfse_status)
+                db.session.commit()
+                return jsonify({'success': True, 'event': event}), 200
+
+            return jsonify({'success': True, 'event': event, 'message': 'Event processed'}), 200
+
+        # ============================================
+        # EVENTOS DE PAGAMENTO (codigo existente)
+        # ============================================
+        payment_data = data.get('payment', {})
+
+        external_ref = payment_data.get('externalReference')
+        if not external_ref:
+            return jsonify({'error': 'No external reference'}), 400
+
+        try:
+            invoice_id = int(external_ref)
+        except:
+            return jsonify({'error': 'Invalid reference'}), 400
+
+        invoice = Invoice.query.get(invoice_id)
+        if not invoice:
+            return jsonify({'error': 'Invoice not found'}), 404
+
+        asaas_id = payment_data.get('id')
+
+        payment = Payment.query.filter_by(
+            invoice_id=invoice.id,
+            transaction_id=asaas_id
+        ).first()
+
+        if event in ['PAYMENT_CONFIRMED', 'PAYMENT_RECEIVED']:
+            if payment:
+                payment.status = 'confirmed'
+                payment.paid_at = datetime.utcnow()
+            else:
+                payment = Payment(
+                    invoice_id=invoice.id,
+                    amount=Decimal(str(payment_data.get('value', 0))),
+                    method=payment_data.get('billingType', 'pix').lower(),
+                    status='confirmed',
+                    transaction_id=asaas_id,
+                    provider='asaas',
+                    paid_at=datetime.utcnow(),
+                    notes=f"Confirmado via webhook - {event}",
+                    company_id=invoice.company_id
+                )
+                db.session.add(payment)
+
+            db.session.flush()
+            total_pago = sum(p.amount for p in invoice.payments if p.status == 'confirmed')
+
+            if total_pago >= invoice.total:
+                invoice.status = 'paid'
+                invoice.paid_at = datetime.utcnow()
+            else:
+                invoice.status = 'partial'
+
+        elif event == 'PAYMENT_REFUNDED':
+            if payment:
+                payment.status = 'refunded'
+
+        db.session.commit()
+        return jsonify({'success': True, 'event': event}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+
+@financial_bp.route('/cobrancas-pendentes')
+@login_required
+@admin_required
+def cobrancas_pendentes():
+    """Lista cobrancas PIX/Boleto pendentes"""
+    payments = Payment.query.join(Invoice).filter(
+        Invoice.company_id == current_user.company_id,
+        Payment.status == 'pending',
+        Payment.provider != 'manual'
+    ).order_by(Payment.created_at.desc()).all()
+
+    return render_template('financial/cobrancas_pendentes.html', payments=payments)
+
+
+# ============================================
+# NFSe - NOTA FISCAL DE SERVICO ELETRONICA
+# ============================================
+
+@financial_bp.route('/invoices/<int:id>/emitir-nfse', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def emitir_nfse_fatura(id):
+    """Emitir NFSe para uma fatura paga"""
+    from services.payment_adapter import get_payment_provider
+
+    invoice = Invoice.query.filter_by(
+        id=id,
+        company_id=current_user.company_id
+    ).first_or_404()
+
+    company = Company.query.get(current_user.company_id)
+
+    # Verifica se Asaas esta configurado
+    if not company.asaas_api_key:
+        flash('Configure a integracao Asaas primeiro', 'warning')
+        return redirect(url_for('company.settings'))
+
+    provider = get_payment_provider(
+        "asaas",
+        api_key=company.asaas_api_key,
+        sandbox=company.asaas_sandbox
+    )
+
+    if request.method == 'POST':
+        # Busca o payment_id do Asaas (se existir)
+        payment = Payment.query.filter_by(
+            invoice_id=invoice.id,
+            provider='asaas',
+            status='confirmed'
+        ).first()
+
+        service_description = request.form.get('service_description', f'Servicos conforme fatura {invoice.code}')
+        service_code = request.form.get('service_code', '')
+        service_id = request.form.get('service_id', '')
+        service_name = request.form.get('service_name', '')
+        observations = request.form.get('observations', '')
+
+        # Impostos
+        taxes = {
+            'iss': float(request.form.get('iss', 0) or 0),
+            'cofins': float(request.form.get('cofins', 0) or 0),
+            'csll': float(request.form.get('csll', 0) or 0),
+            'inss': float(request.form.get('inss', 0) or 0),
+            'ir': float(request.form.get('ir', 0) or 0),
+            'pis': float(request.form.get('pis', 0) or 0),
+            'retain_iss': request.form.get('retain_iss') == 'on'
+        }
+
+        # Emite NFSe
+        result = provider.emit_nfse(
+            payment_id=payment.external_id if payment else None,
+            service_description=service_description,
+            service_code=service_code or None,
+            service_id=service_id or None,
+            service_name=service_name or None,
+            value=float(invoice.total),
+            effective_date=date.today().isoformat(),
+            taxes=taxes,
+            observations=observations
+        )
+
+        if result.get('success'):
+            # Salva dados da NFSe na fatura
+            invoice.nfse_id = result.get('nfse_id')
+            invoice.nfse_number = result.get('nfse_number')
+            invoice.nfse_status = result.get('nfse_status', 'SCHEDULED')
+            invoice.nfse_url = result.get('nfse_url')
+            db.session.commit()
+
+            flash('NFSe agendada com sucesso! Aguarde a emissao.', 'success')
+            return redirect(url_for('financial.view_invoice', id=invoice.id))
+        else:
+            flash(f'Erro ao emitir NFSe: {result.get("error")}', 'danger')
+
+    # GET - Busca servicos municipais
+    services_result = provider.get_municipal_services()
+    services = services_result.get('services', [])
+
+    return render_template('financial/emitir_nfse.html', 
+                          invoice=invoice, 
+                          services=services)
+
+
+@financial_bp.route('/invoices/<int:id>/nfse-status')
+@login_required
+@admin_required
+def verificar_nfse(id):
+    """Verifica status da NFSe"""
+    from services.payment_adapter import get_payment_provider
+
+    invoice = Invoice.query.filter_by(
+        id=id,
+        company_id=current_user.company_id
+    ).first_or_404()
+
+    if not invoice.nfse_id:
+        flash('Esta fatura nao possui NFSe', 'warning')
+        return redirect(url_for('financial.view_invoice', id=invoice.id))
+
+    company = Company.query.get(current_user.company_id)
+    provider = get_payment_provider(
+        "asaas",
+        api_key=company.asaas_api_key,
+        sandbox=company.asaas_sandbox
+    )
+
+    result = provider.get_nfse_status(invoice.nfse_id)
+
+    if result.get('success'):
+        invoice.nfse_status = result.get('status_raw', invoice.nfse_status)
+        invoice.nfse_number = result.get('nfse_number') or invoice.nfse_number
+        invoice.nfse_url = result.get('nfse_url') or invoice.nfse_url
+        db.session.commit()
+
+        status_msg = result.get('status', 'desconhecido')
+        if result.get('error_message'):
+            flash(f'Status NFSe: {status_msg} - {result.get("error_message")}', 'warning')
+        else:
+            flash(f'Status NFSe: {status_msg}', 'info')
+    else:
+        flash(f'Erro ao verificar NFSe: {result.get("error")}', 'danger')
+
+    return redirect(url_for('financial.view_invoice', id=invoice.id))
+
+
+@financial_bp.route('/nfse/servicos-municipais')
+@login_required
+@admin_required
+def listar_servicos_municipais():
+    """Lista servicos municipais disponiveis (AJAX)"""
+    from services.payment_adapter import get_payment_provider
+
+    company = Company.query.get(current_user.company_id)
+
+    if not company.asaas_api_key:
+        return jsonify({'success': False, 'error': 'Asaas nao configurado'})
+
+    provider = get_payment_provider(
+        "asaas",
+        api_key=company.asaas_api_key,
+        sandbox=company.asaas_sandbox
+    )
+
+    description = request.args.get('description', '')
+    result = provider.get_municipal_services(description)
+
+    return jsonify(result)

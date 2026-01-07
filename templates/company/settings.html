@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Configurações da Empresa{% endblock %}
+{% block title %}Configuracoes da Empresa{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -57,6 +57,11 @@
         gap: 10px;
     }
 
+    .section-title.asaas {
+        color: #00bfa6;
+        border-bottom-color: rgba(0, 191, 166, 0.3);
+    }
+
     .form-group {
         margin-bottom: var(--spacing-lg);
     }
@@ -73,14 +78,8 @@
         gap: var(--spacing-md);
     }
 
-    .form-row-4 {
-        display: grid;
-        grid-template-columns: 1fr 1fr 1fr 1fr;
-        gap: var(--spacing-md);
-    }
-
     @media (max-width: 600px) {
-        .form-row, .form-row-3, .form-row-4 {
+        .form-row, .form-row-3 {
             grid-template-columns: 1fr;
         }
     }
@@ -111,11 +110,6 @@
         border-color: #d4a574;
     }
 
-    .form-textarea {
-        resize: vertical;
-        min-height: 80px;
-    }
-
     .logo-preview {
         margin-bottom: var(--spacing-md);
         padding: var(--spacing-md);
@@ -130,12 +124,6 @@
         max-height: 100px;
     }
 
-    .logo-preview-label {
-        font-size: 0.85rem;
-        color: #888;
-        margin-top: 8px;
-    }
-
     .file-input {
         width: 100%;
         padding: var(--spacing-md);
@@ -144,10 +132,6 @@
         border-radius: var(--radius-md);
         color: #888;
         font-size: 0.95rem;
-    }
-
-    .file-input:focus {
-        border-color: #d4a574;
     }
 
     .file-hint {
@@ -181,6 +165,110 @@
         background-color: #1a1a1a;
         color: #f5f5f5;
     }
+
+    .toggle-switch {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 0;
+    }
+
+    .toggle-switch input[type="checkbox"] {
+        width: 50px;
+        height: 26px;
+        appearance: none;
+        background: #333;
+        border-radius: 13px;
+        position: relative;
+        cursor: pointer;
+        transition: background 0.3s;
+    }
+
+    .toggle-switch input[type="checkbox"]:checked {
+        background: #00bfa6;
+    }
+
+    .toggle-switch input[type="checkbox"]::before {
+        content: '';
+        position: absolute;
+        width: 22px;
+        height: 22px;
+        background: #fff;
+        border-radius: 50%;
+        top: 2px;
+        left: 2px;
+        transition: left 0.3s;
+    }
+
+    .toggle-switch input[type="checkbox"]:checked::before {
+        left: 26px;
+    }
+
+    .toggle-label {
+        color: #e0e0e0;
+        font-size: 0.9rem;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .status-badge.active {
+        background: rgba(0, 191, 166, 0.2);
+        color: #00bfa6;
+    }
+
+    .status-badge.inactive {
+        background: rgba(239, 68, 68, 0.2);
+        color: #ef4444;
+    }
+
+    .btn-test {
+        background: #00bfa6;
+        color: #000;
+        border: none;
+        padding: 10px 20px;
+        border-radius: var(--radius-md);
+        font-weight: 600;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .alert-box {
+        padding: 12px 16px;
+        border-radius: var(--radius-md);
+        font-size: 0.85rem;
+        margin-top: 12px;
+    }
+
+    .alert-box.success {
+        background: rgba(16, 185, 129, 0.1);
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        color: #10b981;
+    }
+
+    .alert-box.error {
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        color: #ef4444;
+    }
+
+    .webhook-url {
+        background: #0a0a0a;
+        padding: 12px;
+        border-radius: var(--radius-md);
+        font-family: monospace;
+        font-size: 0.8rem;
+        color: #888;
+        word-break: break-all;
+        margin-top: 8px;
+    }
 </style>
 {% endblock %}
 
@@ -188,14 +276,14 @@
 <div class="page-container">
     <div class="page-header">
         <a href="{{ url_for('dashboard') }}" class="back-link">← Voltar para Dashboard</a>
-        <h1 class="page-title"><i class="fas fa-cog"></i> Configurações da Empresa</h1>
+        <h1 class="page-title"><i class="fas fa-cog"></i> Configuracoes da Empresa</h1>
     </div>
 
     <form method="POST" action="{{ url_for('company.settings') }}" enctype="multipart/form-data">
-        
+
         <div class="form-section">
             <div class="section-title"><i class="fas fa-building"></i> Dados da Empresa</div>
-            
+
             <div class="form-group">
                 <label class="form-label">Nome da Empresa *</label>
                 <input type="text" name="name" value="{{ company.name }}" required class="form-input">
@@ -207,8 +295,8 @@
                     <input type="text" name="cnpj" value="{{ company.cnpj or '' }}" class="form-input" placeholder="00.000.000/0000-00">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Inscrição Estadual</label>
-                    <input type="text" name="inscricao_estadual" value="{{ company.inscricao_estadual or '' }}" class="form-input" placeholder="000.000.000.000">
+                    <label class="form-label">Inscricao Estadual</label>
+                    <input type="text" name="inscricao_estadual" value="{{ company.inscricao_estadual or '' }}" class="form-input">
                 </div>
             </div>
 
@@ -217,47 +305,46 @@
                 {% if company.logo_url %}
                 <div class="logo-preview">
                     <img src="{{ company.logo_url }}" alt="Logo atual">
-                    <div class="logo-preview-label">Logo atual</div>
                 </div>
                 {% endif %}
                 <input type="file" name="logo" accept=".png,.jpg,.jpeg" class="file-input">
-                <div class="file-hint">Formatos: PNG, JPG. Recomendado: fundo transparente (PNG).</div>
+                <div class="file-hint">Formatos: PNG, JPG. Recomendado: fundo transparente.</div>
             </div>
         </div>
 
         <div class="form-section">
-            <div class="section-title"><i class="fas fa-map-marker-alt"></i> Endereço</div>
-            
+            <div class="section-title"><i class="fas fa-map-marker-alt"></i> Endereco</div>
+
             <div class="form-row-3">
                 <div class="form-group">
-                    <label class="form-label">Rua / Avenida / Praça</label>
-                    <input type="text" name="street" value="{{ company.street or '' }}" class="form-input" placeholder="Av. Atlântica">
+                    <label class="form-label">Rua / Avenida</label>
+                    <input type="text" name="street" value="{{ company.street or '' }}" class="form-input">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Número</label>
-                    <input type="text" name="number" value="{{ company.number or '' }}" class="form-input" placeholder="4500">
+                    <label class="form-label">Numero</label>
+                    <input type="text" name="number" value="{{ company.number or '' }}" class="form-input">
                 </div>
                 <div class="form-group">
                     <label class="form-label">Complemento</label>
-                    <input type="text" name="complement" value="{{ company.complement or '' }}" class="form-input" placeholder="Sala 101">
+                    <input type="text" name="complement" value="{{ company.complement or '' }}" class="form-input">
                 </div>
             </div>
 
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label">Bairro</label>
-                    <input type="text" name="neighborhood" value="{{ company.neighborhood or '' }}" class="form-input" placeholder="Centro">
+                    <input type="text" name="neighborhood" value="{{ company.neighborhood or '' }}" class="form-input">
                 </div>
                 <div class="form-group">
                     <label class="form-label">CEP</label>
-                    <input type="text" name="zipcode" value="{{ company.zipcode or '' }}" class="form-input" placeholder="00000-000">
+                    <input type="text" name="zipcode" value="{{ company.zipcode or '' }}" class="form-input">
                 </div>
             </div>
 
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label">Cidade</label>
-                    <input type="text" name="city" value="{{ company.city or '' }}" class="form-input" placeholder="Balneário Camboriú">
+                    <input type="text" name="city" value="{{ company.city or '' }}" class="form-input">
                 </div>
                 <div class="form-group">
                     <label class="form-label">Estado (UF)</label>
@@ -274,39 +361,110 @@
 
         <div class="form-section">
             <div class="section-title"><i class="fas fa-phone"></i> Contato</div>
-            
+
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label">Telefone Fixo</label>
-                    <input type="text" name="phone" value="{{ company.phone or '' }}" class="form-input" placeholder="(47) 3366-7788">
+                    <input type="text" name="phone" value="{{ company.phone or '' }}" class="form-input">
                 </div>
                 <div class="form-group">
                     <label class="form-label">Celular / WhatsApp</label>
-                    <input type="text" name="cellphone" value="{{ company.cellphone or '' }}" class="form-input" placeholder="(47) 99999-8888">
+                    <input type="text" name="cellphone" value="{{ company.cellphone or '' }}" class="form-input">
                 </div>
             </div>
 
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label">Email</label>
-                    <input type="email" name="email" value="{{ company.email or '' }}" class="form-input" placeholder="contato@empresa.com">
+                    <input type="email" name="email" value="{{ company.email or '' }}" class="form-input">
                 </div>
                 <div class="form-group">
                     <label class="form-label">Website</label>
-                    <input type="text" name="website" value="{{ company.website or '' }}" class="form-input" placeholder="www.empresa.com.br">
+                    <input type="text" name="website" value="{{ company.website or '' }}" class="form-input">
                 </div>
             </div>
         </div>
 
-        <button type="submit" class="submit-button">Salvar Configurações</button>
+        <button type="submit" class="submit-button">Salvar Configuracoes</button>
     </form>
 
+    <!-- INTEGRACAO ASAAS -->
+    <div class="form-section" style="margin-top: var(--spacing-lg); border-color: rgba(0, 191, 166, 0.3);">
+        <div class="section-title asaas">
+            <i class="fas fa-credit-card"></i> Integracao Asaas (PIX e Boleto)
+            {% if company.asaas_enabled and company.asaas_api_key %}
+            <span class="status-badge active">ATIVO</span>
+            {% else %}
+            <span class="status-badge inactive">INATIVO</span>
+            {% endif %}
+        </div>
+
+        <p style="color: #888; font-size: 0.9rem; margin-bottom: var(--spacing-lg); line-height: 1.6;">
+            Configure a integracao com Asaas para gerar cobrancas PIX e Boleto automaticamente.
+            <a href="https://www.asaas.com" target="_blank" style="color: #00bfa6;">Criar conta Asaas</a>
+        </p>
+
+        <form method="POST" action="{{ url_for('company.asaas_config') }}">
+            <div class="form-group">
+                <label class="form-label">Chave API Asaas</label>
+                <input type="password" name="asaas_api_key" value="{{ company.asaas_api_key or '' }}" 
+                       class="form-input" placeholder="$aact_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                       style="font-family: monospace;">
+                <div class="file-hint">Encontre em: Asaas > Configuracoes > Integracao > Gerar API Key</div>
+            </div>
+
+            <div class="toggle-switch">
+                <input type="checkbox" name="asaas_sandbox" id="asaas_sandbox" 
+                       {% if company.asaas_sandbox %}checked{% endif %}>
+                <label class="toggle-label" for="asaas_sandbox">
+                    Modo Sandbox (Teste) - Use para testar antes de ir para producao
+                </label>
+            </div>
+
+            <div class="toggle-switch">
+                <input type="checkbox" name="asaas_enabled" id="asaas_enabled"
+                       {% if company.asaas_enabled %}checked{% endif %}>
+                <label class="toggle-label" for="asaas_enabled">
+                    Habilitar integracao Asaas
+                </label>
+            </div>
+
+            <div style="display: flex; gap: 12px; margin-top: var(--spacing-md);">
+                <button type="submit" class="submit-button" style="flex: 1; margin-top: 0;">
+                    Salvar Configuracao Asaas
+                </button>
+                <button type="button" class="btn-test" onclick="testarAsaas()" id="btnTestar">
+                    <i class="fas fa-plug"></i> Testar
+                </button>
+            </div>
+        </form>
+
+        <div id="testResult"></div>
+
+        {% if company.asaas_enabled %}
+        <div style="margin-top: var(--spacing-lg); padding-top: var(--spacing-lg); border-top: 1px solid #333;">
+            <h4 style="color: #00bfa6; margin-bottom: 12px; font-size: 0.9rem;">
+                <i class="fas fa-bolt"></i> Webhook para Baixa Automatica
+            </h4>
+            <p style="color: #888; font-size: 0.85rem; margin-bottom: 8px;">
+                Configure esta URL no painel Asaas para receber notificacoes de pagamento:
+            </p>
+            <div class="webhook-url">
+                {{ request.url_root }}financial/webhook/asaas
+            </div>
+            <div class="file-hint">
+                Asaas > Configuracoes > Integracao > Webhooks > Adicionar
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- API RFID -->
     <div class="form-section" style="margin-top: var(--spacing-lg);">
         <div class="section-title"><i class="fas fa-key"></i> API para Leitores RFID</div>
-        
+
         <p style="color: #888; font-size: 0.9rem; margin-bottom: var(--spacing-lg); line-height: 1.6;">
-            Use esta chave para integrar leitores industriais RFID (portais, antenas, pistolas) com o sistema.
-            A chave deve ser enviada no header <code style="background: #222; padding: 2px 6px; border-radius: 4px;">X-API-Key</code> das requisições.
+            Use esta chave para integrar leitores industriais RFID com o sistema.
         </p>
 
         <div id="apiKeyContainer">
@@ -315,8 +473,8 @@
                 <label class="form-label">Chave API Atual</label>
                 <div style="display: flex; gap: 10px; align-items: center;">
                     <input type="text" id="apiKeyDisplay" value="{{ company.api_key }}" class="form-input" style="font-family: monospace; font-size: 0.85rem;" readonly>
-                    <button type="button" onclick="copyApiKey()" style="background: #d4a574; color: #0a0a0a; border: none; padding: 10px 15px; border-radius: var(--radius-md); cursor: pointer; white-space: nowrap;">
-                        <i class="fas fa-copy"></i> Copiar
+                    <button type="button" onclick="copyApiKey()" style="background: #d4a574; color: #0a0a0a; border: none; padding: 10px 15px; border-radius: var(--radius-md); cursor: pointer;">
+                        <i class="fas fa-copy"></i>
                     </button>
                 </div>
             </div>
@@ -337,11 +495,11 @@
         </div>
 
         <div style="margin-top: var(--spacing-lg); padding: var(--spacing-md); background: rgba(155, 89, 182, 0.1); border: 1px solid rgba(155, 89, 182, 0.3); border-radius: var(--radius-md);">
-            <h4 style="color: #9b59b6; margin-bottom: 10px; font-size: 0.9rem;">Endpoints Disponíveis:</h4>
+            <h4 style="color: #9b59b6; margin-bottom: 10px; font-size: 0.9rem;">Endpoints Disponiveis:</h4>
             <ul style="color: #888; font-size: 0.85rem; line-height: 1.8; padding-left: 20px;">
-                <li><code>POST /api/v1/rfid/scan</code> - Leitura única</li>
-                <li><code>POST /api/v1/rfid/batch</code> - Leitura em lote (portal)</li>
-                <li><code>POST /api/v1/rfid/inventory</code> - Verificação de inventário</li>
+                <li><code>POST /api/v1/rfid/scan</code> - Leitura unica</li>
+                <li><code>POST /api/v1/rfid/batch</code> - Leitura em lote</li>
+                <li><code>POST /api/v1/rfid/inventory</code> - Verificacao de inventario</li>
                 <li><code>POST /api/v1/rfid/checkpoint</code> - Registro de passagem</li>
             </ul>
         </div>
@@ -358,13 +516,13 @@ function copyApiKey() {
 
 async function generateApiKey() {
     if (!confirm('Deseja gerar uma nova chave API?')) return;
-    
+
     try {
         const response = await fetch('/company/generate-api-key', { method: 'POST' });
         const data = await response.json();
-        
+
         if (data.success) {
-            alert('Chave gerada: ' + data.api_key + '\n\nGuarde esta chave em local seguro!');
+            alert('Chave gerada: ' + data.api_key);
             window.location.reload();
         } else {
             alert('Erro: ' + data.error);
@@ -375,14 +533,14 @@ async function generateApiKey() {
 }
 
 async function regenerateApiKey() {
-    if (!confirm('ATENÇÃO: Regenerar a chave irá invalidar a chave atual. Todos os leitores precisarão ser reconfigurados. Continuar?')) return;
-    
+    if (!confirm('Regenerar a chave ira invalidar a chave atual. Continuar?')) return;
+
     try {
         const response = await fetch('/company/generate-api-key', { method: 'POST' });
         const data = await response.json();
-        
+
         if (data.success) {
-            alert('Nova chave: ' + data.api_key + '\n\nAtualize seus leitores!');
+            alert('Nova chave: ' + data.api_key);
             window.location.reload();
         } else {
             alert('Erro: ' + data.error);
@@ -393,14 +551,14 @@ async function regenerateApiKey() {
 }
 
 async function revokeApiKey() {
-    if (!confirm('ATENÇÃO: Revogar a chave irá desativar TODOS os leitores RFID conectados. Continuar?')) return;
-    
+    if (!confirm('Revogar a chave ira desativar TODOS os leitores RFID conectados. Continuar?')) return;
+
     try {
         const response = await fetch('/company/revoke-api-key', { method: 'POST' });
         const data = await response.json();
-        
+
         if (data.success) {
-            alert('Chave revogada com sucesso');
+            alert('Chave revogada');
             window.location.reload();
         } else {
             alert('Erro: ' + data.error);
@@ -408,6 +566,36 @@ async function revokeApiKey() {
     } catch (error) {
         alert('Erro ao revogar chave');
     }
+}
+
+async function testarAsaas() {
+    const btn = document.getElementById('btnTestar');
+    const resultDiv = document.getElementById('testResult');
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Testando...';
+
+    try {
+        const response = await fetch('/company/asaas/test', { method: 'POST' });
+        const data = await response.json();
+
+        if (data.success) {
+            resultDiv.innerHTML = `<div class="alert-box success">
+                <i class="fas fa-check-circle"></i> ${data.message} - Ambiente: ${data.ambiente}
+            </div>`;
+        } else {
+            resultDiv.innerHTML = `<div class="alert-box error">
+                <i class="fas fa-times-circle"></i> ${data.error}
+            </div>`;
+        }
+    } catch (error) {
+        resultDiv.innerHTML = `<div class="alert-box error">
+            <i class="fas fa-times-circle"></i> Erro de conexao
+        </div>`;
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-plug"></i> Testar';
 }
 </script>
 {% endblock %}

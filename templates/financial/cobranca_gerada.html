@@ -1,0 +1,370 @@
+{% extends "base.html" %}
+
+{% block title %}Cobranca Gerada - {{ invoice.code }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-container {
+        padding: 0;
+        min-height: 100vh;
+        padding-bottom: 90px;
+        background-color: #0a0a0a;
+    }
+
+    .page-header {
+        background: linear-gradient(135deg, rgba(16,185,129,0.3) 0%, rgba(26,26,26,0.95) 100%);
+        padding: 20px 16px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        border-bottom: 1px solid #2a2a2a;
+    }
+
+    .back-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #10b981;
+        text-decoration: none;
+    }
+
+    .page-title h1 {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #f5f5f5;
+        margin-bottom: 4px;
+    }
+
+    .page-title p {
+        color: #888;
+        font-size: 0.85rem;
+    }
+
+    .success-card {
+        margin: 16px;
+        background: linear-gradient(135deg, rgba(16,185,129,0.1) 0%, rgba(26,26,26,1) 100%);
+        border: 1px solid #10b981;
+        border-radius: 12px;
+        padding: 24px;
+        text-align: center;
+    }
+
+    .success-icon {
+        width: 80px;
+        height: 80px;
+        background: rgba(16,185,129,0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 16px;
+    }
+
+    .success-icon i {
+        font-size: 2.5rem;
+        color: #10b981;
+    }
+
+    .success-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #10b981;
+        margin-bottom: 8px;
+    }
+
+    .success-subtitle {
+        color: #888;
+        font-size: 0.9rem;
+    }
+
+    .info-card {
+        margin: 16px;
+        background: #1a1a1a;
+        border-radius: 12px;
+        padding: 16px;
+        border: 1px solid #2a2a2a;
+    }
+
+    .info-card h3 {
+        color: #f5f5f5;
+        font-size: 1rem;
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 0;
+        border-bottom: 1px solid #2a2a2a;
+    }
+
+    .info-row:last-child {
+        border-bottom: none;
+    }
+
+    .info-label {
+        color: #888;
+    }
+
+    .info-value {
+        color: #f5f5f5;
+        font-weight: 600;
+    }
+
+    .info-value.valor {
+        color: #10b981;
+        font-size: 1.2rem;
+    }
+
+    .qr-section {
+        margin: 16px;
+        background: #fff;
+        border-radius: 12px;
+        padding: 24px;
+        text-align: center;
+    }
+
+    .qr-section img {
+        max-width: 200px;
+        margin-bottom: 16px;
+    }
+
+    .pix-code-box {
+        background: #f5f5f5;
+        padding: 12px;
+        border-radius: 8px;
+        font-family: monospace;
+        font-size: 0.75rem;
+        word-break: break-all;
+        color: #333;
+        margin-bottom: 12px;
+        max-height: 100px;
+        overflow-y: auto;
+    }
+
+    .btn-copy {
+        background: #10b981;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        width: 100%;
+    }
+
+    .btn-copy:hover {
+        background: #059669;
+    }
+
+    .boleto-section {
+        margin: 16px;
+        background: #1a1a1a;
+        border-radius: 12px;
+        padding: 16px;
+        border: 1px solid #2a2a2a;
+    }
+
+    .boleto-line {
+        background: #252525;
+        padding: 12px;
+        border-radius: 8px;
+        font-family: monospace;
+        font-size: 0.85rem;
+        word-break: break-all;
+        color: #f5f5f5;
+        margin-bottom: 12px;
+    }
+
+    .btn-boleto {
+        display: block;
+        width: 100%;
+        background: #3b82f6;
+        color: white;
+        padding: 14px;
+        border-radius: 8px;
+        text-align: center;
+        text-decoration: none;
+        font-weight: 600;
+        margin-bottom: 8px;
+    }
+
+    .btn-boleto:hover {
+        background: #2563eb;
+        color: white;
+    }
+
+    .action-buttons {
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .btn-action {
+        display: block;
+        width: 100%;
+        padding: 14px;
+        border-radius: 8px;
+        text-align: center;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .btn-primary {
+        background: #10b981;
+        color: white;
+    }
+
+    .btn-secondary {
+        background: #333;
+        color: #f5f5f5;
+    }
+
+    .btn-outline {
+        background: transparent;
+        border: 1px solid #333;
+        color: #888;
+    }
+
+    .alert-info {
+        background: rgba(59, 130, 246, 0.1);
+        border: 1px solid #3b82f6;
+        border-radius: 8px;
+        padding: 12px;
+        margin: 16px;
+        color: #93c5fd;
+        font-size: 0.85rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <a href="{{ url_for('financial.view_invoice', id=invoice.id) }}" class="back-btn">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <div class="page-title">
+            <h1><i class="fas fa-check-circle"></i> Cobranca Gerada</h1>
+            <p>{{ invoice.code }}</p>
+        </div>
+    </div>
+
+    <!-- Sucesso -->
+    <div class="success-card">
+        <div class="success-icon">
+            {% if tipo == 'pix' %}
+            <i class="fas fa-qrcode"></i>
+            {% else %}
+            <i class="fas fa-barcode"></i>
+            {% endif %}
+        </div>
+        <div class="success-title">
+            {% if tipo == 'pix' %}PIX Gerado!{% else %}Boleto Gerado!{% endif %}
+        </div>
+        <div class="success-subtitle">
+            Aguardando pagamento do cliente
+        </div>
+    </div>
+
+    <!-- Info da Fatura -->
+    <div class="info-card">
+        <h3><i class="fas fa-receipt"></i> Dados da Cobranca</h3>
+        <div class="info-row">
+            <span class="info-label">Cliente</span>
+            <span class="info-value">{{ invoice.client_name }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Valor</span>
+            <span class="info-value valor">R$ {{ "%.2f"|format(valor|float) }}</span>
+        </div>
+        {% if tipo == 'boleto' and vencimento %}
+        <div class="info-row">
+            <span class="info-label">Vencimento</span>
+            <span class="info-value">{{ vencimento.strftime('%d/%m/%Y') if vencimento else '-' }}</span>
+        </div>
+        {% endif %}
+    </div>
+
+    {% if tipo == 'pix' %}
+    <!-- QR Code PIX -->
+    <div class="qr-section">
+        {% if pix_qr_base64 %}
+        <img src="data:image/png;base64,{{ pix_qr_base64 }}" alt="QR Code PIX">
+        {% endif %}
+
+        {% if pix_code %}
+        <p style="color: #666; font-size: 0.85rem; margin-bottom: 8px;">Codigo Pix Copia e Cola:</p>
+        <div class="pix-code-box" id="pixCode">{{ pix_code }}</div>
+        <button class="btn-copy" onclick="copyPixCode()">
+            <i class="fas fa-copy"></i> Copiar Codigo PIX
+        </button>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% if tipo == 'boleto' %}
+    <!-- Boleto -->
+    <div class="boleto-section">
+        <h3 style="color: #f5f5f5; margin-bottom: 12px;">
+            <i class="fas fa-barcode"></i> Dados do Boleto
+        </h3>
+
+        {% if boleto_line %}
+        <p style="color: #888; font-size: 0.85rem; margin-bottom: 8px;">Linha Digitavel:</p>
+        <div class="boleto-line" id="boletoLine">{{ boleto_line }}</div>
+        <button class="btn-copy" onclick="copyBoletoLine()" style="margin-bottom: 12px;">
+            <i class="fas fa-copy"></i> Copiar Linha Digitavel
+        </button>
+        {% endif %}
+
+        {% if boleto_url %}
+        <a href="{{ boleto_url }}" target="_blank" class="btn-boleto">
+            <i class="fas fa-file-pdf"></i> Abrir Boleto PDF
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% if invoice_url %}
+    <div class="alert-info">
+        <i class="fas fa-info-circle"></i>
+        Link de pagamento Asaas: <a href="{{ invoice_url }}" target="_blank" style="color: #60a5fa;">{{ invoice_url }}</a>
+    </div>
+    {% endif %}
+
+    <!-- Botoes de Acao -->
+    <div class="action-buttons">
+        <a href="{{ url_for('financial.view_invoice', id=invoice.id) }}" class="btn-action btn-primary">
+            <i class="fas fa-eye"></i> Ver Fatura
+        </a>
+        <a href="{{ url_for('financial.receitas') }}" class="btn-action btn-outline">
+            <i class="fas fa-arrow-left"></i> Voltar para Receitas
+        </a>
+    </div>
+</div>
+
+<script>
+function copyPixCode() {
+    const code = document.getElementById('pixCode').innerText;
+    navigator.clipboard.writeText(code).then(() => {
+        alert('Codigo PIX copiado!');
+    });
+}
+
+function copyBoletoLine() {
+    const code = document.getElementById('boletoLine').innerText;
+    navigator.clipboard.writeText(code).then(() => {
+        alert('Linha digitavel copiada!');
+    });
+}
+</script>
+{% endblock %}

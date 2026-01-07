@@ -1,0 +1,784 @@
+{% extends "base.html" %}
+
+{% block title %}Holerite - {{ entry.employee.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ============================================
+       IMPRESSÃO - MEIA FOLHA A4 (210mm x 148.5mm)
+       ============================================ */
+    @page {
+        size: A4 portrait;
+        margin: 3mm;
+    }
+
+    @media print {
+        * { 
+            -webkit-print-color-adjust: exact !important; 
+            print-color-adjust: exact !important; 
+        }
+
+        html, body { 
+            margin: 0 !important; 
+            padding: 0 !important; 
+            background: white !important;
+            font-size: 8pt !important;
+            height: auto !important;
+            overflow: visible !important;
+        }
+
+        /* ESCONDE ABSOLUTAMENTE TUDO */
+        .no-print,
+        .toolbar,
+        nav, 
+        footer, 
+        header,
+        .bottom-nav, 
+        .nav-bottom,
+        .navbar,
+        .sidebar,
+        .menu,
+        .fab,
+        .floating-btn,
+        .bottom-nav-item,
+        .fab-icon,
+        [class*="nav"],
+        [class*="footer"],
+        [class*="bottom"],
+        [class*="header"]:not(.emp-header),
+        [class*="menu"],
+        [class*="sidebar"],
+        [class*="fab"],
+        [class*="float"],
+        .page-header, 
+        .action-buttons,
+        form,
+        button,
+        a.btn,
+        .linha-corte,
+        .alert,
+        .flash-messages {
+            display: none !important;
+            visibility: hidden !important;
+            height: 0 !important;
+            width: 0 !important;
+            overflow: hidden !important;
+            position: absolute !important;
+            left: -99999px !important;
+            top: -99999px !important;
+            max-height: 0 !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            border: none !important;
+        }
+
+        .page-container {
+            padding: 0 !important;
+            margin: 0 !important;
+            background: white !important;
+            min-height: auto !important;
+            max-height: none !important;
+            padding-bottom: 0 !important;
+            height: auto !important;
+            overflow: visible !important;
+        }
+
+        .holerite-wrapper { 
+            padding: 0 !important; 
+            margin: 0 !important;
+            background: white !important;
+            display: block !important;
+            height: auto !important;
+            min-height: auto !important;
+        }
+
+        .holerite { 
+            box-shadow: none !important; 
+            margin: 0 auto !important;
+            width: 195mm !important;
+            max-width: 195mm !important;
+            padding: 2mm !important;
+            border: 1px solid #000 !important;
+            page-break-inside: avoid !important;
+            page-break-after: avoid !important;
+            height: auto !important;
+            overflow: visible !important;
+        }
+
+        /* Reduzir tamanhos para caber */
+        .holerite table {
+            margin-bottom: 0 !important;
+        }
+
+        .holerite td, .holerite th {
+            padding: 2px 3px !important;
+            font-size: 8pt !important;
+        }
+
+        .titulo-box {
+            font-size: 10pt !important;
+            padding: 4px !important;
+        }
+
+        .titulo-box .periodo {
+            font-size: 8pt !important;
+        }
+
+        .totais-row td {
+            padding: 3px 4px !important;
+            font-size: 9pt !important;
+        }
+
+        .total-liq-bg {
+            font-size: 10pt !important;
+        }
+
+        .bases-table td {
+            padding: 2px !important;
+            font-size: 7pt !important;
+        }
+
+        .bases-table .valor {
+            font-size: 8pt !important;
+        }
+
+        .assinatura-section td {
+            height: 25px !important;
+            padding: 3px !important;
+            font-size: 7pt !important;
+        }
+
+        .via-label {
+            display: block !important;
+            text-align: center !important;
+            font-size: 7pt !important;
+            margin-top: 2px !important;
+            padding: 0 !important;
+        }
+    }
+
+    /* ============================================
+       TELA - VISUALIZAÇÃO
+       ============================================ */
+    .page-container {
+        padding: 0;
+        min-height: 100vh;
+        padding-bottom: 100px;
+        background: var(--bg-primary);
+    }
+
+    .toolbar {
+        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        padding: 12px 15px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+    }
+
+    .toolbar h2 {
+        color: #fff;
+        font-size: 14px;
+        margin: 0;
+        flex: 1;
+    }
+
+    .toolbar .status {
+        padding: 4px 12px;
+        border-radius: 15px;
+        font-size: 11px;
+        font-weight: bold;
+    }
+    .status-pending { background: #f39c12; color: #000; }
+    .status-approved { background: #3498db; color: #fff; }
+    .status-paid { background: #27ae60; color: #fff; }
+
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 8px 14px;
+        border: none;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+    .btn:hover { transform: translateY(-1px); opacity: 0.9; }
+    .btn-print { background: #f1c40f; color: #000; }
+    .btn-back { background: #95a5a6; color: #fff; }
+    .btn-approve { background: #3498db; color: #fff; }
+    .btn-pay { background: #27ae60; color: #fff; }
+
+    .holerite-wrapper {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 20px;
+        display: flex;
+        justify-content: center;
+        min-height: calc(100vh - 60px);
+    }
+
+    .holerite {
+        background: white;
+        width: 210mm;
+        max-width: 100%;
+        padding: 5mm;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        font-family: 'Courier New', Courier, monospace;
+        font-size: 9pt;
+        color: #000;
+        border-radius: 4px;
+    }
+
+    /* ============================================
+       ESTRUTURA DO HOLERITE
+       ============================================ */
+    .holerite table { 
+        width: 100%; 
+        border-collapse: collapse; 
+        margin-bottom: 1px;
+    }
+
+    .holerite td, .holerite th { 
+        border: 1px solid #333; 
+        padding: 3px 5px; 
+        vertical-align: middle; 
+    }
+
+    .holerite th { 
+        background: linear-gradient(180deg, #e8e8e8 0%, #d0d0d0 100%);
+        font-weight: bold; 
+        font-size: 8pt;
+    }
+
+    /* Cabeçalho Empresa */
+    .emp-header td {
+        padding: 5px 8px;
+        vertical-align: top;
+    }
+
+    .emp-info {
+        font-size: 9pt;
+        line-height: 1.4;
+    }
+
+    .emp-info strong {
+        color: #2c3e50;
+    }
+
+    .titulo-box {
+        text-align: center;
+        font-weight: bold;
+        font-size: 12pt;
+        line-height: 1.3;
+        background: linear-gradient(180deg, #f8f9fa 0%, #e9ecef 100%);
+        padding: 8px;
+    }
+
+    .titulo-box .periodo {
+        font-size: 10pt;
+        font-weight: normal;
+        color: #666;
+        margin-top: 3px;
+    }
+
+    /* Dados Funcionário */
+    .func-header th {
+        font-size: 8pt;
+        padding: 4px;
+    }
+
+    .func-data td {
+        font-size: 9pt;
+        padding: 5px;
+    }
+
+    /* Tabela Proventos/Descontos */
+    .codigo { text-align: center; width: 35px; font-weight: bold; }
+    .descricao { text-align: left; }
+    .ref { text-align: center; width: 50px; }
+    .col-prov { width: 80px; text-align: right; }
+    .col-desc { width: 80px; text-align: right; }
+
+    .valores { 
+        text-align: right; 
+        font-family: 'Courier New', monospace;
+        font-weight: 600;
+    }
+
+    .valores-prov { color: #155724; }
+    .valores-desc { color: #721c24; }
+
+    .linha-vazia td {
+        height: 18px;
+        border-left: 1px solid #333;
+        border-right: 1px solid #333;
+        border-top: none;
+        border-bottom: none;
+    }
+
+    /* Totais */
+    .totais-row td { 
+        font-weight: bold; 
+        padding: 6px 8px;
+        font-size: 10pt;
+    }
+
+    .total-prov-bg { 
+        background: linear-gradient(180deg, #d4edda 0%, #c3e6cb 100%);
+        color: #155724;
+    }
+
+    .total-desc-bg { 
+        background: linear-gradient(180deg, #f8d7da 0%, #f5c6cb 100%);
+        color: #721c24;
+    }
+
+    .total-liq-bg { 
+        background: linear-gradient(180deg, #27ae60 0%, #1e8449 100%);
+        color: white;
+        font-size: 11pt;
+    }
+
+    /* Bases de Cálculo */
+    .bases-table td {
+        text-align: center;
+        padding: 4px;
+        font-size: 8pt;
+        background: #f8f9fa;
+    }
+
+    .bases-table .label {
+        color: #666;
+        font-size: 7pt;
+        display: block;
+    }
+
+    .bases-table .valor {
+        font-weight: bold;
+        font-size: 9pt;
+        color: #2c3e50;
+    }
+
+    /* Provisões */
+    .prov-section {
+        margin-top: 2px;
+    }
+
+    .prov-section .section-title {
+        background: linear-gradient(180deg, #fff3cd 0%, #ffeeba 100%);
+        font-weight: bold;
+        text-align: center;
+        padding: 4px;
+        font-size: 8pt;
+        color: #856404;
+    }
+
+    .prov-section td {
+        font-size: 8pt;
+        padding: 3px 5px;
+    }
+
+    .prov-section .label {
+        color: #666;
+    }
+
+    .prov-section .valor {
+        font-weight: bold;
+        text-align: right;
+        font-family: 'Courier New', monospace;
+    }
+
+    .prov-total {
+        background: #e8f5e9 !important;
+        font-weight: bold !important;
+    }
+
+    /* Encargos */
+    .enc-section {
+        margin-top: 2px;
+    }
+
+    .enc-section .section-title {
+        background: linear-gradient(180deg, #e2e3e5 0%, #d6d8db 100%);
+        font-weight: bold;
+        text-align: center;
+        padding: 4px;
+        font-size: 8pt;
+        color: #383d41;
+    }
+
+    .enc-section td {
+        font-size: 8pt;
+        padding: 3px 5px;
+    }
+
+    .custo-total-row td {
+        background: linear-gradient(180deg, #2c3e50 0%, #1a252f 100%);
+        color: #f1c40f;
+        font-weight: bold;
+        font-size: 10pt;
+        text-align: center;
+        padding: 6px;
+    }
+
+    /* Assinatura */
+    .assinatura-section {
+        margin-top: 3px;
+    }
+
+    .assinatura-section td {
+        height: 35px;
+        vertical-align: bottom;
+        text-align: center;
+        font-size: 7pt;
+        color: #666;
+        padding: 5px;
+        border-top: 1px solid #000;
+    }
+
+    /* Via */
+    .via-label {
+        text-align: center;
+        font-size: 8pt;
+        color: #888;
+        margin-top: 5px;
+        font-weight: bold;
+    }
+
+    /* Linha de corte (visual) */
+    .linha-corte {
+        border-top: 2px dashed #999;
+        margin: 10px 0;
+        position: relative;
+    }
+
+    .linha-corte::after {
+        content: '✂';
+        position: absolute;
+        left: 10px;
+        top: -10px;
+        background: white;
+        padding: 0 5px;
+        color: #999;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+
+    <!-- ============================================
+         TOOLBAR - NÃO IMPRIME
+         ============================================ -->
+    <div class="toolbar no-print">
+        <a href="{{ url_for('rh.payroll', month=entry.reference_month, year=entry.reference_year) }}" class="btn btn-back">
+            ← Voltar
+        </a>
+
+        <h2>📋 {{ entry.employee.name }} - {{ '%02d'|format(entry.reference_month) }}/{{ entry.reference_year }}</h2>
+
+        <span class="status status-{{ entry.status }}">
+            {% if entry.status == 'pending' %}⏳ Pendente
+            {% elif entry.status == 'approved' %}✓ Aprovado
+            {% else %}💰 Pago{% endif %}
+        </span>
+
+        {% if entry.status == 'pending' %}
+        <form method="POST" action="{{ url_for('rh.approve_payroll', id=entry.id) }}" style="display:inline; margin:0;">
+            <button type="submit" class="btn btn-approve">✓ Aprovar</button>
+        </form>
+        {% elif entry.status == 'approved' %}
+        <form method="POST" action="{{ url_for('rh.pay_payroll', id=entry.id) }}" style="display:inline; margin:0;">
+            <button type="submit" class="btn btn-pay">💵 Registrar Pagamento</button>
+        </form>
+        {% endif %}
+
+        <button onclick="window.print()" class="btn btn-print">🖨️ Imprimir</button>
+    </div>
+
+    <!-- ============================================
+         HOLERITE - MEIA FOLHA A4
+         ============================================ -->
+    <div class="holerite-wrapper">
+    <div class="holerite">
+
+        <!-- CABEÇALHO EMPRESA -->
+        <table class="emp-header">
+        <tr>
+            <td style="width:60%">
+                <div class="emp-info">
+                    <strong>EMPRESA:</strong> {{ current_user.company.name or 'EMPRESA LTDA' }}<br>
+                    <strong>CNPJ:</strong> {{ current_user.company.cnpj or '00.000.000/0001-00' }}<br>
+                    <strong>ENDEREÇO:</strong> {{ current_user.company.address or 'Endereço da Empresa' }}
+                </div>
+            </td>
+            <td class="titulo-box">
+                <div>RECIBO DE PAGAMENTO</div>
+                <div>DE SALÁRIO</div>
+                <div class="periodo">Referente: {{ '%02d'|format(entry.reference_month) }}/{{ entry.reference_year }}</div>
+            </td>
+        </tr>
+        </table>
+
+        <!-- DADOS DO FUNCIONÁRIO -->
+        <table>
+        <tr class="func-header">
+            <th style="width:12%">MATRÍCULA</th>
+            <th>NOME DO FUNCIONÁRIO</th>
+            <th style="width:15%">ADMISSÃO</th>
+            <th style="width:18%">FUNÇÃO</th>
+        </tr>
+        <tr class="func-data">
+            <td style="text-align:center; font-weight:bold;">{{ '%05d'|format(entry.employee.id) }}</td>
+            <td style="font-weight:bold;">{{ entry.employee.name|upper }}</td>
+            <td style="text-align:center;">{{ entry.employee.admission_date.strftime('%d/%m/%Y') if entry.employee.admission_date else '-' }}</td>
+            <td>{{ (entry.employee.position or 'FUNCIONÁRIO')|upper }}</td>
+        </tr>
+        </table>
+
+        <!-- PROVENTOS E DESCONTOS -->
+        <table>
+        <tr>
+            <th class="codigo">CÓD.</th>
+            <th class="descricao">DESCRIÇÃO</th>
+            <th class="ref">REF.</th>
+            <th class="col-prov">PROVENTOS</th>
+            <th class="col-desc">DESCONTOS</th>
+        </tr>
+
+        <!-- PROVENTOS -->
+        <tr>
+            <td class="codigo">001</td>
+            <td>SALÁRIO BASE</td>
+            <td class="ref">220:00</td>
+            <td class="valores valores-prov">{{ "%.2f"|format(entry.base_salary|float) }}</td>
+            <td></td>
+        </tr>
+
+        {% if entry.overtime_hours and entry.overtime_hours > 0 %}
+        <tr>
+            <td class="codigo">002</td>
+            <td>HORAS EXTRAS 50%</td>
+            <td class="ref">{{ "%.1f"|format(entry.overtime_hours|float) }}h</td>
+            <td class="valores valores-prov">{{ "%.2f"|format(entry.overtime_amount|float) }}</td>
+            <td></td>
+        </tr>
+        {% endif %}
+
+        {% if entry.night_shift_amount and entry.night_shift_amount > 0 %}
+        <tr>
+            <td class="codigo">003</td>
+            <td>ADICIONAL NOTURNO</td>
+            <td class="ref">{{ "%.1f"|format(entry.night_shift_hours|float) }}h</td>
+            <td class="valores valores-prov">{{ "%.2f"|format(entry.night_shift_amount|float) }}</td>
+            <td></td>
+        </tr>
+        {% endif %}
+
+        {% if entry.bonuses and entry.bonuses > 0 %}
+        <tr>
+            <td class="codigo">004</td>
+            <td>GRATIFICAÇÕES / BÔNUS</td>
+            <td class="ref"></td>
+            <td class="valores valores-prov">{{ "%.2f"|format(entry.bonuses|float) }}</td>
+            <td></td>
+        </tr>
+        {% endif %}
+
+        {% if entry.commissions and entry.commissions > 0 %}
+        <tr>
+            <td class="codigo">005</td>
+            <td>COMISSÕES</td>
+            <td class="ref"></td>
+            <td class="valores valores-prov">{{ "%.2f"|format(entry.commissions|float) }}</td>
+            <td></td>
+        </tr>
+        {% endif %}
+
+        <!-- LINHA SEPARADORA -->
+        <tr class="linha-vazia"><td></td><td></td><td></td><td></td><td></td></tr>
+
+        <!-- DESCONTOS -->
+        <tr>
+            <td class="codigo">901</td>
+            <td>INSS</td>
+            <td class="ref">{{ "%.1f"|format((entry.inss_employee|float / entry.gross_salary|float * 100) if entry.gross_salary and entry.gross_salary > 0 else 0) }}%</td>
+            <td></td>
+            <td class="valores valores-desc">{{ "%.2f"|format(entry.inss_employee|float) }}</td>
+        </tr>
+
+        {% if entry.irrf and entry.irrf > 0 %}
+        <tr>
+            <td class="codigo">902</td>
+            <td>IRRF</td>
+            <td class="ref"></td>
+            <td></td>
+            <td class="valores valores-desc">{{ "%.2f"|format(entry.irrf|float) }}</td>
+        </tr>
+        {% endif %}
+
+        {% if entry.vt_discount and entry.vt_discount > 0 %}
+        <tr>
+            <td class="codigo">903</td>
+            <td>VALE TRANSPORTE</td>
+            <td class="ref">6%</td>
+            <td></td>
+            <td class="valores valores-desc">{{ "%.2f"|format(entry.vt_discount|float) }}</td>
+        </tr>
+        {% endif %}
+
+        {% if entry.vr_discount and entry.vr_discount > 0 %}
+        <tr>
+            <td class="codigo">904</td>
+            <td>VALE REFEIÇÃO</td>
+            <td class="ref"></td>
+            <td></td>
+            <td class="valores valores-desc">{{ "%.2f"|format(entry.vr_discount|float) }}</td>
+        </tr>
+        {% endif %}
+
+        {% if entry.health_discount and entry.health_discount > 0 %}
+        <tr>
+            <td class="codigo">905</td>
+            <td>PLANO DE SAÚDE</td>
+            <td class="ref"></td>
+            <td></td>
+            <td class="valores valores-desc">{{ "%.2f"|format(entry.health_discount|float) }}</td>
+        </tr>
+        {% endif %}
+
+        {% if entry.advances and entry.advances > 0 %}
+        <tr>
+            <td class="codigo">910</td>
+            <td>ADIANTAMENTO</td>
+            <td class="ref"></td>
+            <td></td>
+            <td class="valores valores-desc">{{ "%.2f"|format(entry.advances|float) }}</td>
+        </tr>
+        {% endif %}
+
+        {% if entry.other_deductions and entry.other_deductions > 0 %}
+        <tr>
+            <td class="codigo">999</td>
+            <td>OUTROS DESCONTOS</td>
+            <td class="ref"></td>
+            <td></td>
+            <td class="valores valores-desc">{{ "%.2f"|format(entry.other_deductions|float) }}</td>
+        </tr>
+        {% endif %}
+
+        <!-- TOTAIS -->
+        <tr class="totais-row">
+            <td colspan="3" class="total-prov-bg" style="text-align:right;">TOTAL PROVENTOS:</td>
+            <td class="total-prov-bg valores">R$ {{ "%.2f"|format(entry.gross_salary|float) }}</td>
+            <td class="total-prov-bg"></td>
+        </tr>
+        <tr class="totais-row">
+            <td colspan="3" class="total-desc-bg" style="text-align:right;">TOTAL DESCONTOS:</td>
+            <td class="total-desc-bg"></td>
+            <td class="total-desc-bg valores">R$ {{ "%.2f"|format(entry.deductions|float) }}</td>
+        </tr>
+        <tr class="totais-row">
+            <td colspan="3" class="total-liq-bg" style="text-align:right;">LÍQUIDO A RECEBER:</td>
+            <td colspan="2" class="total-liq-bg valores" style="text-align:center;">R$ {{ "%.2f"|format(entry.net_salary|float) }}</td>
+        </tr>
+        </table>
+
+        <!-- BASES DE CÁLCULO -->
+        <table class="bases-table">
+        <tr>
+            <td>
+                <span class="label">BASE INSS</span>
+                <span class="valor">{{ "%.2f"|format(entry.gross_salary|float) }}</span>
+            </td>
+            <td>
+                <span class="label">BASE FGTS</span>
+                <span class="valor">{{ "%.2f"|format(entry.gross_salary|float) }}</span>
+            </td>
+            <td>
+                <span class="label">FGTS DO MÊS</span>
+                <span class="valor">{{ "%.2f"|format(entry.fgts|float) }}</span>
+            </td>
+            <td>
+                <span class="label">BASE IRRF</span>
+                <span class="valor">{{ "%.2f"|format((entry.gross_salary|float) - (entry.inss_employee|float)) }}</span>
+            </td>
+            <td>
+                <span class="label">FAIXA IRRF</span>
+                <span class="valor">
+                    {% set base_irrf = (entry.gross_salary|float) - (entry.inss_employee|float) %}
+                    {% if base_irrf <= 2259.20 %}ISENTO
+                    {% elif base_irrf <= 2826.65 %}7,5%
+                    {% elif base_irrf <= 3751.05 %}15%
+                    {% elif base_irrf <= 4664.68 %}22,5%
+                    {% else %}27,5%{% endif %}
+                </span>
+            </td>
+        </tr>
+        </table>
+
+        <!-- PROVISÕES (13º E FÉRIAS) - SÓ TELA, NÃO IMPRIME -->
+        <table class="prov-section no-print">
+        <tr>
+            <td colspan="6" class="section-title">📅 PROVISÕES DO MÊS (13º Salário e Férias)</td>
+        </tr>
+        <tr>
+            <td class="label">13º Salário:</td>
+            <td class="valor">R$ {{ "%.2f"|format(entry.provision_13th|float) }}</td>
+            <td class="label">Férias:</td>
+            <td class="valor">R$ {{ "%.2f"|format(entry.provision_vacation|float) }}</td>
+            <td class="label">1/3 Férias:</td>
+            <td class="valor">R$ {{ "%.2f"|format(entry.provision_vacation_bonus|float) }}</td>
+        </tr>
+        <tr>
+            <td class="label">FGTS s/ 13º:</td>
+            <td class="valor">R$ {{ "%.2f"|format(entry.provision_fgts_13th|float) }}</td>
+            <td class="label">FGTS s/ Férias:</td>
+            <td class="valor">R$ {{ "%.2f"|format(entry.provision_fgts_vacation|float) }}</td>
+            <td class="label prov-total">TOTAL PROVISÕES:</td>
+            <td class="valor prov-total">R$ {{ "%.2f"|format(entry.total_provisions|float) }}</td>
+        </tr>
+        </table>
+
+        <!-- ENCARGOS PATRONAIS - SÓ TELA, NÃO IMPRIME -->
+        <table class="enc-section no-print">
+        <tr>
+            <td colspan="4" class="section-title">🏢 ENCARGOS PATRONAIS (Não descontam do funcionário)</td>
+        </tr>
+        <tr>
+            <td><span class="label">INSS Patronal (20%):</span> <strong>R$ {{ "%.2f"|format(entry.inss_employer|float) }}</strong></td>
+            <td><span class="label">RAT/SAT:</span> <strong>R$ {{ "%.2f"|format(entry.inss_rat|float) }}</strong></td>
+            <td><span class="label">Sistema S:</span> <strong>R$ {{ "%.2f"|format(entry.inss_terceiros|float) }}</strong></td>
+            <td><span class="label">FGTS (8%):</span> <strong>R$ {{ "%.2f"|format(entry.fgts|float) }}</strong></td>
+        </tr>
+        <tr class="custo-total-row">
+            <td colspan="4">💰 CUSTO TOTAL EMPRESA: R$ {{ "%.2f"|format(entry.total_employer_cost|float) }}</td>
+        </tr>
+        </table>
+
+        <!-- ASSINATURA -->
+        <table class="assinatura-section">
+        <tr>
+            <td style="width:50%;">
+                DECLARO TER RECEBIDO A IMPORTÂNCIA LÍQUIDA DISCRIMINADA NESTE RECIBO
+            </td>
+            <td>
+                ASSINATURA DO FUNCIONÁRIO / DATA: ____/____/________
+            </td>
+        </tr>
+        </table>
+
+        <!-- LINHA DE CORTE (opcional para imprimir 2ª via) -->
+        <div class="linha-corte no-print"></div>
+
+    </div>
+    </div>
+
+</div>
+{% endblock %}

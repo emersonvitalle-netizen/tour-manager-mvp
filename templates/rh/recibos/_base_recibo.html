@@ -1,0 +1,531 @@
+{% extends "base.html" %}
+
+{% block title %}{% block titulo_pagina %}Recibo{% endblock %} - {{ employee.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ============================================
+       IMPRESSÃO - MEIA FOLHA A4 (210mm x 148.5mm)
+       ============================================ */
+    @page {
+        size: A4 portrait;
+        margin: 3mm;
+    }
+
+    @media print {
+        * { 
+            -webkit-print-color-adjust: exact !important; 
+            print-color-adjust: exact !important; 
+        }
+
+        html, body { 
+            margin: 0 !important; 
+            padding: 0 !important; 
+            background: white !important;
+            font-size: 8pt !important;
+            height: auto !important;
+            overflow: visible !important;
+        }
+
+        /* ESCONDE ABSOLUTAMENTE TUDO */
+        .no-print,
+        .toolbar,
+        nav, 
+        footer, 
+        header,
+        .bottom-nav, 
+        .nav-bottom,
+        .navbar,
+        .sidebar,
+        .menu,
+        .fab,
+        .floating-btn,
+        .bottom-nav-item,
+        .fab-icon,
+        [class*="nav"],
+        [class*="footer"],
+        [class*="bottom"],
+        [class*="header"]:not(.emp-header),
+        [class*="menu"],
+        [class*="sidebar"],
+        [class*="fab"],
+        [class*="float"],
+        .page-header, 
+        .action-buttons,
+        form,
+        button,
+        a.btn,
+        .linha-corte,
+        .alert,
+        .flash-messages {
+            display: none !important;
+            visibility: hidden !important;
+            height: 0 !important;
+            width: 0 !important;
+            overflow: hidden !important;
+            position: absolute !important;
+            left: -99999px !important;
+            top: -99999px !important;
+            max-height: 0 !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            border: none !important;
+        }
+
+        .page-container {
+            padding: 0 !important;
+            margin: 0 !important;
+            background: white !important;
+            min-height: auto !important;
+            max-height: none !important;
+            padding-bottom: 0 !important;
+            height: auto !important;
+            overflow: visible !important;
+        }
+
+        .recibo-wrapper { 
+            padding: 0 !important; 
+            margin: 0 !important;
+            background: white !important;
+            display: block !important;
+            height: auto !important;
+            min-height: auto !important;
+        }
+
+        .recibo { 
+            box-shadow: none !important; 
+            margin: 0 auto !important;
+            width: 195mm !important;
+            max-width: 195mm !important;
+            padding: 2mm !important;
+            border: 1px solid #000 !important;
+            page-break-inside: avoid !important;
+            page-break-after: avoid !important;
+            height: auto !important;
+            overflow: visible !important;
+        }
+
+        /* Reduzir tamanhos para caber */
+        .recibo table {
+            margin-bottom: 0 !important;
+        }
+
+        .recibo td, .recibo th {
+            padding: 2px 3px !important;
+            font-size: 8pt !important;
+        }
+
+        .titulo-box {
+            font-size: 10pt !important;
+            padding: 4px !important;
+        }
+
+        .titulo-box .periodo {
+            font-size: 8pt !important;
+        }
+
+        .totais-row td {
+            padding: 3px 4px !important;
+            font-size: 9pt !important;
+        }
+
+        .total-liq-bg {
+            font-size: 10pt !important;
+        }
+
+        .bases-table td {
+            padding: 2px !important;
+            font-size: 7pt !important;
+        }
+
+        .bases-table .valor {
+            font-size: 8pt !important;
+        }
+
+        .assinatura-section td {
+            height: 25px !important;
+            padding: 3px !important;
+            font-size: 7pt !important;
+        }
+
+        .via-label {
+            display: block !important;
+            text-align: center !important;
+            font-size: 7pt !important;
+            margin-top: 2px !important;
+            padding: 0 !important;
+        }
+    }
+
+    /* ============================================
+       TELA - VISUALIZAÇÃO
+       ============================================ */
+    .page-container {
+        padding: 0;
+        min-height: 100vh;
+        padding-bottom: 100px;
+        background: var(--bg-primary);
+    }
+
+    .toolbar {
+        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        padding: 12px 15px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+    }
+
+    .toolbar h2 {
+        color: #fff;
+        font-size: 14px;
+        margin: 0;
+        flex: 1;
+    }
+
+    .toolbar .status {
+        padding: 4px 12px;
+        border-radius: 15px;
+        font-size: 11px;
+        font-weight: bold;
+    }
+    .status-pending { background: #f39c12; color: #000; }
+    .status-approved { background: #3498db; color: #fff; }
+    .status-paid { background: #27ae60; color: #fff; }
+
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 8px 14px;
+        border: none;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+    .btn:hover { transform: translateY(-1px); opacity: 0.9; }
+    .btn-print { background: #f1c40f; color: #000; }
+    .btn-back { background: #95a5a6; color: #fff; }
+    .btn-approve { background: #3498db; color: #fff; }
+    .btn-pay { background: #27ae60; color: #fff; }
+    .btn-cancel { background: #e74c3c; color: #fff; }
+
+    .recibo-wrapper {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 20px;
+        display: flex;
+        justify-content: center;
+        min-height: calc(100vh - 60px);
+    }
+
+    .recibo {
+        background: white;
+        width: 210mm;
+        max-width: 100%;
+        padding: 5mm;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        font-family: 'Courier New', Courier, monospace;
+        font-size: 9pt;
+        color: #000;
+        border-radius: 4px;
+    }
+
+    /* ============================================
+       ESTRUTURA DO RECIBO
+       ============================================ */
+    .recibo table { 
+        width: 100%; 
+        border-collapse: collapse; 
+        margin-bottom: 1px;
+    }
+
+    .recibo td, .recibo th { 
+        border: 1px solid #333; 
+        padding: 3px 5px; 
+        vertical-align: middle; 
+    }
+
+    .recibo th { 
+        background: linear-gradient(180deg, #e8e8e8 0%, #d0d0d0 100%);
+        font-weight: bold; 
+        font-size: 8pt;
+    }
+
+    /* Cabeçalho Empresa */
+    .emp-header td {
+        padding: 5px 8px;
+        vertical-align: top;
+    }
+
+    .emp-info {
+        font-size: 9pt;
+        line-height: 1.4;
+    }
+
+    .emp-info strong {
+        color: #2c3e50;
+    }
+
+    .titulo-box {
+        text-align: center;
+        font-weight: bold;
+        font-size: 12pt;
+        line-height: 1.3;
+        background: linear-gradient(180deg, #f8f9fa 0%, #e9ecef 100%);
+        padding: 8px;
+    }
+
+    .titulo-box .periodo {
+        font-size: 10pt;
+        font-weight: normal;
+        color: #666;
+        margin-top: 3px;
+    }
+
+    /* Dados Funcionário */
+    .func-header th {
+        font-size: 8pt;
+        padding: 4px;
+    }
+
+    .func-data td {
+        font-size: 9pt;
+        padding: 5px;
+    }
+
+    /* Tabela Proventos/Descontos */
+    .codigo { text-align: center; width: 35px; font-weight: bold; }
+    .descricao { text-align: left; }
+    .ref { text-align: center; width: 50px; }
+    .col-prov { width: 80px; text-align: right; }
+    .col-desc { width: 80px; text-align: right; }
+
+    .valores { 
+        text-align: right; 
+        font-family: 'Courier New', monospace;
+        font-weight: 600;
+    }
+
+    .valores-prov { color: #155724; }
+    .valores-desc { color: #721c24; }
+
+    .linha-vazia td {
+        height: 18px;
+        border-left: 1px solid #333;
+        border-right: 1px solid #333;
+        border-top: none;
+        border-bottom: none;
+    }
+
+    /* Totais */
+    .totais-row td { 
+        font-weight: bold; 
+        padding: 6px 8px;
+        font-size: 10pt;
+    }
+
+    .total-prov-bg { 
+        background: linear-gradient(180deg, #d4edda 0%, #c3e6cb 100%);
+        color: #155724;
+    }
+
+    .total-desc-bg { 
+        background: linear-gradient(180deg, #f8d7da 0%, #f5c6cb 100%);
+        color: #721c24;
+    }
+
+    .total-liq-bg { 
+        background: linear-gradient(180deg, #27ae60 0%, #1e8449 100%);
+        color: white;
+        font-size: 11pt;
+    }
+
+    /* Bases de Cálculo */
+    .bases-table td {
+        text-align: center;
+        padding: 4px;
+        font-size: 8pt;
+        border: 1px solid #ccc;
+        background: #f8f9fa;
+    }
+
+    .bases-table .label {
+        display: block;
+        font-size: 7pt;
+        color: #666;
+    }
+
+    .bases-table .valor {
+        font-weight: bold;
+        color: #2c3e50;
+    }
+
+    /* Seções extras (provisões, encargos) */
+    .prov-section, .enc-section {
+        margin-top: 2px;
+        border: 1px solid #17a2b8;
+    }
+
+    .prov-section td, .enc-section td {
+        padding: 4px 6px;
+        font-size: 8pt;
+        background: #e7f5ff;
+    }
+
+    .prov-section .section-title, .enc-section .section-title {
+        background: #17a2b8;
+        color: white;
+        text-align: center;
+        font-weight: bold;
+        font-size: 9pt;
+    }
+
+    .prov-section .label, .enc-section .label {
+        color: #666;
+        font-size: 7pt;
+    }
+
+    .prov-total {
+        background: #bee5eb !important;
+        font-size: 9pt !important;
+    }
+
+    .enc-section td {
+        background: #fff3cd;
+    }
+
+    .enc-section .section-title {
+        background: #fd7e14;
+    }
+
+    .custo-total-row td {
+        background: #fd7e14 !important;
+        color: white !important;
+        text-align: center !important;
+        font-weight: bold !important;
+        font-size: 10pt !important;
+    }
+
+    /* Assinatura */
+    .assinatura-section td {
+        text-align: center;
+        padding: 8px;
+        font-size: 8pt;
+        vertical-align: bottom;
+        height: 40px;
+    }
+
+    .assinatura-section .linha-assinatura {
+        border-top: 1px solid #000;
+        padding-top: 5px;
+        margin-top: 20px;
+    }
+
+    /* Observações */
+    .obs-section {
+        background: #fff3cd;
+        padding: 8px;
+        font-size: 8pt;
+        border: 1px solid #ffc107;
+        margin-top: 2px;
+    }
+
+    .obs-section strong {
+        color: #856404;
+    }
+
+    {% block extra_css_recibo %}{% endblock %}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+
+    <!-- ============================================
+         TOOLBAR - NÃO IMPRIME
+         ============================================ -->
+    {% block toolbar %}
+    <div class="toolbar no-print">
+        <a href="{{ url_for('rh.index') }}" class="btn btn-back">
+            ← Voltar
+        </a>
+        <h2>📋 {% block toolbar_titulo %}Recibo{% endblock %}</h2>
+        <button onclick="window.print()" class="btn btn-print">🖨️ Imprimir</button>
+    </div>
+    {% endblock %}
+
+    <!-- ============================================
+         RECIBO
+         ============================================ -->
+    <div class="recibo-wrapper">
+    <div class="recibo">
+
+        <!-- CABEÇALHO EMPRESA -->
+        {% block cabecalho_empresa %}
+        <table class="emp-header">
+        <tr>
+            <td style="width:60%">
+                <div class="emp-info">
+                    <strong>EMPRESA:</strong> {{ current_user.company.name or 'EMPRESA LTDA' }}<br>
+                    <strong>CNPJ:</strong> {{ current_user.company.cnpj or '00.000.000/0001-00' }}<br>
+                    <strong>ENDEREÇO:</strong> {{ current_user.company.address or 'Endereço da Empresa' }}
+                </div>
+            </td>
+            <td class="titulo-box">
+                {% block titulo_documento %}
+                <div>RECIBO</div>
+                {% endblock %}
+                {% block periodo_documento %}{% endblock %}
+            </td>
+        </tr>
+        </table>
+        {% endblock %}
+
+        <!-- DADOS DO FUNCIONÁRIO -->
+        {% block dados_funcionario %}
+        <table>
+        <tr class="func-header">
+            <th style="width:12%">MATRÍCULA</th>
+            <th>NOME DO FUNCIONÁRIO</th>
+            <th style="width:15%">ADMISSÃO</th>
+            <th style="width:18%">FUNÇÃO</th>
+        </tr>
+        <tr class="func-data">
+            <td style="text-align:center; font-weight:bold;">{{ '%05d'|format(employee.id) }}</td>
+            <td style="font-weight:bold;">{{ employee.name|upper }}</td>
+            <td style="text-align:center;">{{ employee.admission_date.strftime('%d/%m/%Y') if employee.admission_date else '-' }}</td>
+            <td>{{ (employee.position or 'FUNCIONÁRIO')|upper }}</td>
+        </tr>
+        </table>
+        {% endblock %}
+
+        <!-- CONTEÚDO ESPECÍFICO DE CADA RECIBO -->
+        {% block conteudo %}{% endblock %}
+
+        <!-- ASSINATURA -->
+        {% block assinatura %}
+        <table class="assinatura-section">
+        <tr>
+            <td style="width:50%;">
+                DECLARO TER RECEBIDO A IMPORTÂNCIA LÍQUIDA DISCRIMINADA NESTE RECIBO
+            </td>
+            <td>
+                <div class="linha-assinatura">
+                    ASSINATURA DO FUNCIONÁRIO / DATA: ____/____/________
+                </div>
+            </td>
+        </tr>
+        </table>
+        {% endblock %}
+
+    </div>
+    </div>
+
+</div>
+{% endblock %}

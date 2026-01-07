@@ -1,0 +1,106 @@
+{% extends "rh/recibos/_base_recibo.html" %}
+
+{# employee já vem da rota, não precisa do set #}
+
+{% block titulo_pagina %}Recibo de Adiantamento{% endblock %}
+
+{% block toolbar %}
+<div class="toolbar no-print">
+    <a href="{{ url_for('rh.adiantamento') }}" class="btn btn-back">
+        ← Voltar
+    </a>
+
+    <h2>💵 Adiantamento - {{ employee.name if employee else 'Funcionário' }}</h2>
+
+    <span class="status status-{{ adiantamento.status }}">
+        {% if adiantamento.status == 'pending' %}⏳ Pendente
+        {% elif adiantamento.status == 'paid' %}💰 Pago
+        {% else %}❌ Cancelado{% endif %}
+    </span>
+
+    {% if adiantamento.status == 'pending' %}
+    <form method="POST" action="{{ url_for('rh.pagar_adiantamento', id=adiantamento.id) }}" style="display:inline; margin:0;">
+        <button type="submit" class="btn btn-pay">💵 Pagar</button>
+    </form>
+    <form method="POST" action="{{ url_for('rh.cancelar_adiantamento', id=adiantamento.id) }}" style="display:inline; margin:0;">
+        <button type="submit" class="btn btn-cancel">❌ Cancelar</button>
+    </form>
+    {% endif %}
+
+    <button onclick="window.print()" class="btn btn-print">🖨️ Imprimir</button>
+</div>
+{% endblock %}
+
+{% block titulo_documento %}
+<div>RECIBO DE</div>
+<div>ADIANTAMENTO SALARIAL</div>
+{% endblock %}
+
+{% block periodo_documento %}
+<div class="periodo">
+    {% set mes_ref = adiantamento.due_date.month if adiantamento.due_date else '' %}
+    {% set ano_ref = adiantamento.due_date.year if adiantamento.due_date else '' %}
+    Referente: {{ '%02d'|format(mes_ref) }}/{{ ano_ref }}
+</div>
+{% endblock %}
+
+{% block conteudo %}
+<!-- VALOR DO ADIANTAMENTO -->
+<table>
+<tr>
+    <th class="codigo">CÓD.</th>
+    <th class="descricao">DESCRIÇÃO</th>
+    <th class="ref">REF.</th>
+    <th style="width:120px; text-align:right;">VALOR</th>
+</tr>
+
+<tr>
+    <td class="codigo">910</td>
+    <td>ADIANTAMENTO SALARIAL (VALE)</td>
+    <td class="ref">
+        {% if employee and employee.salary and employee.salary > 0 %}
+            {{ "%.0f"|format(adiantamento.amount / employee.salary * 100) }}%
+        {% else %}
+            -
+        {% endif %}
+    </td>
+    <td class="valores valores-prov">{{ "%.2f"|format(adiantamento.amount|float) }}</td>
+</tr>
+
+<!-- LINHA SEPARADORA -->
+<tr class="linha-vazia"><td></td><td></td><td></td><td></td></tr>
+
+<!-- TOTAL -->
+<tr class="totais-row">
+    <td colspan="3" class="total-liq-bg" style="text-align:right;">VALOR LÍQUIDO:</td>
+    <td class="total-liq-bg valores" style="text-align:center;">R$ {{ "%.2f"|format(adiantamento.amount|float) }}</td>
+</tr>
+</table>
+
+<!-- OBSERVAÇÃO -->
+<div class="obs-section">
+    <strong>⚠️ OBSERVAÇÃO:</strong> Este valor será descontado integralmente na folha de pagamento 
+    do mês de referência ({{ '%02d'|format(adiantamento.due_date.month) }}/{{ adiantamento.due_date.year }}).
+    {% if adiantamento.status == 'paid' and adiantamento.paid_at %}
+    <br><br>
+    <strong>✅ PAGO EM:</strong> {{ adiantamento.paid_at.strftime('%d/%m/%Y às %H:%M') }}
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_css_recibo %}
+<style>
+    /* Ajuste específico para recibo de adiantamento - tabela mais simples */
+    .obs-section {
+        margin-top: 10px;
+    }
+
+    @media print {
+        .obs-section {
+            margin-top: 5px !important;
+            padding: 5px !important;
+            font-size: 7pt !important;
+        }
+    }
+</style>
+{% endblock %}
