@@ -1067,7 +1067,7 @@ def contas_pagar():
 @admin_required
 def nova_conta_pagar():
     """Criar nova conta a pagar"""
-    from models.rh import AccountPayable
+    from models.rh import AccountPayable, CostCenter
 
     if request.method == 'POST':
         try:
@@ -1075,6 +1075,9 @@ def nova_conta_pagar():
             valor_total = Decimal(request.form.get('amount', '0').replace(',', '.'))
             valor_parcela = valor_total / total_installments if total_installments > 1 else valor_total
             due_date_base = datetime.strptime(request.form.get('due_date'), '%Y-%m-%d').date()
+            cost_center_id = request.form.get('cost_center_id') or None
+            if cost_center_id:
+                cost_center_id = int(cost_center_id)
 
             from dateutil.relativedelta import relativedelta
 
@@ -1094,6 +1097,7 @@ def nova_conta_pagar():
                     payment_method=request.form.get('payment_method', '').strip() or None,
                     installment_number=i + 1 if total_installments > 1 else None,
                     total_installments=total_installments if total_installments > 1 else None,
+                    cost_center_id=cost_center_id,
                     notes=request.form.get('notes', '').strip(),
                     status='pending',
                     created_by=current_user.id
@@ -1115,19 +1119,8 @@ def nova_conta_pagar():
             db.session.rollback()
             flash(f'Erro ao salvar: {str(e)}', 'danger')
 
-    # LISTA EXPANDIDA DE CATEGORIAS (24 categorias)
-    categorias = [
-        'folha_clt', 'freelancers', 'manutencao',
-        'aluguel', 'energia', 'agua', 'telefone', 'internet',
-        'contabilidade', 'juridico', 'softwares',
-        'transporte', 'combustivel', 'pedagios', 'manutencao_veiculos',
-        'impostos', 'seguros',
-        'equipamentos', 'veiculos',
-        'marketing',
-        'materiais_consumo', 'ferramentas',
-        'parcelamentos', 'outros'
-    ]
-    return render_template('financial/conta_pagar_form.html', conta=None, categorias=categorias)
+    cost_centers = CostCenter.query.filter_by(company_id=current_user.company_id, is_active=True).order_by(CostCenter.name).all()
+    return render_template('financial/conta_pagar_form.html', conta=None, cost_centers=cost_centers)
 
 
 @financial_bp.route('/contas-pagar/<int:id>/editar', methods=['GET', 'POST'])
@@ -1135,7 +1128,7 @@ def nova_conta_pagar():
 @admin_required
 def editar_conta_pagar(id):
     """Editar conta a pagar"""
-    from models.rh import AccountPayable
+    from models.rh import AccountPayable, CostCenter
 
     conta = AccountPayable.query.filter_by(
         id=id,
@@ -1153,6 +1146,8 @@ def editar_conta_pagar(id):
             conta.is_recurring = request.form.get('is_recurring') == 'on'
             conta.recurrence_type = request.form.get('recurrence_type') if conta.is_recurring else None
             conta.payment_method = request.form.get('payment_method', '').strip() or None
+            cost_center_id = request.form.get('cost_center_id') or None
+            conta.cost_center_id = int(cost_center_id) if cost_center_id else None
             conta.notes = request.form.get('notes', '').strip()
 
             db.session.commit()
@@ -1164,19 +1159,8 @@ def editar_conta_pagar(id):
             db.session.rollback()
             flash(f'Erro ao salvar: {str(e)}', 'danger')
 
-    # LISTA EXPANDIDA DE CATEGORIAS (24 categorias)
-    categorias = [
-        'folha_clt', 'freelancers', 'manutencao',
-        'aluguel', 'energia', 'agua', 'telefone', 'internet',
-        'contabilidade', 'juridico', 'softwares',
-        'transporte', 'combustivel', 'pedagios', 'manutencao_veiculos',
-        'impostos', 'seguros',
-        'equipamentos', 'veiculos',
-        'marketing',
-        'materiais_consumo', 'ferramentas',
-        'parcelamentos', 'outros'
-    ]
-    return render_template('financial/conta_pagar_form.html', conta=conta, categorias=categorias)
+    cost_centers = CostCenter.query.filter_by(company_id=current_user.company_id, is_active=True).order_by(CostCenter.name).all()
+    return render_template('financial/conta_pagar_form.html', conta=conta, cost_centers=cost_centers)
 
 
 @financial_bp.route('/contas-pagar/<int:id>/pagar', methods=['POST'])
