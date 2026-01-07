@@ -1,0 +1,367 @@
+{% extends "base.html" %}
+
+{% block title %}Repositorio {{ ano_filtro }} - Financeiro{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-container {
+        padding: 0;
+        min-height: 100vh;
+        padding-bottom: 90px;
+        background-color: #0a0a0a;
+    }
+
+    .page-header {
+        background: linear-gradient(135deg, rgba(99,102,241,0.3) 0%, rgba(26,26,26,0.95) 100%);
+        padding: 20px 16px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        border-bottom: 1px solid #2a2a2a;
+    }
+
+    .back-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #6366f1;
+        text-decoration: none;
+    }
+
+    .page-title {
+        flex: 1;
+    }
+
+    .page-title h1 {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #f5f5f5;
+        margin-bottom: 0;
+    }
+
+    .page-title p {
+        color: #888;
+        font-size: 0.8rem;
+        margin: 0;
+    }
+
+    .kpi-row {
+        padding: 16px;
+        display: flex;
+        gap: 12px;
+    }
+
+    .kpi-card {
+        flex: 1;
+        padding: 16px;
+        border-radius: 12px;
+        text-align: center;
+    }
+
+    .kpi-card.purple { background: linear-gradient(135deg, #4c1d95 0%, #5b21b6 100%); }
+    .kpi-card.blue { background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%); }
+
+    .kpi-card .kpi-label {
+        font-size: 0.7rem;
+        color: rgba(255,255,255,0.7);
+        margin-bottom: 4px;
+    }
+
+    .kpi-card .kpi-value {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #fff;
+    }
+
+    .ano-selector {
+        padding: 0 16px 16px;
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+    }
+
+    .ano-btn {
+        padding: 8px 20px;
+        border-radius: 20px;
+        background: #1a1a1a;
+        color: #a0a0a0;
+        border: 1px solid #2a2a2a;
+        font-size: 0.85rem;
+        white-space: nowrap;
+        text-decoration: none;
+    }
+
+    .ano-btn.active {
+        background: #6366f1;
+        color: #fff;
+        border-color: #6366f1;
+    }
+
+    .folders-section {
+        padding: 0 16px 16px;
+    }
+
+    .folder-card {
+        background: #1a1a1a;
+        border-radius: 12px;
+        overflow: hidden;
+        margin-bottom: 8px;
+        border-left: 4px solid #6366f1;
+    }
+
+    .folder-card.empty {
+        border-left-color: #333;
+        opacity: 0.5;
+    }
+
+    .folder-header {
+        padding: 16px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        transition: background 0.2s;
+    }
+
+    .folder-header:hover {
+        background: rgba(99,102,241,0.1);
+    }
+
+    .folder-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .folder-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        background: rgba(99,102,241,0.15);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #6366f1;
+        font-size: 1.1rem;
+    }
+
+    .folder-name {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #f5f5f5;
+    }
+
+    .folder-stats {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 0.8rem;
+        color: #888;
+        margin-top: 2px;
+    }
+
+    .folder-stats .qtd {
+        background: rgba(255,255,255,0.1);
+        padding: 2px 8px;
+        border-radius: 10px;
+    }
+
+    .folder-stats .total {
+        color: #10b981;
+        font-weight: 600;
+    }
+
+    .folder-toggle {
+        color: #666;
+        font-size: 0.9rem;
+        transition: transform 0.3s;
+    }
+
+    .folder-toggle.expanded {
+        transform: rotate(180deg);
+    }
+
+    .folder-content {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease;
+        background: #0f0f0f;
+    }
+
+    .folder-content.expanded {
+        max-height: 2000px;
+    }
+
+    .folder-content-inner {
+        padding: 12px 16px 16px;
+    }
+
+    .conta-item {
+        background: #1a1a1a;
+        border-radius: 10px;
+        padding: 14px;
+        margin-bottom: 8px;
+        border-left: 3px solid #10b981;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+    }
+
+    .conta-desc {
+        flex: 1;
+    }
+
+    .conta-desc h5 {
+        color: #f5f5f5;
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-bottom: 4px;
+    }
+
+    .conta-desc p {
+        color: #666;
+        font-size: 0.75rem;
+        margin: 0;
+    }
+
+    .conta-right {
+        text-align: right;
+    }
+
+    .conta-right .amount {
+        color: #10b981;
+        font-weight: 700;
+        font-size: 1rem;
+    }
+
+    .conta-right .paid-date {
+        color: #666;
+        font-size: 0.7rem;
+    }
+
+    .badge-paid {
+        display: inline-block;
+        background: rgba(16,185,129,0.2);
+        color: #10b981;
+        font-size: 0.65rem;
+        padding: 2px 8px;
+        border-radius: 10px;
+        margin-top: 4px;
+    }
+
+    .empty-folder {
+        text-align: center;
+        padding: 20px;
+        color: #555;
+        font-size: 0.85rem;
+    }
+
+    @media (min-width: 768px) {
+        .page-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <a href="{{ url_for('financial.contas_pagar') }}" class="back-btn">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <div class="page-title">
+            <h1><i class="fas fa-archive"></i> Repositorio {{ ano_filtro }}</h1>
+            <p>Contas pagas no exercicio</p>
+        </div>
+    </div>
+
+    <div class="kpi-row">
+        <div class="kpi-card purple">
+            <div class="kpi-label">Total Pago</div>
+            <div class="kpi-value">R$ {{ "{:,.0f}".format(total_ano).replace(",", ".") }}</div>
+        </div>
+        <div class="kpi-card blue">
+            <div class="kpi-label">Qtd Contas</div>
+            <div class="kpi-value">{{ qtd_total }}</div>
+        </div>
+    </div>
+
+    {% if anos_disponiveis|length > 1 %}
+    <div class="ano-selector">
+        {% for ano in anos_disponiveis %}
+        <a href="{{ url_for('financial.repositorio_contas', ano=ano) }}" class="ano-btn {{ 'active' if ano == ano_filtro else '' }}">
+            {{ ano }}
+        </a>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="folders-section">
+        {% for mes_key, pasta in pastas.items() %}
+        <div class="folder-card {{ 'empty' if pasta.qtd == 0 else '' }}">
+            <div class="folder-header" onclick="toggleFolder('{{ mes_key }}')">
+                <div class="folder-info">
+                    <div class="folder-icon">
+                        <i class="fas fa-folder-open"></i>
+                    </div>
+                    <div>
+                        <div class="folder-name">{{ pasta.label }}</div>
+                        <div class="folder-stats">
+                            <span class="qtd">{{ pasta.qtd }} conta{{ 's' if pasta.qtd != 1 else '' }}</span>
+                            {% if pasta.qtd > 0 %}
+                            <span class="total">R$ {{ "{:,.0f}".format(pasta.total).replace(",", ".") }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="folder-toggle" id="icon-{{ mes_key }}">▼</div>
+            </div>
+            <div class="folder-content" id="content-{{ mes_key }}">
+                <div class="folder-content-inner">
+                    {% if pasta.contas %}
+                        {% for conta in pasta.contas %}
+                        <div class="conta-item">
+                            <div class="conta-desc">
+                                <h5>{{ conta.description[:40] }}{% if conta.description|length > 40 %}...{% endif %}</h5>
+                                <p>{{ conta.supplier or conta.category }}</p>
+                            </div>
+                            <div class="conta-right">
+                                <div class="amount">R$ {{ "{:,.2f}".format(conta.amount).replace(",", "X").replace(".", ",").replace("X", ".") }}</div>
+                                <div class="paid-date">Venc. {{ conta.due_date.strftime('%d/%m') }}</div>
+                                <span class="badge-paid"><i class="fas fa-check"></i> Pago</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty-folder">
+                            Nenhuma conta paga neste mes
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+function toggleFolder(folderId) {
+    const content = document.getElementById('content-' + folderId);
+    const icon = document.getElementById('icon-' + folderId);
+    
+    if (content.classList.contains('expanded')) {
+        content.classList.remove('expanded');
+        icon.classList.remove('expanded');
+    } else {
+        content.classList.add('expanded');
+        icon.classList.add('expanded');
+    }
+}
+</script>
+{% endblock %}

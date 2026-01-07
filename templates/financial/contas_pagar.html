@@ -85,11 +85,249 @@
         color: #fff;
     }
 
+    .folders-section {
+        padding: 0 16px 16px;
+    }
+
+    .section-title {
+        color: #888;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .folder-card {
+        background: #1a1a1a;
+        border-radius: 12px;
+        overflow: hidden;
+        margin-bottom: 8px;
+        border-left: 4px solid #d4a574;
+    }
+
+    .folder-card.vencidas {
+        border-left-color: #ef4444;
+    }
+
+    .folder-card.empty {
+        border-left-color: #333;
+        opacity: 0.6;
+    }
+
+    .folder-header {
+        padding: 16px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        transition: background 0.2s;
+    }
+
+    .folder-header:hover {
+        background: rgba(212,165,116,0.1);
+    }
+
+    .folder-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .folder-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        background: rgba(212,165,116,0.15);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #d4a574;
+        font-size: 1.1rem;
+    }
+
+    .folder-card.vencidas .folder-icon {
+        background: rgba(239,68,68,0.15);
+        color: #ef4444;
+    }
+
+    .folder-name {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #f5f5f5;
+    }
+
+    .folder-stats {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 0.8rem;
+        color: #888;
+        margin-top: 2px;
+    }
+
+    .folder-stats .qtd {
+        background: rgba(255,255,255,0.1);
+        padding: 2px 8px;
+        border-radius: 10px;
+    }
+
+    .folder-stats .total {
+        color: #d4a574;
+        font-weight: 600;
+    }
+
+    .folder-toggle {
+        color: #666;
+        font-size: 0.9rem;
+        transition: transform 0.3s;
+    }
+
+    .folder-toggle.expanded {
+        transform: rotate(180deg);
+    }
+
+    .folder-content {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease;
+        background: #0f0f0f;
+    }
+
+    .folder-content.expanded {
+        max-height: 2000px;
+    }
+
+    .folder-content-inner {
+        padding: 12px 16px 16px;
+    }
+
+    .conta-item {
+        background: #1a1a1a;
+        border-radius: 10px;
+        padding: 14px;
+        margin-bottom: 8px;
+        border-left: 3px solid;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+    }
+
+    .conta-item.urgente { border-left-color: #ef4444; }
+    .conta-item.atencao { border-left-color: #f59e0b; }
+    .conta-item.ok { border-left-color: #10b981; }
+
+    .conta-desc {
+        flex: 1;
+    }
+
+    .conta-desc h5 {
+        color: #f5f5f5;
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-bottom: 4px;
+    }
+
+    .conta-desc p {
+        color: #666;
+        font-size: 0.75rem;
+        margin: 0;
+    }
+
+    .conta-right {
+        text-align: right;
+    }
+
+    .conta-right .amount {
+        color: #f5f5f5;
+        font-weight: 700;
+        font-size: 1rem;
+    }
+
+    .conta-right .due {
+        color: #888;
+        font-size: 0.7rem;
+    }
+
+    .conta-right .due.overdue {
+        color: #ef4444;
+    }
+
+    .conta-actions-mini {
+        display: flex;
+        gap: 6px;
+        margin-top: 8px;
+        justify-content: flex-end;
+    }
+
+    .btn-mini {
+        padding: 6px 10px;
+        border-radius: 6px;
+        font-size: 0.7rem;
+        border: none;
+        cursor: pointer;
+        text-decoration: none;
+    }
+
+    .btn-mini.pagar {
+        background: #10b981;
+        color: #fff;
+    }
+
+    .btn-mini.editar {
+        background: #374151;
+        color: #fff;
+    }
+
+    .btn-mini.excluir {
+        background: transparent;
+        color: #ef4444;
+        border: 1px solid #ef4444;
+    }
+
+    .repositorio-link {
+        display: block;
+        background: #1a1a1a;
+        border-radius: 12px;
+        padding: 16px;
+        margin: 16px;
+        text-decoration: none;
+        border: 1px dashed #333;
+        text-align: center;
+    }
+
+    .repositorio-link i {
+        color: #6366f1;
+        font-size: 1.5rem;
+        margin-bottom: 8px;
+    }
+
+    .repositorio-link h4 {
+        color: #888;
+        font-size: 0.9rem;
+        margin-bottom: 4px;
+    }
+
+    .repositorio-link span {
+        color: #555;
+        font-size: 0.75rem;
+    }
+
+    .empty-folder {
+        text-align: center;
+        padding: 20px;
+        color: #555;
+        font-size: 0.85rem;
+    }
+
     .filter-bar {
         padding: 0 16px 16px;
         display: flex;
         gap: 8px;
         overflow-x: auto;
+        flex-wrap: wrap;
     }
 
     .filter-btn {
@@ -98,7 +336,7 @@
         background: #1a1a1a;
         color: #a0a0a0;
         border: 1px solid #2a2a2a;
-        font-size: 0.85rem;
+        font-size: 0.8rem;
         white-space: nowrap;
         text-decoration: none;
     }
@@ -109,144 +347,13 @@
         border-color: #d4a574;
     }
 
-    .list-section {
-        padding: 0 16px 16px;
-    }
-
-    .empty-state {
-        text-align: center;
-        padding: 60px 20px;
-        color: #666;
-    }
-
-    .empty-state i {
-        font-size: 3rem;
-        margin-bottom: 16px;
-        color: #444;
-    }
-
-    .empty-state h3 {
-        color: #888;
-        margin-bottom: 8px;
-    }
-
-    .empty-state a {
-        color: #d4a574;
-        text-decoration: none;
-    }
-
-    .conta-card {
+    .categoria-select {
+        padding: 8px 12px;
+        border-radius: 20px;
         background: #1a1a1a;
-        border-radius: 12px;
-        padding: 16px;
-        margin-bottom: 12px;
-        border-left: 4px solid;
-    }
-
-    .conta-card.urgente { border-left-color: #ef4444; }
-    .conta-card.atencao { border-left-color: #f59e0b; }
-    .conta-card.ok { border-left-color: #10b981; }
-    .conta-card.pago { border-left-color: #6366f1; opacity: 0.7; }
-
-    .conta-header {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 12px;
-    }
-
-    .conta-info h4 {
-        color: #f5f5f5;
-        font-size: 1rem;
-        font-weight: 700;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin-bottom: 4px;
-    }
-
-    .conta-info p {
-        color: #888;
+        color: #a0a0a0;
+        border: 1px solid #2a2a2a;
         font-size: 0.8rem;
-        margin: 0;
-    }
-
-    .badge-rec {
-        background: rgba(139,92,246,0.2);
-        color: #a78bfa;
-        font-size: 0.6rem;
-        padding: 2px 8px;
-        border-radius: 10px;
-        font-weight: 600;
-    }
-
-    .badge-paid {
-        background: rgba(99,102,241,0.2);
-        color: #818cf8;
-        font-size: 0.6rem;
-        padding: 2px 8px;
-        border-radius: 10px;
-        font-weight: 600;
-    }
-
-    .conta-value {
-        text-align: right;
-    }
-
-    .conta-value .amount {
-        color: #f5f5f5;
-        font-weight: 700;
-        font-size: 1.1rem;
-    }
-
-    .conta-value .date {
-        color: #888;
-        font-size: 0.75rem;
-    }
-
-    .conta-value .date.overdue {
-        color: #ef4444;
-    }
-
-    .conta-actions {
-        display: flex;
-        gap: 8px;
-    }
-
-    .btn-pagar {
-        flex: 1;
-        background: #10b981;
-        color: #fff;
-        padding: 10px;
-        border-radius: 8px;
-        border: none;
-        font-weight: 600;
-        cursor: pointer;
-        font-size: 0.85rem;
-    }
-
-    .btn-pagar:hover {
-        background: #059669;
-    }
-
-    .btn-editar {
-        padding: 10px 16px;
-        background: #374151;
-        color: #fff;
-        border-radius: 8px;
-        border: none;
-        cursor: pointer;
-        text-decoration: none;
-        font-size: 0.85rem;
-    }
-
-    .btn-excluir {
-        padding: 10px;
-        background: transparent;
-        color: #ef4444;
-        border-radius: 8px;
-        border: 1px solid #ef4444;
-        cursor: pointer;
-        font-size: 0.85rem;
     }
 
     .modal-overlay {
@@ -290,7 +397,7 @@
         margin-bottom: 8px;
     }
 
-    .modal-content input {
+    .modal-content input, .modal-content select {
         width: 100%;
         padding: 12px;
         background: #0a0a0a;
@@ -323,6 +430,13 @@
         background: #10b981;
         color: #fff;
     }
+
+    @media (min-width: 768px) {
+        .page-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -343,133 +457,221 @@
     <div class="kpi-grid">
         <div class="kpi-card red">
             <div class="kpi-label">Vencidas</div>
-            <div class="kpi-value">R$ {{ "%.0f"|format(total_vencidas) if total_vencidas else '0' }}</div>
+            <div class="kpi-value">R$ {{ "%.0f"|format(total_vencidas) }}</div>
         </div>
         <div class="kpi-card yellow">
             <div class="kpi-label">Prox. 7 dias</div>
-            <div class="kpi-value">R$ {{ "%.0f"|format(total_7_dias) if total_7_dias else '0' }}</div>
+            <div class="kpi-value">R$ {{ "%.0f"|format(total_7_dias) }}</div>
         </div>
         <div class="kpi-card blue">
-            <div class="kpi-label">Este mes</div>
-            <div class="kpi-value">R$ {{ "%.0f"|format(total_mes) if total_mes else '0' }}</div>
+            <div class="kpi-label">Este Mes</div>
+            <div class="kpi-value">R$ {{ "%.0f"|format(total_mes) }}</div>
         </div>
     </div>
 
     <div class="filter-bar">
-        <a href="{{ url_for('financial.contas_pagar', status='pending') }}" 
-           class="filter-btn {{ 'active' if status_filter == 'pending' else '' }}">Pendentes</a>
-        <a href="{{ url_for('financial.contas_pagar', status='overdue') }}" 
-           class="filter-btn {{ 'active' if status_filter == 'overdue' else '' }}">Vencidas</a>
-        <a href="{{ url_for('financial.contas_pagar', status='paid') }}" 
-           class="filter-btn {{ 'active' if status_filter == 'paid' else '' }}">Pagas</a>
-        <a href="{{ url_for('financial.contas_pagar', status='all') }}" 
-           class="filter-btn {{ 'active' if status_filter == 'all' else '' }}">Todas</a>
+        {% if categoria_filter %}
+        <a href="{{ url_for('financial.contas_pagar', status='pending', categoria=categoria_filter) }}" class="filter-btn {{ 'active' if status_filter == 'pending' else '' }}">Pendentes</a>
+        <a href="{{ url_for('financial.contas_pagar', status='overdue', categoria=categoria_filter) }}" class="filter-btn {{ 'active' if status_filter == 'overdue' else '' }}">Vencidas</a>
+        <a href="{{ url_for('financial.contas_pagar', status='paid', categoria=categoria_filter) }}" class="filter-btn {{ 'active' if status_filter == 'paid' else '' }}">Pagas</a>
+        <a href="{{ url_for('financial.contas_pagar', status='all', categoria=categoria_filter) }}" class="filter-btn {{ 'active' if status_filter == 'all' else '' }}">Todas</a>
+        {% else %}
+        <a href="{{ url_for('financial.contas_pagar', status='pending') }}" class="filter-btn {{ 'active' if status_filter == 'pending' else '' }}">Pendentes</a>
+        <a href="{{ url_for('financial.contas_pagar', status='overdue') }}" class="filter-btn {{ 'active' if status_filter == 'overdue' else '' }}">Vencidas</a>
+        <a href="{{ url_for('financial.contas_pagar', status='paid') }}" class="filter-btn {{ 'active' if status_filter == 'paid' else '' }}">Pagas</a>
+        <a href="{{ url_for('financial.contas_pagar', status='all') }}" class="filter-btn {{ 'active' if status_filter == 'all' else '' }}">Todas</a>
+        {% endif %}
+        <select class="categoria-select" onchange="handleCategoriaChange(this.value)">
+            <option value="">Todas Categorias</option>
+            {% for cat in categorias %}
+            <option value="{{ cat }}" {{ 'selected' if categoria_filter == cat else '' }}>{{ cat|replace('_', ' ')|title }}</option>
+            {% endfor %}
+        </select>
     </div>
+    <script>
+    function handleCategoriaChange(categoria) {
+        var baseUrl = '{{ url_for('financial.contas_pagar') }}';
+        var status = '{{ status_filter }}';
+        var params = [];
+        if (status) params.push('status=' + encodeURIComponent(status));
+        if (categoria) params.push('categoria=' + encodeURIComponent(categoria));
+        window.location.href = baseUrl + (params.length ? '?' + params.join('&') : '');
+    }
+    </script>
 
-    <div class="list-section">
-        {% if contas %}
-            {% for conta in contas %}
-            <div class="conta-card {{ 'pago' if conta.status == 'paid' else 'urgente' if conta.days_until_due < 0 else 'atencao' if conta.days_until_due < 7 else 'ok' }}">
-                <div class="conta-header">
-                    <div class="conta-info">
-                        <h4>
-                            {% if conta.category == 'outros' and conta.custom_category %}
-                                {{ conta.custom_category }}
-                            {% else %}
-                                {{ conta.category|capitalize if conta.category else 'Conta' }}
-                            {% endif %}
-                            {% if conta.is_recurring %}<span class="badge-rec">REC</span>{% endif %}
-                            {% if conta.total_installments and conta.total_installments > 1 %}
-                                <span class="badge-rec" style="background: rgba(14,165,233,0.2); color: #38bdf8;">{{ conta.installment_number }}/{{ conta.total_installments }}</span>
-                            {% endif %}
-                            {% if conta.status == 'paid' %}<span class="badge-paid">PAGO</span>{% endif %}
-                        </h4>
-                        <p>{{ conta.description }}</p>
-                        {% if conta.supplier %}
-                        <p style="color: #666; font-size: 0.75rem;">{{ conta.supplier }}</p>
-                        {% endif %}
-                        {% if conta.payment_method %}
-                        <p style="color: #666; font-size: 0.7rem;"><i class="fas fa-credit-card"></i> {{ conta.payment_method|upper }}</p>
-                        {% endif %}
+    <div class="folders-section">
+        {% if contas_vencidas and status_filter != 'paid' %}
+        <div class="folder-card vencidas">
+            <div class="folder-header" onclick="toggleFolder('vencidas')">
+                <div class="folder-info">
+                    <div class="folder-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
                     </div>
-                    <div class="conta-value">
-                        <div class="amount">R$ {{ "%.2f"|format(conta.amount) }}</div>
-                        <div class="date {{ 'overdue' if conta.days_until_due < 0 and conta.status == 'pending' else '' }}">
-                            {% if conta.status == 'paid' %}
-                                Pago em {{ conta.paid_at.strftime('%d/%m') if conta.paid_at else '-' }}
-                            {% elif conta.days_until_due < 0 %}
-                                Vencida ha {{ conta.days_until_due|abs }} dias
-                            {% elif conta.days_until_due == 0 %}
-                                Vence HOJE
-                            {% else %}
-                                Vence {{ conta.due_date.strftime('%d/%m') }}
+                    <div>
+                        <div class="folder-name">Vencidas</div>
+                        <div class="folder-stats">
+                            <span class="qtd">{{ qtd_vencidas }} conta{{ 's' if qtd_vencidas > 1 else '' }}</span>
+                            <span class="total">R$ {{ "{:,.0f}".format(total_vencidas).replace(",", ".") }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="folder-toggle" id="icon-vencidas">▼</div>
+            </div>
+            <div class="folder-content" id="content-vencidas">
+                <div class="folder-content-inner">
+                    {% for conta in contas_vencidas %}
+                    <div class="conta-item urgente">
+                        <div class="conta-desc">
+                            <h5>{{ conta.description[:40] }}{% if conta.description|length > 40 %}...{% endif %}</h5>
+                            <p>{{ conta.supplier or conta.category }}</p>
+                        </div>
+                        <div class="conta-right">
+                            <div class="amount">R$ {{ "{:,.2f}".format(conta.amount).replace(",", "X").replace(".", ",").replace("X", ".") }}</div>
+                            <div class="due overdue">Venc. {{ conta.due_date.strftime('%d/%m') }}</div>
+                            <div class="conta-actions-mini">
+                                <button class="btn-mini pagar" onclick="abrirModalPagar({{ conta.id }}, '{{ conta.description[:30] }}', {{ conta.amount }})">Pagar</button>
+                                <a href="{{ url_for('financial.editar_conta_pagar', id=conta.id) }}" class="btn-mini editar">Editar</a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="section-title">
+            <i class="fas fa-calendar-alt"></i> Proximos 12 Meses
+        </div>
+
+        {% for mes_key, pasta in pastas.items() %}
+        <div class="folder-card {{ 'empty' if pasta.qtd == 0 else '' }}">
+            <div class="folder-header" onclick="toggleFolder('{{ mes_key }}')">
+                <div class="folder-info">
+                    <div class="folder-icon">
+                        <i class="fas fa-folder{{ '-open' if mes_key == mes_atual_key else '' }}"></i>
+                    </div>
+                    <div>
+                        <div class="folder-name">{{ pasta.label }}</div>
+                        <div class="folder-stats">
+                            <span class="qtd">{{ pasta.qtd }} conta{{ 's' if pasta.qtd != 1 else '' }}</span>
+                            {% if pasta.qtd > 0 %}
+                            <span class="total">R$ {{ "{:,.0f}".format(pasta.total).replace(",", ".") }}</span>
                             {% endif %}
                         </div>
                     </div>
                 </div>
-                
-                {% if conta.status == 'pending' %}
-                <div class="conta-actions">
-                    <button class="btn-pagar" data-id="{{ conta.id }}" data-desc="{{ conta.description|e }}" data-amount="{{ conta.amount }}" onclick="openPayModal(this)">
-                        <i class="fas fa-check"></i> Pagar
-                    </button>
-                    <a href="{{ url_for('financial.editar_conta_pagar', id=conta.id) }}" class="btn-editar">
-                        <i class="fas fa-edit"></i>
-                    </a>
-                    <form action="{{ url_for('financial.excluir_conta_pagar', id=conta.id) }}" method="POST" style="display:inline;" 
-                          onsubmit="return confirm('Cancelar esta conta?')">
-                        <button type="submit" class="btn-excluir">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </form>
+                <div class="folder-toggle" id="icon-{{ mes_key }}">▼</div>
+            </div>
+            <div class="folder-content" id="content-{{ mes_key }}">
+                <div class="folder-content-inner">
+                    {% if pasta.contas %}
+                        {% for conta in pasta.contas %}
+                        {% set dias_ate = (conta.due_date - today).days if conta.due_date else 999 %}
+                        <div class="conta-item {{ 'urgente' if dias_ate < 0 else 'atencao' if dias_ate <= 7 else 'ok' }}">
+                            <div class="conta-desc">
+                                <h5>{{ conta.description[:40] }}{% if conta.description|length > 40 %}...{% endif %}</h5>
+                                <p>{{ conta.supplier or conta.category }}</p>
+                            </div>
+                            <div class="conta-right">
+                                <div class="amount">R$ {{ "{:,.2f}".format(conta.amount).replace(",", "X").replace(".", ",").replace("X", ".") }}</div>
+                                <div class="due">{{ conta.due_date.strftime('%d/%m/%Y') }}</div>
+                                <div class="conta-actions-mini">
+                                    <button class="btn-mini pagar" onclick="abrirModalPagar({{ conta.id }}, '{{ conta.description[:30] }}', {{ conta.amount }})">Pagar</button>
+                                    <a href="{{ url_for('financial.editar_conta_pagar', id=conta.id) }}" class="btn-mini editar">Editar</a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty-folder">
+                            <i class="fas fa-check-circle"></i> Nenhuma conta para este mes
+                        </div>
+                    {% endif %}
                 </div>
-                {% endif %}
             </div>
-            {% endfor %}
-        {% else %}
-            <div class="empty-state">
-                <i class="fas fa-file-invoice"></i>
-                <h3>Nenhuma conta encontrada</h3>
-                <p><a href="{{ url_for('financial.nova_conta_pagar') }}">Cadastrar primeira conta</a></p>
-            </div>
-        {% endif %}
+        </div>
+        {% endfor %}
     </div>
+
+    {% if anos_repositorio %}
+    <a href="{{ url_for('financial.repositorio_contas') }}" class="repositorio-link">
+        <i class="fas fa-archive"></i>
+        <h4>Repositorio de Contas Pagas</h4>
+        <span>Anos: {{ anos_repositorio|join(', ') }}</span>
+    </a>
+    {% endif %}
 </div>
 
-<div class="modal-overlay" id="payModal">
+<div class="modal-overlay" id="modalPagar">
     <div class="modal-content">
-        <h3><i class="fas fa-check-circle"></i> Confirmar Pagamento</h3>
-        <p id="payDescription" style="color: #888; margin-bottom: 16px;"></p>
-        <form id="payForm" method="POST">
+        <h3><i class="fas fa-check-circle" style="color: #10b981;"></i> Registrar Pagamento</h3>
+        <form id="formPagar" method="post">
+            <input type="hidden" id="conta_id" name="conta_id">
+            <div class="form-group">
+                <label>Conta</label>
+                <input type="text" id="conta_desc" readonly style="color: #888;">
+            </div>
             <div class="form-group">
                 <label>Valor Pago</label>
-                <input type="text" name="paid_amount" id="payAmount" placeholder="0,00">
+                <input type="number" step="0.01" name="valor_pago" id="valor_pago" required>
+            </div>
+            <div class="form-group">
+                <label>Data do Pagamento</label>
+                <input type="date" name="data_pagamento" id="data_pagamento" required>
             </div>
             <div class="modal-actions">
-                <button type="button" class="btn-cancel" onclick="closePayModal()">Cancelar</button>
-                <button type="submit" class="btn-confirm">Confirmar Pagamento</button>
+                <button type="button" class="btn-cancel" onclick="fecharModal()">Cancelar</button>
+                <button type="submit" class="btn-confirm">Confirmar</button>
             </div>
         </form>
     </div>
 </div>
 
 <script>
-function openPayModal(btn) {
-    var id = btn.getAttribute('data-id');
-    var description = btn.getAttribute('data-desc');
-    var amount = parseFloat(btn.getAttribute('data-amount'));
-    document.getElementById('payDescription').textContent = description;
-    document.getElementById('payAmount').value = amount.toFixed(2).replace('.', ',');
-    document.getElementById('payForm').action = '/financial/contas-pagar/' + id + '/pagar';
-    document.getElementById('payModal').classList.add('show');
+function toggleFolder(folderId) {
+    const content = document.getElementById('content-' + folderId);
+    const icon = document.getElementById('icon-' + folderId);
+    
+    if (content.classList.contains('expanded')) {
+        content.classList.remove('expanded');
+        icon.classList.remove('expanded');
+    } else {
+        content.classList.add('expanded');
+        icon.classList.add('expanded');
+    }
 }
 
-function closePayModal() {
-    document.getElementById('payModal').classList.remove('show');
+function abrirModalPagar(id, desc, valor) {
+    document.getElementById('conta_id').value = id;
+    document.getElementById('conta_desc').value = desc;
+    document.getElementById('valor_pago').value = valor.toFixed(2);
+    document.getElementById('data_pagamento').value = new Date().toISOString().split('T')[0];
+    document.getElementById('formPagar').action = '/financial/contas-pagar/' + id + '/pagar';
+    document.getElementById('modalPagar').classList.add('show');
 }
 
-document.getElementById('payModal').addEventListener('click', function(e) {
-    if (e.target === this) closePayModal();
+function fecharModal() {
+    document.getElementById('modalPagar').classList.remove('show');
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const mesAtualKey = '{{ mes_atual_key }}';
+    const contentAtual = document.getElementById('content-' + mesAtualKey);
+    const iconAtual = document.getElementById('icon-' + mesAtualKey);
+    if (contentAtual && iconAtual) {
+        contentAtual.classList.add('expanded');
+        iconAtual.classList.add('expanded');
+    }
+    
+    {% if contas_vencidas %}
+    const contentVencidas = document.getElementById('content-vencidas');
+    const iconVencidas = document.getElementById('icon-vencidas');
+    if (contentVencidas && iconVencidas) {
+        contentVencidas.classList.add('expanded');
+        iconVencidas.classList.add('expanded');
+    }
+    {% endif %}
 });
 </script>
 {% endblock %}
