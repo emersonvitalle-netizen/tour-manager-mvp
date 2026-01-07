@@ -1981,3 +1981,116 @@ def rescisao_pagar(id):
     db.session.commit()
     flash('Rescisao paga e funcionario desligado!', 'success')
     return redirect(url_for('rh.rescisao_view', id=id))
+
+
+# ============================================
+# RELATORIO CUSTO TOTAL POR FUNCIONARIO
+# ============================================
+
+@rh_bp.route('/relatorio/custo-funcionario')
+@login_required
+@admin_required
+def relatorio_custo_funcionario():
+    """Relatorio completo de custo total por funcionario"""
+    from sqlalchemy import func
+    from dateutil.relativedelta import relativedelta
+    
+    employees = Employee.query.filter_by(
+        company_id=current_user.company_id,
+        status='active'
+    ).order_by(Employee.name).all()
+    
+    # Periodo de analise (ultimos 12 meses)
+    hoje = date.today()
+    inicio_periodo = (hoje - relativedelta(months=12)).replace(day=1)
+    
+    relatorio = []
+    totais = {
+        'salarios': Decimal('0'),
+        'inss_patronal': Decimal('0'),
+        'fgts': Decimal('0'),
+        'provisao_ferias': Decimal('0'),
+        'provisao_13': Decimal('0'),
+        'beneficios': Decimal('0'),
+        'custo_total': Decimal('0')
+    }
+    
+    for emp in employees:
+        salario = Decimal(str(emp.salary or 0))
+        
+        # Calcular encargos mensais
+        inss_patronal = salario * Decimal('0.20')  # 20% INSS patronal
+        fgts = salario * Decimal('0.08')  # 8% FGTS
+        
+        # Provisoes mensais (1/12 do salario + encargos)
+        provisao_ferias = (salario + (salario / Decimal('3'))) / Decimal('12')  # 1/12 de salario + 1/3
+        provisao_13 = salario / Decimal('12')  # 1/12 do 13o
+        
+        # Beneficios (usando campos corretos do modelo)
+        vale_transporte = Decimal(str(emp.vt_value or 0))
+        vale_alimentacao = Decimal(str(emp.va_value or 0)) + Decimal(str(emp.vr_value or 0))
+        plano_saude = Decimal(str(emp.health_insurance or 0))
+        outros_beneficios = Decimal(str(emp.other_benefits or 0))
+        total_beneficios = vale_transporte + vale_alimentacao + plano_saude + outros_beneficios
+        
+        # Custo total mensal
+        custo_mensal = salario + inss_patronal + fgts + provisao_ferias + provisao_13 + total_beneficios
+        
+        # Buscar folhas pagas no periodo (últimos 12 meses)
+        folhas_pagas = PayrollEntry.query.filter(
+            PayrollEntry.employee_id == emp.id,
+            PayrollEntry.company_id == current_user.company_id,
+            PayrollEntry.status == 'paid',
+            PayrollEntry.payment_date >= inicio_periodo,
+            PayrollEntry.payment_date <= hoje
+        ).count()
+        
+        # Buscar total pago em folhas no período
+        total_pago_folhas = db.session.query(func.coalesce(func.sum(PayrollEntry.net_salary), 0)).filter(
+            PayrollEntry.employee_id == emp.id,
+            PayrollEntry.company_id == current_user.company_id,
+            PayrollEntry.status == 'paid',
+            PayrollEntry.payment_date >= inicio_periodo,
+            PayrollEntry.payment_date <= hoje
+        ).scalar() or Decimal('0')
+        
+        # Buscar adiantamentos pagos (origin_type=adiantamento usa employee.id em origin_id)
+        adiantamentos_pagos = db.session.query(func.coalesce(func.sum(AccountPayable.amount), 0)).filter(
+            AccountPayable.company_id == current_user.company_id,
+            AccountPayable.origin_type == 'adiantamento',
+            AccountPayable.origin_id == emp.id,
+            AccountPayable.status == 'paid',
+            AccountPayable.paid_at >= inicio_periodo
+        ).scalar() or Decimal('0')
+        
+        item = {
+            'funcionario': emp,
+            'salario': salario,
+            'inss_patronal': inss_patronal,
+            'fgts': fgts,
+            'provisao_ferias': provisao_ferias,
+            'provisao_13': provisao_13,
+            'beneficios': total_beneficios,
+            'custo_mensal': custo_mensal,
+            'custo_anual': custo_mensal * 12,
+            'folhas_pagas': folhas_pagas,
+            'total_pago_periodo': total_pago_folhas,
+            'adiantamentos_periodo': adiantamentos_pagos
+        }
+        
+        relatorio.append(item)
+        
+        # Acumular totais
+        totais['salarios'] += salario
+        totais['inss_patronal'] += inss_patronal
+        totais['fgts'] += fgts
+        totais['provisao_ferias'] += provisao_ferias
+        totais['provisao_13'] += provisao_13
+        totais['beneficios'] += total_beneficios
+        totais['custo_total'] += custo_mensal
+    
+    return render_template('rh/relatorio_custo_funcionario.html',
+                          relatorio=relatorio,
+                          totais=totais,
+                          periodo_inicio=inicio_periodo,
+                          periodo_fim=hoje)
