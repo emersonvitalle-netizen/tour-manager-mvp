@@ -15,7 +15,7 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 24px;
+        margin-bottom: 20px;
     }
 
     .page-title {
@@ -34,20 +34,65 @@
         text-decoration: none;
     }
 
+    .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+
+    .kpi-card {
+        background: #1a1a1a;
+        border-radius: 10px;
+        padding: 14px;
+        border-left: 3px solid #333;
+    }
+
+    .kpi-card.green { border-left-color: #10b981; }
+    .kpi-card.orange { border-left-color: #f59e0b; }
+    .kpi-card.blue { border-left-color: #3b82f6; }
+    .kpi-card.gold { border-left-color: #d4a574; }
+
+    .kpi-label {
+        color: #666;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .kpi-value {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #f5f5f5;
+        margin: 4px 0;
+    }
+
+    .kpi-card.green .kpi-value { color: #10b981; }
+    .kpi-card.orange .kpi-value { color: #f59e0b; }
+
+    .kpi-sub {
+        font-size: 0.7rem;
+        color: #555;
+    }
+
     .centro-card {
         background: #1a1a1a;
         border-radius: 12px;
         padding: 16px;
         margin-bottom: 12px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
         border-left: 4px solid #d4a574;
     }
 
     .centro-card.inactive {
         border-left-color: #666;
         opacity: 0.6;
+    }
+
+    .centro-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 12px;
     }
 
     .centro-info {
@@ -73,21 +118,21 @@
 
     .centro-desc {
         color: #888;
-        font-size: 0.85rem;
-        margin-top: 4px;
+        font-size: 0.8rem;
+        margin-top: 2px;
     }
 
     .centro-actions {
         display: flex;
-        gap: 8px;
+        gap: 6px;
     }
 
     .btn-edit, .btn-delete {
-        padding: 8px 12px;
+        padding: 6px 10px;
         border-radius: 6px;
         border: none;
         cursor: pointer;
-        font-size: 0.85rem;
+        font-size: 0.8rem;
     }
 
     .btn-edit {
@@ -101,6 +146,86 @@
         color: #fff;
     }
 
+    .centro-metrics {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+
+    .metric {
+        text-align: center;
+    }
+
+    .metric-value {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #f5f5f5;
+    }
+
+    .metric-value.green { color: #10b981; }
+    .metric-value.orange { color: #f59e0b; }
+    .metric-value.blue { color: #3b82f6; }
+
+    .metric-label {
+        font-size: 0.65rem;
+        color: #666;
+        text-transform: uppercase;
+    }
+
+    .progress-bar {
+        height: 6px;
+        background: #2a2a2a;
+        border-radius: 3px;
+        overflow: hidden;
+    }
+
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #d4a574, #c9956a);
+        border-radius: 3px;
+        transition: width 0.3s;
+    }
+
+    .percent-badge {
+        float: right;
+        background: rgba(212,165,116,0.2);
+        color: #d4a574;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 700;
+    }
+
+    .sem-centro-card {
+        background: #1a1a1a;
+        border-radius: 10px;
+        padding: 14px;
+        margin-bottom: 16px;
+        border: 1px dashed #333;
+    }
+
+    .sem-centro-title {
+        color: #888;
+        font-size: 0.85rem;
+        margin-bottom: 8px;
+    }
+
+    .sem-centro-values {
+        display: flex;
+        gap: 20px;
+    }
+
+    .sem-centro-item span {
+        color: #666;
+        font-size: 0.75rem;
+    }
+
+    .sem-centro-item strong {
+        color: #f5f5f5;
+        font-size: 0.9rem;
+    }
+
     .empty-state {
         text-align: center;
         color: #666;
@@ -111,6 +236,16 @@
         color: #d4a574;
         text-decoration: none;
         font-size: 0.9rem;
+    }
+
+    @media (min-width: 768px) {
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .kpi-grid {
+            grid-template-columns: repeat(4, 1fr);
+        }
     }
 </style>
 {% endblock %}
@@ -128,30 +263,85 @@
         </a>
     </div>
 
+    <div class="kpi-grid">
+        <div class="kpi-card green">
+            <div class="kpi-label">Total Pago</div>
+            <div class="kpi-value">R$ {{ "{:,.0f}".format(total_pago).replace(",", ".") }}</div>
+        </div>
+        <div class="kpi-card orange">
+            <div class="kpi-label">Pendente</div>
+            <div class="kpi-value">R$ {{ "{:,.0f}".format(total_pendente).replace(",", ".") }}</div>
+        </div>
+        <div class="kpi-card blue">
+            <div class="kpi-label">Total Geral</div>
+            <div class="kpi-value" style="color: #3b82f6;">R$ {{ "{:,.0f}".format(total_geral).replace(",", ".") }}</div>
+        </div>
+        <div class="kpi-card gold">
+            <div class="kpi-label">Maior Centro</div>
+            <div class="kpi-value" style="color: #d4a574; font-size: 0.9rem;">{{ maior_centro or '-' }}</div>
+        </div>
+    </div>
+
+    {% if sem_centro_pago > 0 or sem_centro_pendente > 0 %}
+    <div class="sem-centro-card">
+        <div class="sem-centro-title"><i class="fas fa-exclamation-circle"></i> Sem Centro de Custo</div>
+        <div class="sem-centro-values">
+            <div class="sem-centro-item">
+                <span>Pago:</span> <strong style="color: #10b981;">R$ {{ "{:,.0f}".format(sem_centro_pago).replace(",", ".") }}</strong>
+            </div>
+            <div class="sem-centro-item">
+                <span>Pendente:</span> <strong style="color: #f59e0b;">R$ {{ "{:,.0f}".format(sem_centro_pendente).replace(",", ".") }}</strong>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     {% if centros %}
-        {% for centro in centros %}
-        <div class="centro-card {{ 'inactive' if not centro.is_active else '' }}">
-            <div class="centro-info">
-                <div>
-                    <span class="centro-code">{{ centro.code }}</span>
-                    <span class="centro-name">{{ centro.name }}</span>
-                    {% if not centro.is_active %}
-                    <span style="color: #666; font-size: 0.75rem;">(inativo)</span>
+        {% for c in centros %}
+        <div class="centro-card {{ 'inactive' if not c.obj.is_active else '' }}">
+            <div class="centro-header">
+                <div class="centro-info">
+                    <div>
+                        <span class="centro-code">{{ c.obj.code }}</span>
+                        <span class="centro-name">{{ c.obj.name }}</span>
+                        {% if not c.obj.is_active %}
+                        <span style="color: #666; font-size: 0.7rem;">(inativo)</span>
+                        {% endif %}
+                        <span class="percent-badge">{{ "%.1f"|format(c.percent) }}%</span>
+                    </div>
+                    {% if c.obj.description %}
+                    <div class="centro-desc">{{ c.obj.description }}</div>
                     {% endif %}
                 </div>
-                {% if centro.description %}
-                <div class="centro-desc">{{ centro.description }}</div>
-                {% endif %}
+                <div class="centro-actions">
+                    <a href="{{ url_for('financial.editar_centro_custo', id=c.obj.id) }}" class="btn-edit">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    <form action="{{ url_for('financial.excluir_centro_custo', id=c.obj.id) }}" method="post" style="display: inline;" onsubmit="return confirm('Excluir este centro de custo?');">
+                        <button type="submit" class="btn-delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </form>
+                </div>
             </div>
-            <div class="centro-actions">
-                <a href="{{ url_for('financial.editar_centro_custo', id=centro.id) }}" class="btn-edit">
-                    <i class="fas fa-edit"></i>
-                </a>
-                <form action="{{ url_for('financial.excluir_centro_custo', id=centro.id) }}" method="post" style="display: inline;" onsubmit="return confirm('Excluir este centro de custo?');">
-                    <button type="submit" class="btn-delete">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </form>
+
+            <div class="centro-metrics">
+                <div class="metric">
+                    <div class="metric-value green">R$ {{ "{:,.0f}".format(c.pago).replace(",", ".") }}</div>
+                    <div class="metric-label">Pago</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value orange">R$ {{ "{:,.0f}".format(c.pendente).replace(",", ".") }}</div>
+                    <div class="metric-label">Pendente</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value blue">{{ c.qtd }}</div>
+                    <div class="metric-label">Contas</div>
+                </div>
+            </div>
+
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: {{ c.percent }}%;"></div>
             </div>
         </div>
         {% endfor %}

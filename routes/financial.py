@@ -2435,14 +2435,94 @@ def listar_servicos_municipais():
 @login_required
 @admin_required
 def centros_custo():
-    """Lista de centros de custo"""
-    from models.rh import CostCenter
+    """Lista de centros de custo com analise de gastos"""
+    from models.rh import CostCenter, AccountPayable
+    from sqlalchemy import func, case
+    from decimal import Decimal
     
     centros = CostCenter.query.filter_by(
         company_id=current_user.company_id
     ).order_by(CostCenter.code).all()
     
-    return render_template('financial/centros_custo.html', centros=centros)
+    # Calcular totais por centro de custo usando status correto
+    # Inclui pagamentos parciais corretamente
+    gastos_por_centro = db.session.query(
+        AccountPayable.cost_center_id,
+        func.sum(case(
+            (AccountPayable.status.in_(['paid', 'partial']), func.coalesce(AccountPayable.paid_amount, 0)),
+            else_=0
+        )).label('total_pago'),
+        func.sum(case(
+            (AccountPayable.status == 'paid', 0),
+            (AccountPayable.status == 'partial', func.coalesce(AccountPayable.amount, 0) - func.coalesce(AccountPayable.paid_amount, 0)),
+            else_=func.coalesce(AccountPayable.amount, 0)
+        )).label('total_pendente'),
+        func.count(AccountPayable.id).label('qtd_contas')
+    ).filter(
+        AccountPayable.company_id == current_user.company_id,
+        AccountPayable.status != 'cancelled'
+    ).group_by(AccountPayable.cost_center_id).all()
+    
+    # Mapear para dict
+    gastos_map = {}
+    total_geral_pago = Decimal('0')
+    total_geral_pendente = Decimal('0')
+    sem_centro_pago = Decimal('0')
+    sem_centro_pendente = Decimal('0')
+    
+    for g in gastos_por_centro:
+        pago = Decimal(str(g.total_pago or 0))
+        pendente = Decimal(str(g.total_pendente or 0))
+        
+        if g.cost_center_id:
+            gastos_map[g.cost_center_id] = {
+                'pago': pago,
+                'pendente': pendente,
+                'qtd': g.qtd_contas
+            }
+            total_geral_pago += pago
+            total_geral_pendente += pendente
+        else:
+            sem_centro_pago = pago
+            sem_centro_pendente = pendente
+    
+    total_geral_pago += sem_centro_pago
+    total_geral_pendente += sem_centro_pendente
+    total_geral = total_geral_pago + total_geral_pendente
+    
+    # Enriquecer centros com dados de gastos
+    centros_data = []
+    maior_centro = None
+    maior_valor = Decimal('0')
+    
+    for c in centros:
+        dados = gastos_map.get(c.id, {'pago': Decimal('0'), 'pendente': Decimal('0'), 'qtd': 0})
+        total_centro = dados['pago'] + dados['pendente']
+        percent = (total_centro / total_geral * 100) if total_geral > 0 else 0
+        
+        centro_info = {
+            'obj': c,
+            'pago': float(dados['pago']),
+            'pendente': float(dados['pendente']),
+            'total': float(total_centro),
+            'percent': float(percent),
+            'qtd': dados['qtd']
+        }
+        centros_data.append(centro_info)
+        
+        if total_centro > maior_valor:
+            maior_valor = total_centro
+            maior_centro = c.name
+    
+    return render_template('financial/centros_custo.html', 
+        centros=centros_data,
+        total_pago=float(total_geral_pago),
+        total_pendente=float(total_geral_pendente),
+        total_geral=float(total_geral),
+        sem_centro_pago=float(sem_centro_pago),
+        sem_centro_pendente=float(sem_centro_pendente),
+        maior_centro=maior_centro
+    )
 
 
 @financial_bp.route('/centros-custo/novo', methods=['GET', 'POST'])
