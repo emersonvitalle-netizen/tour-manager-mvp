@@ -995,7 +995,7 @@ def freelancers():
 @login_required
 @admin_required
 def contas_pagar():
-    """Contas a pagar - pastas mensais colapsaveis (12 meses rolling)"""
+    """Contas a pagar - pastas mensais colapsaveis com meses vencidos dinamicos"""
     from models.rh import AccountPayable
     from sqlalchemy import func
     from dateutil.relativedelta import relativedelta
@@ -1021,16 +1021,12 @@ def contas_pagar():
         'parcelamentos', 'outros'
     ]
     
-    # Gerar 12 meses a partir do mes atual
-    meses_rolling = []
-    for i in range(12):
-        mes = mes_atual + relativedelta(months=i)
-        meses_rolling.append({
-            'key': mes.strftime('%Y-%m'),
-            'label': mes.strftime('%b/%Y').capitalize(),
-            'inicio': mes,
-            'fim': mes + relativedelta(months=1, days=-1)
-        })
+    # Helper para classificar estado da pasta
+    def classify_folder_state(folder_date, has_pending):
+        """Retorna: 'overdue', 'on_track', ou 'archivable'"""
+        if folder_date < mes_atual:
+            return 'overdue' if has_pending else 'archivable'
+        return 'on_track'
     
     # Base query com filtros
     query = AccountPayable.query.filter(AccountPayable.company_id == current_user.company_id)
@@ -1052,50 +1048,70 @@ def contas_pagar():
     
     contas_todas = query.order_by(AccountPayable.due_date).all()
     
-    # Agrupar contas por mes
-    pastas = OrderedDict()
-    contas_vencidas = []
+    # Primeiro passo: identificar TODOS os meses presentes no dataset filtrado
+    meses_no_dataset = set()
+    for conta in contas_todas:
+        if conta.due_date:
+            meses_no_dataset.add(conta.due_date.strftime('%Y-%m'))
     
-    for m in meses_rolling:
-        pastas[m['key']] = {
-            'label': m['label'],
-            'inicio': m['inicio'],
-            'fim': m['fim'],
+    # Gerar pastas: todos os meses no dataset + 12 meses rolling
+    pastas = OrderedDict()
+    
+    # Adicionar meses do dataset que sao anteriores ao mes atual (ordenados)
+    meses_passados = sorted([m for m in meses_no_dataset if m < mes_atual.strftime('%Y-%m')])
+    for mes_key in meses_passados:
+        ano, mes_num = int(mes_key[:4]), int(mes_key[5:7])
+        mes_inicio = date(ano, mes_num, 1)
+        pastas[mes_key] = {
+            'label': mes_inicio.strftime('%b/%Y').capitalize(),
+            'inicio': mes_inicio,
+            'fim': mes_inicio + relativedelta(months=1, days=-1),
             'contas': [],
             'total': Decimal('0'),
-            'qtd': 0
+            'qtd': 0,
+            'state': 'on_track'  # sera recalculado depois
         }
     
+    # Adicionar 12 meses rolling (atual + 11 futuros)
+    for i in range(12):
+        mes = mes_atual + relativedelta(months=i)
+        mes_key = mes.strftime('%Y-%m')
+        if mes_key not in pastas:
+            pastas[mes_key] = {
+                'label': mes.strftime('%b/%Y').capitalize(),
+                'inicio': mes,
+                'fim': mes + relativedelta(months=1, days=-1),
+                'contas': [],
+                'total': Decimal('0'),
+                'qtd': 0,
+                'state': 'on_track'
+            }
+    
+    # Agrupar contas nas pastas
     for conta in contas_todas:
         if conta.due_date:
             mes_key = conta.due_date.strftime('%Y-%m')
-            
-            # Verificar se vencida (antes de hoje) - apenas para status pendentes/partial
-            # Nao mostrar vencidas quando filtrando por pagas
-            # Quando status=overdue, todas as contas ja sao vencidas, mostrar nas pastas
-            is_vencida = conta.due_date < hoje and conta.status in ['pending', 'partial']
-            
-            if is_vencida and status_filter not in ['paid', 'overdue']:
-                contas_vencidas.append(conta)
-            elif mes_key in pastas:
+            if mes_key in pastas:
                 pastas[mes_key]['contas'].append(conta)
                 pastas[mes_key]['total'] += conta.amount or Decimal('0')
                 pastas[mes_key]['qtd'] += 1
-            else:
-                # Contas fora dos 12 meses rolling (ex: vencidas de meses anteriores quando status=overdue)
-                # Colocar em vencidas se for overdue
-                if is_vencida:
-                    contas_vencidas.append(conta)
     
-    # KPIs derivados do mesmo dataset filtrado (contas_todas)
-    # Quando status=overdue, todas as contas visíveis são vencidas
-    if status_filter == 'overdue':
-        # Todas as contas_todas já são vencidas pelo filtro, calcular total delas
-        total_vencidas = sum(float(c.amount or 0) for c in contas_todas)
-        qtd_vencidas = len(contas_todas)
-    else:
-        total_vencidas = sum(float(c.amount or 0) for c in contas_vencidas)
-        qtd_vencidas = len(contas_vencidas)
+    # Atualizar estado das pastas (verificar se tem pendencias vencidas)
+    for mes_key, pasta in pastas.items():
+        has_pending = any(c.status in ['pending', 'partial'] for c in pasta['contas'])
+        pasta['state'] = classify_folder_state(pasta['inicio'], has_pending)
+    
+    # KPIs derivados do mesmo dataset filtrado
+    # Total vencidas = soma de TODAS as contas vencidas (due_date < hoje E status pendente)
+    total_vencidas = sum(
+        float(c.amount or 0) 
+        for c in contas_todas
+        if c.due_date and c.due_date < hoje and c.status in ['pending', 'partial']
+    )
+    qtd_vencidas = sum(
+        1 for c in contas_todas
+        if c.due_date and c.due_date < hoje and c.status in ['pending', 'partial']
+    )
     
     # KPI de 7 dias - calculado a partir do dataset ja filtrado
     total_7_dias = sum(
@@ -1117,7 +1133,6 @@ def contas_pagar():
 
     return render_template('financial/contas_pagar.html',
                           pastas=pastas,
-                          contas_vencidas=contas_vencidas,
                           total_vencidas=total_vencidas,
                           qtd_vencidas=qtd_vencidas,
                           total_7_dias=total_7_dias,
