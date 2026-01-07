@@ -278,6 +278,18 @@
             </div>
 
             <div class="form-group">
+                <label class="form-label">Centro de Custo</label>
+                <select name="cost_center_id" class="form-select">
+                    <option value="">Sem centro de custo</option>
+                    {% for cc in cost_centers %}
+                    <option value="{{ cc.id }}" {{ 'selected' if conta and conta.cost_center_id == cc.id else '' }}>
+                        {{ cc.code ~ ' - ' if cc.code else '' }}{{ cc.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
                 <label class="form-label">Data de Vencimento *</label>
                 <input type="date" name="due_date" class="form-control" 
                        value="{{ conta.due_date.strftime('%Y-%m-%d') if conta else '' }}" 
