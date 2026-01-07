@@ -109,6 +109,16 @@ The system is built using a Flask (Python) backend with SQLAlchemy for ORM and J
 - `scanner/` - qr, nfc, rfid, rfid_batch_associate
 - `orcamento/`, `leads/`, `users/`, `kit/`, `work_list/`
 
+## Recent Changes (Jan/2026)
+
+- Centro de Custos ativado em Contas a Pagar (CostCenter model + select dropdown)
+- Novo relatório de Custo Total por Funcionário (/rh/relatorio/custo-funcionario) com:
+  - Salário base, INSS patronal (20%), FGTS (8%)
+  - Provisões mensais de férias e 13º
+  - Benefícios (VT, VA, VR, plano saúde)
+  - Custo total mensal e anual por funcionário
+- Cálculo de rescisão completo com multa FGTS 40% (sem justa causa) e 20% (acordo mútuo)
+
 ## Recent Changes (Dec/2025)
 
 - Equipment photos shared automatically by brand+model (EquipmentModel)
