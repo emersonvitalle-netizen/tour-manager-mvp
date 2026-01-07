@@ -2425,3 +2425,97 @@ def listar_servicos_municipais():
     result = provider.get_municipal_services(description)
 
     return jsonify(result)
+
+
+# ============================================
+# CENTRO DE CUSTOS
+# ============================================
+
+@financial_bp.route('/centros-custo')
+@login_required
+@admin_required
+def centros_custo():
+    """Lista de centros de custo"""
+    from models.rh import CostCenter
+    
+    centros = CostCenter.query.filter_by(
+        company_id=current_user.company_id
+    ).order_by(CostCenter.code).all()
+    
+    return render_template('financial/centros_custo.html', centros=centros)
+
+
+@financial_bp.route('/centros-custo/novo', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def novo_centro_custo():
+    """Criar novo centro de custo"""
+    from models.rh import CostCenter
+    
+    if request.method == 'POST':
+        try:
+            centro = CostCenter(
+                company_id=current_user.company_id,
+                code=request.form.get('code', '').strip().upper(),
+                name=request.form.get('name', '').strip(),
+                description=request.form.get('description', '').strip() or None,
+                is_active=request.form.get('is_active') == 'on'
+            )
+            db.session.add(centro)
+            db.session.commit()
+            flash('Centro de custo criado!', 'success')
+            return redirect(url_for('financial.centros_custo'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Erro: {str(e)}', 'danger')
+    
+    return render_template('financial/centro_custo_form.html', centro=None)
+
+
+@financial_bp.route('/centros-custo/<int:id>/editar', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def editar_centro_custo(id):
+    """Editar centro de custo"""
+    from models.rh import CostCenter
+    
+    centro = CostCenter.query.filter_by(
+        id=id, company_id=current_user.company_id
+    ).first_or_404()
+    
+    if request.method == 'POST':
+        try:
+            centro.code = request.form.get('code', '').strip().upper()
+            centro.name = request.form.get('name', '').strip()
+            centro.description = request.form.get('description', '').strip() or None
+            centro.is_active = request.form.get('is_active') == 'on'
+            db.session.commit()
+            flash('Centro de custo atualizado!', 'success')
+            return redirect(url_for('financial.centros_custo'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Erro: {str(e)}', 'danger')
+    
+    return render_template('financial/centro_custo_form.html', centro=centro)
+
+
+@financial_bp.route('/centros-custo/<int:id>/excluir', methods=['POST'])
+@login_required
+@admin_required
+def excluir_centro_custo(id):
+    """Excluir centro de custo"""
+    from models.rh import CostCenter
+    
+    centro = CostCenter.query.filter_by(
+        id=id, company_id=current_user.company_id
+    ).first_or_404()
+    
+    try:
+        db.session.delete(centro)
+        db.session.commit()
+        flash('Centro de custo excluido!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Erro ao excluir: {str(e)}', 'danger')
+    
+    return redirect(url_for('financial.centros_custo'))
