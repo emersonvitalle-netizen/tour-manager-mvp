@@ -111,6 +111,14 @@ The system is built using a Flask (Python) backend with SQLAlchemy for ORM and J
 
 ## Recent Changes (Jan/2026)
 
+- **Fluxo RH→Financeiro com Aprovação Explícita:**
+  - Novo modelo SolicitacaoAdiantamento com workflow completo (pendente→aprovado→integrado→pago)
+  - 5 módulos refatorados: adiantamentos, folha CLT, férias, 13º salário, rescisão
+  - Eventos *_APPROVED criam AccountPayable (pending), *_PAID marca como paid
+  - Listeners retornam dict estruturado para diferenciar duplicidade de erro real
+  - Rotas de pagamento adiam commit até confirmação do listener financeiro
+  - Transações atômicas em listeners multi-insert (rollback em caso de falha)
+  - Rastreabilidade employee_id via notes (migração futura para FK estruturado)
 - **Contas a Pagar - Pastas Mensais Dinâmicas:**
   - Pastas colapsáveis por mês usando padrão HARDCASE (toggleFolder)
   - Meses vencidos aparecem com efeito "breathing" vermelho (animação sutil)
