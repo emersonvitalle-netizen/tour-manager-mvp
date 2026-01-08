@@ -12,7 +12,7 @@ from flask import Blueprint, render_template, redirect, url_for, request, flash,
 from flask_login import login_required, current_user
 from functools import wraps
 from extensions import db
-from models.rh import Employee, Freelancer, FreelancerAssignment, FreelancerReview, PayrollEntry, AccountPayable
+from models.rh import Employee, Freelancer, FreelancerAssignment, FreelancerReview, PayrollEntry, AccountPayable, SolicitacaoAdiantamento
 from datetime import datetime, date, timedelta
 from decimal import Decimal, ROUND_HALF_UP
 
@@ -361,6 +361,22 @@ def new_employee():
             db.session.add(employee)
             db.session.commit()
 
+            # === EVENTBUS: EMPLOYEE_HIRED ===
+            try:
+                from services.event_bus import EventBus, Events
+                EventBus.emit(Events.EMPLOYEE_HIRED, {
+                    'employee_id': employee.id,
+                    'employee_name': employee.name,
+                    'position': employee.position,
+                    'department': employee.department,
+                    'salary': float(employee.salary),
+                    'admission_date': str(admission_date) if admission_date else None,
+                    'company_id': current_user.company_id,
+                    'created_by': current_user.id
+                })
+            except ImportError:
+                pass
+
             flash('Funcionario cadastrado com sucesso!', 'success')
             return redirect(url_for('rh.employees'))
 
@@ -547,49 +563,52 @@ def adiantamento():
             else:
                 data_pagamento = date.today()
 
-            # Verificar se ja tem adiantamento no mes (pendente OU pago)
+            # Verificar se ja tem solicitacao de adiantamento no mes (pendente, aprovado)
             mes_ref = data_pagamento.replace(day=1)
             mes_fim = (mes_ref + timedelta(days=32)).replace(day=1)
 
-            adiantamento_existente = AccountPayable.query.filter(
-                AccountPayable.company_id == current_user.company_id,
-                AccountPayable.origin_type == 'adiantamento',
-                AccountPayable.origin_id == employee.id,
-                AccountPayable.category == 'adiantamento',
-                AccountPayable.status.in_(['pending', 'paid']),
-                AccountPayable.due_date >= mes_ref,
-                AccountPayable.due_date < mes_fim
+            solicitacao_existente = SolicitacaoAdiantamento.query.filter(
+                SolicitacaoAdiantamento.company_id == current_user.company_id,
+                SolicitacaoAdiantamento.employee_id == employee.id,
+                SolicitacaoAdiantamento.status.in_(['pendente', 'aprovado']),
+                SolicitacaoAdiantamento.data_pagamento >= mes_ref,
+                SolicitacaoAdiantamento.data_pagamento < mes_fim
             ).first()
 
-            if adiantamento_existente:
-                status_txt = 'pendente' if adiantamento_existente.status == 'pending' else 'pago'
+            if solicitacao_existente:
+                status_map = {'pendente': 'pendente de aprovacao', 'aprovado': 'aprovado'}
+                status_txt = status_map.get(solicitacao_existente.status, solicitacao_existente.status)
                 flash(f'Ja existe adiantamento {status_txt} para {employee.name} neste mes', 'warning')
                 return redirect(url_for('rh.adiantamento'))
 
-            # Criar conta a pagar do adiantamento
-            conta = AccountPayable(
+            # Criar SolicitacaoAdiantamento (aguarda aprovacao RH)
+            solicitacao = SolicitacaoAdiantamento(
                 company_id=current_user.company_id,
-                description=f"Adiantamento - {employee.name} ({data_pagamento.strftime('%m/%Y')})",
-                category='adiantamento',
-                amount=Decimal(str(valor)),
-                due_date=data_pagamento,
-                status='pending',
-                origin_type='adiantamento',
-                origin_id=employee.id,
+                employee_id=employee.id,
+                valor=Decimal(str(valor)),
+                data_solicitacao=date.today(),
+                data_pagamento=data_pagamento,
+                status='pendente',
                 created_by=current_user.id
             )
-            db.session.add(conta)
+            db.session.add(solicitacao)
             db.session.commit()
 
-            flash(f'Adiantamento de R$ {valor:.2f} criado para {employee.name}', 'success')
+            flash(f'Solicitacao de adiantamento de R$ {valor:.2f} criada para {employee.name}. Aguarda aprovacao.', 'success')
             return redirect(url_for('rh.adiantamento'))
 
         except Exception as e:
             db.session.rollback()
             flash(f'Erro ao criar adiantamento: {str(e)}', 'danger')
 
-    # Listar adiantamentos pendentes
-    adiantamentos_pendentes = AccountPayable.query.filter(
+    # Listar solicitacoes pendentes de aprovacao
+    solicitacoes_pendentes = SolicitacaoAdiantamento.query.filter(
+        SolicitacaoAdiantamento.company_id == current_user.company_id,
+        SolicitacaoAdiantamento.status == 'pendente'
+    ).order_by(SolicitacaoAdiantamento.data_pagamento).all()
+
+    # Listar adiantamentos aprovados (AccountPayable pendentes de pagamento)
+    adiantamentos_aprovados = AccountPayable.query.filter(
         AccountPayable.company_id == current_user.company_id,
         AccountPayable.category == 'adiantamento',
         AccountPayable.status == 'pending'
@@ -597,8 +616,68 @@ def adiantamento():
 
     return render_template('rh/adiantamento.html', 
                           employees=employees,
-                          adiantamentos=adiantamentos_pendentes,
+                          solicitacoes_pendentes=solicitacoes_pendentes,
+                          adiantamentos_aprovados=adiantamentos_aprovados,
                           today=date.today().strftime('%Y-%m-%d'))
+
+
+@rh_bp.route('/adiantamento/<int:id>/aprovar', methods=['POST'])
+@login_required
+@admin_required
+def aprovar_adiantamento(id):
+    """Aprovar solicitacao de adiantamento - cria AccountPayable"""
+    solicitacao = SolicitacaoAdiantamento.query.filter_by(
+        id=id,
+        company_id=current_user.company_id,
+        status='pendente'
+    ).first_or_404()
+
+    # Atualizar status para aprovado
+    solicitacao.status = 'aprovado'
+    solicitacao.approved_by = current_user.id
+    solicitacao.approved_at = datetime.utcnow()
+    db.session.commit()
+
+    # Emitir evento para criar AccountPayable
+    try:
+        from services.event_bus import EventBus, Events
+        EventBus.emit(Events.ADVANCE_APPROVED, {
+            'solicitacao_id': solicitacao.id,
+            'employee_id': solicitacao.employee_id,
+            'employee_name': solicitacao.employee.name,
+            'amount': float(solicitacao.valor),
+            'due_date': str(solicitacao.data_pagamento),
+            'company_id': current_user.company_id,
+            'approved_by': current_user.id
+        })
+    except ImportError:
+        pass
+
+    flash(f'Adiantamento de R$ {solicitacao.valor:.2f} aprovado para {solicitacao.employee.name}', 'success')
+    return redirect(url_for('rh.adiantamento'))
+
+
+@rh_bp.route('/adiantamento/<int:id>/rejeitar', methods=['POST'])
+@login_required
+@admin_required
+def rejeitar_adiantamento(id):
+    """Rejeitar solicitacao de adiantamento"""
+    solicitacao = SolicitacaoAdiantamento.query.filter_by(
+        id=id,
+        company_id=current_user.company_id,
+        status='pendente'
+    ).first_or_404()
+
+    motivo = request.form.get('motivo', 'Solicitacao rejeitada')
+
+    solicitacao.status = 'rejeitado'
+    solicitacao.rejected_by = current_user.id
+    solicitacao.rejected_at = datetime.utcnow()
+    solicitacao.rejection_reason = motivo
+    db.session.commit()
+
+    flash(f'Solicitacao de adiantamento rejeitada para {solicitacao.employee.name}', 'info')
+    return redirect(url_for('rh.adiantamento'))
 
 
 @rh_bp.route('/adiantamento/<int:id>/pagar', methods=['POST'])
@@ -612,12 +691,30 @@ def pagar_adiantamento(id):
         category='adiantamento'
     ).first_or_404()
 
+    # Buscar funcionário
+    employee = Employee.query.get(conta.origin_id) if conta.origin_id else None
+
     conta.status = 'paid'
     conta.paid_at = datetime.utcnow()
     conta.paid_amount = conta.amount
     conta.payment_method = request.form.get('method', 'transfer')
 
     db.session.commit()
+
+    # === EVENTBUS: ADVANCE_PAID ===
+    try:
+        from services.event_bus import EventBus, Events
+        EventBus.emit(Events.ADVANCE_PAID, {
+            'advance_id': conta.id,
+            'employee_id': conta.origin_id,
+            'employee_name': employee.name if employee else 'N/A',
+            'amount': float(conta.paid_amount),
+            'payment_method': conta.payment_method,
+            'company_id': current_user.company_id,
+            'paid_by': current_user.id
+        })
+    except ImportError:
+        pass
 
     flash('Adiantamento pago com sucesso!', 'success')
     return redirect(url_for('rh.adiantamento'))
@@ -884,6 +981,22 @@ def approve_payroll(id):
     entry.status = 'approved'
     db.session.commit()
 
+    # === EVENTBUS: PAYROLL_APPROVED ===
+    try:
+        from services.event_bus import EventBus, Events
+        EventBus.emit(Events.PAYROLL_APPROVED, {
+            'payroll_id': entry.id,
+            'employee_id': entry.employee_id,
+            'employee_name': entry.employee.name if entry.employee else 'N/A',
+            'reference_month': entry.reference_month,
+            'reference_year': entry.reference_year,
+            'net_salary': float(entry.net_salary or 0),
+            'company_id': current_user.company_id,
+            'approved_by': current_user.id
+        })
+    except ImportError:
+        pass
+
     flash('Folha aprovada!', 'success')
     return redirect(url_for('rh.payroll', month=entry.reference_month, year=entry.reference_year))
 
@@ -898,12 +1011,12 @@ def pay_payroll(id):
         company_id=current_user.company_id
     ).first_or_404()
 
-    # Verificar se já está pago
+    # Verificar se jÃ¡ estÃ¡ pago
     if entry.status == 'paid':
-        flash('Esta folha já foi paga!', 'warning')
+        flash('Esta folha jÃ¡ foi paga!', 'warning')
         return redirect(url_for('rh.payroll', month=entry.reference_month, year=entry.reference_year))
 
-    # Verificar se já existe AccountPayable para esta folha
+    # Verificar se jÃ¡ existe AccountPayable para esta folha
     conta_existente = AccountPayable.query.filter_by(
         company_id=current_user.company_id,
         origin_type='payroll',
@@ -912,81 +1025,33 @@ def pay_payroll(id):
     ).first()
 
     if conta_existente:
-        flash('Já existe registro financeiro para esta folha!', 'warning')
+        flash('JÃ¡ existe registro financeiro para esta folha!', 'warning')
         return redirect(url_for('rh.payroll', month=entry.reference_month, year=entry.reference_year))
 
     entry.status = 'paid'
     entry.payment_date = date.today()
     entry.payment_method = request.form.get('method', 'transfer')
 
-    # Criar conta a pagar se nao integrado
-    if not entry.financial_integrated:
-        # Salario liquido
-        conta_salario = AccountPayable(
-            company_id=current_user.company_id,
-            description=f"Salario - {entry.employee.name} ({entry.reference_month:02d}/{entry.reference_year})",
-            category='folha_pagamento',
-            amount=entry.net_salary,
-            due_date=date.today(),
-            status='paid',
-            paid_at=datetime.utcnow(),
-            paid_amount=entry.net_salary,
-            payment_method=entry.payment_method,
-            origin_type='payroll',
-            origin_id=entry.id,
-            created_by=current_user.id
-        )
-        db.session.add(conta_salario)
-
-        # INSS (empresa + funcionario)
-        total_inss = float(entry.inss_employee or 0) + float(entry.inss_employer or 0) + float(entry.inss_rat or 0) + float(entry.inss_terceiros or 0)
-        if total_inss > 0:
-            conta_inss = AccountPayable(
-                company_id=current_user.company_id,
-                description=f"INSS/GPS - {entry.employee.name} ({entry.reference_month:02d}/{entry.reference_year})",
-                category='inss',
-                amount=Decimal(str(total_inss)),
-                due_date=date(entry.reference_year, entry.reference_month, 20) + timedelta(days=30),
-                status='pending',
-                origin_type='payroll',
-                origin_id=entry.id,
-                created_by=current_user.id
-            )
-            db.session.add(conta_inss)
-
-        # FGTS
-        if entry.fgts and float(entry.fgts) > 0:
-            conta_fgts = AccountPayable(
-                company_id=current_user.company_id,
-                description=f"FGTS - {entry.employee.name} ({entry.reference_month:02d}/{entry.reference_year})",
-                category='fgts',
-                amount=entry.fgts,
-                due_date=date(entry.reference_year, entry.reference_month, 7) + timedelta(days=30),
-                status='pending',
-                origin_type='payroll',
-                origin_id=entry.id,
-                created_by=current_user.id
-            )
-            db.session.add(conta_fgts)
-
-        # IRRF
-        if entry.irrf and float(entry.irrf) > 0:
-            conta_irrf = AccountPayable(
-                company_id=current_user.company_id,
-                description=f"IRRF - {entry.employee.name} ({entry.reference_month:02d}/{entry.reference_year})",
-                category='irrf',
-                amount=entry.irrf,
-                due_date=date(entry.reference_year, entry.reference_month, 20) + timedelta(days=30),
-                status='pending',
-                origin_type='payroll',
-                origin_id=entry.id,
-                created_by=current_user.id
-            )
-            db.session.add(conta_irrf)
-
-        entry.financial_integrated = True
-
     db.session.commit()
+
+    # === EVENTBUS: PAYROLL_PAID (listener cria AccountPayables) ===
+    try:
+        from services.event_bus import EventBus, Events
+        EventBus.emit(Events.PAYROLL_PAID, {
+            'payroll_id': entry.id,
+            'employee_id': entry.employee_id,
+            'employee_name': entry.employee.name if entry.employee else 'N/A',
+            'reference_month': entry.reference_month,
+            'reference_year': entry.reference_year,
+            'net_salary': float(entry.net_salary or 0),
+            'gross_salary': float(entry.gross_salary or 0),
+            'total_employer_cost': float(entry.total_employer_cost or 0),
+            'payment_method': entry.payment_method,
+            'company_id': current_user.company_id,
+            'paid_by': current_user.id
+        })
+    except ImportError:
+        pass
 
     flash('Pagamento registrado e integrado ao financeiro!', 'success')
     return redirect(url_for('rh.payroll', month=entry.reference_month, year=entry.reference_year))
@@ -1103,7 +1168,7 @@ def recibo_adiantamento(id):
         category='adiantamento'
     ).first_or_404()
 
-    # Buscar employee manualmente (AccountPayable não tem relationship)
+    # Buscar employee manualmente (AccountPayable nÃ£o tem relationship)
     employee = Employee.query.get(adiantamento.employee_id) if adiantamento.employee_id else None
 
     return render_template('rh/recibos/recibo_adiantamento.html', adiantamento=adiantamento, employee=employee)
@@ -1573,33 +1638,32 @@ def ferias_pagar(id):
         id=id, company_id=current_user.company_id, status='scheduled'
     ).first_or_404()
 
-    # Criar conta a pagar
-    payable = AccountPayable(
-        company_id=current_user.company_id,
-        description=f'Ferias - {ferias.employee.name}',
-        category='ferias',
-        amount=ferias.net_value,
-        due_date=ferias.payment_date or date.today(),
-        status='paid',
-        paid_amount=ferias.net_value,
-        paid_at=datetime.utcnow(),
-        payment_method=request.form.get('method', 'transfer'),
-        origin_type='vacation',
-        origin_id=ferias.id,
-        created_by=current_user.id
-    )
-    db.session.add(payable)
-
     ferias.status = 'paid'
     ferias.paid_at = datetime.utcnow()
-    ferias.account_payable_id = payable.id
-    ferias.financial_integrated = True
 
     # Atualizar funcionario
     ferias.employee.ultima_ferias_inicio = ferias.vacation_start
     ferias.employee.ultima_ferias_fim = ferias.vacation_end
 
     db.session.commit()
+
+    # === EVENTBUS: VACATION_PAID (listener cria AccountPayable) ===
+    try:
+        from services.event_bus import EventBus, Events
+        EventBus.emit(Events.VACATION_PAID, {
+            'vacation_id': ferias.id,
+            'employee_id': ferias.employee_id,
+            'employee_name': ferias.employee.name if ferias.employee else 'N/A',
+            'days_taken': ferias.days_taken,
+            'days_sold': ferias.days_sold,
+            'vacation_start': str(ferias.vacation_start),
+            'vacation_end': str(ferias.vacation_end),
+            'net_value': float(ferias.net_value or 0),
+            'company_id': current_user.company_id,
+            'paid_by': current_user.id
+        })
+    except ImportError:
+        pass
 
     flash('Ferias pagas com sucesso!', 'success')
     return redirect(url_for('rh.ferias_view', id=id))
@@ -1716,31 +1780,29 @@ def decimo_terceiro_pagar_primeira(id):
         flash('1a parcela ja foi paga!', 'warning')
         return redirect(url_for('rh.decimo_terceiro_list', year=entry.reference_year))
 
-    # Criar conta a pagar
-    payable = AccountPayable(
-        company_id=current_user.company_id,
-        description=f'13o Salario 1a Parcela - {entry.employee.name}',
-        category='13o_salario',
-        amount=entry.first_installment_value,
-        due_date=date.today(),
-        status='paid',
-        paid_amount=entry.first_installment_value,
-        paid_at=datetime.utcnow(),
-        payment_method=request.form.get('method', 'transfer'),
-        origin_type='thirteenth',
-        origin_id=entry.id,
-        created_by=current_user.id
-    )
-    db.session.add(payable)
-
     entry.first_installment_paid = True
     entry.first_installment_paid_at = datetime.utcnow()
     entry.first_installment_date = date.today()
     entry.first_installment_method = request.form.get('method', 'transfer')
-    entry.first_account_payable_id = payable.id
     entry.status = 'first_paid'
 
     db.session.commit()
+
+    # === EVENTBUS: THIRTEENTH_FIRST_PAID (listener cria AccountPayable) ===
+    try:
+        from services.event_bus import EventBus, Events
+        EventBus.emit(Events.THIRTEENTH_FIRST_PAID, {
+            'thirteenth_id': entry.id,
+            'employee_id': entry.employee_id,
+            'employee_name': entry.employee.name if entry.employee else 'N/A',
+            'reference_year': entry.reference_year,
+            'amount': float(entry.first_installment_value or 0),
+            'company_id': current_user.company_id,
+            'paid_by': current_user.id
+        })
+    except ImportError:
+        pass
+
     flash('1a parcela do 13o paga!', 'success')
     return redirect(url_for('rh.decimo_terceiro_list', year=entry.reference_year))
 
@@ -1763,32 +1825,30 @@ def decimo_terceiro_pagar_segunda(id):
         flash('2a parcela ja foi paga!', 'warning')
         return redirect(url_for('rh.decimo_terceiro_list', year=entry.reference_year))
 
-    # Criar conta a pagar
-    payable = AccountPayable(
-        company_id=current_user.company_id,
-        description=f'13o Salario 2a Parcela - {entry.employee.name}',
-        category='13o_salario',
-        amount=entry.second_installment_net,
-        due_date=date.today(),
-        status='paid',
-        paid_amount=entry.second_installment_net,
-        paid_at=datetime.utcnow(),
-        payment_method=request.form.get('method', 'transfer'),
-        origin_type='thirteenth',
-        origin_id=entry.id,
-        created_by=current_user.id
-    )
-    db.session.add(payable)
-
     entry.second_installment_paid = True
     entry.second_installment_paid_at = datetime.utcnow()
     entry.second_installment_date = date.today()
     entry.second_installment_method = request.form.get('method', 'transfer')
-    entry.second_account_payable_id = payable.id
     entry.status = 'completed'
-    entry.financial_integrated = True
 
     db.session.commit()
+
+    # === EVENTBUS: THIRTEENTH_SECOND_PAID (listener cria AccountPayable) ===
+    try:
+        from services.event_bus import EventBus, Events
+        EventBus.emit(Events.THIRTEENTH_SECOND_PAID, {
+            'thirteenth_id': entry.id,
+            'employee_id': entry.employee_id,
+            'employee_name': entry.employee.name if entry.employee else 'N/A',
+            'reference_year': entry.reference_year,
+            'amount': float(entry.second_installment_net or 0),
+            'total_paid': float((entry.first_installment_value or 0) + (entry.second_installment_net or 0)),
+            'company_id': current_user.company_id,
+            'paid_by': current_user.id
+        })
+    except ImportError:
+        pass
+
     flash('2a parcela do 13o paga!', 'success')
     return redirect(url_for('rh.decimo_terceiro_list', year=entry.reference_year))
 
@@ -1950,35 +2010,35 @@ def rescisao_pagar(id):
         id=id, company_id=current_user.company_id, status='approved'
     ).first_or_404()
 
-    # Criar conta a pagar
-    payable = AccountPayable(
-        company_id=current_user.company_id,
-        description=f'Rescisao - {rescisao.employee.name}',
-        category='rescisao',
-        amount=rescisao.net_total,
-        due_date=date.today(),
-        status='paid',
-        paid_amount=rescisao.net_total,
-        paid_at=datetime.utcnow(),
-        payment_method=request.form.get('method', 'transfer'),
-        origin_type='termination',
-        origin_id=rescisao.id,
-        created_by=current_user.id
-    )
-    db.session.add(payable)
-
     rescisao.status = 'paid'
     rescisao.payment_date = date.today()
     rescisao.payment_method = request.form.get('method', 'transfer')
     rescisao.paid_at = datetime.utcnow()
-    rescisao.account_payable_id = payable.id
-    rescisao.financial_integrated = True
 
     # Inativar funcionario
     rescisao.employee.status = 'inactive'
     rescisao.employee.dismissal_date = rescisao.termination_date
 
     db.session.commit()
+
+    # === EVENTBUS: TERMINATION_PAID (listener cria AccountPayable) ===
+    try:
+        from services.event_bus import EventBus, Events
+        EventBus.emit(Events.TERMINATION_PAID, {
+            'termination_id': rescisao.id,
+            'employee_id': rescisao.employee_id,
+            'employee_name': rescisao.employee.name if rescisao.employee else 'N/A',
+            'termination_type': rescisao.termination_type,
+            'termination_date': str(rescisao.termination_date),
+            'net_total': float(rescisao.net_total or 0),
+            'fgts_fine': float(rescisao.fgts_fine or 0),
+            'years_worked': rescisao.years_worked,
+            'company_id': current_user.company_id,
+            'paid_by': current_user.id
+        })
+    except ImportError:
+        pass
+
     flash('Rescisao paga e funcionario desligado!', 'success')
     return redirect(url_for('rh.rescisao_view', id=id))
 
@@ -1994,16 +2054,16 @@ def relatorio_custo_funcionario():
     """Relatorio completo de custo total por funcionario"""
     from sqlalchemy import func
     from dateutil.relativedelta import relativedelta
-    
+
     employees = Employee.query.filter_by(
         company_id=current_user.company_id,
         status='active'
     ).order_by(Employee.name).all()
-    
+
     # Periodo de analise (ultimos 12 meses)
     hoje = date.today()
     inicio_periodo = (hoje - relativedelta(months=12)).replace(day=1)
-    
+
     relatorio = []
     totais = {
         'salarios': Decimal('0'),
@@ -2014,29 +2074,29 @@ def relatorio_custo_funcionario():
         'beneficios': Decimal('0'),
         'custo_total': Decimal('0')
     }
-    
+
     for emp in employees:
         salario = Decimal(str(emp.salary or 0))
-        
+
         # Calcular encargos mensais
         inss_patronal = salario * Decimal('0.20')  # 20% INSS patronal
         fgts = salario * Decimal('0.08')  # 8% FGTS
-        
+
         # Provisoes mensais (1/12 do salario + encargos)
         provisao_ferias = (salario + (salario / Decimal('3'))) / Decimal('12')  # 1/12 de salario + 1/3
         provisao_13 = salario / Decimal('12')  # 1/12 do 13o
-        
+
         # Beneficios (usando campos corretos do modelo)
         vale_transporte = Decimal(str(emp.vt_value or 0))
         vale_alimentacao = Decimal(str(emp.va_value or 0)) + Decimal(str(emp.vr_value or 0))
         plano_saude = Decimal(str(emp.health_insurance or 0))
         outros_beneficios = Decimal(str(emp.other_benefits or 0))
         total_beneficios = vale_transporte + vale_alimentacao + plano_saude + outros_beneficios
-        
+
         # Custo total mensal
         custo_mensal = salario + inss_patronal + fgts + provisao_ferias + provisao_13 + total_beneficios
-        
-        # Buscar folhas pagas no periodo (últimos 12 meses)
+
+        # Buscar folhas pagas no periodo (Ãºltimos 12 meses)
         folhas_pagas = PayrollEntry.query.filter(
             PayrollEntry.employee_id == emp.id,
             PayrollEntry.company_id == current_user.company_id,
@@ -2044,8 +2104,8 @@ def relatorio_custo_funcionario():
             PayrollEntry.payment_date >= inicio_periodo,
             PayrollEntry.payment_date <= hoje
         ).count()
-        
-        # Buscar total pago em folhas no período
+
+        # Buscar total pago em folhas no perÃ­odo
         total_pago_folhas = db.session.query(func.coalesce(func.sum(PayrollEntry.net_salary), 0)).filter(
             PayrollEntry.employee_id == emp.id,
             PayrollEntry.company_id == current_user.company_id,
@@ -2053,7 +2113,7 @@ def relatorio_custo_funcionario():
             PayrollEntry.payment_date >= inicio_periodo,
             PayrollEntry.payment_date <= hoje
         ).scalar() or Decimal('0')
-        
+
         # Buscar adiantamentos pagos (origin_type=adiantamento usa employee.id em origin_id)
         adiantamentos_pagos = db.session.query(func.coalesce(func.sum(AccountPayable.amount), 0)).filter(
             AccountPayable.company_id == current_user.company_id,
@@ -2062,7 +2122,7 @@ def relatorio_custo_funcionario():
             AccountPayable.status == 'paid',
             AccountPayable.paid_at >= inicio_periodo
         ).scalar() or Decimal('0')
-        
+
         item = {
             'funcionario': emp,
             'salario': salario,
@@ -2077,9 +2137,9 @@ def relatorio_custo_funcionario():
             'total_pago_periodo': total_pago_folhas,
             'adiantamentos_periodo': adiantamentos_pagos
         }
-        
+
         relatorio.append(item)
-        
+
         # Acumular totais
         totais['salarios'] += salario
         totais['inss_patronal'] += inss_patronal
@@ -2088,7 +2148,7 @@ def relatorio_custo_funcionario():
         totais['provisao_13'] += provisao_13
         totais['beneficios'] += total_beneficios
         totais['custo_total'] += custo_mensal
-    
+
     return render_template('rh/relatorio_custo_funcionario.html',
                           relatorio=relatorio,
                           totais=totais,

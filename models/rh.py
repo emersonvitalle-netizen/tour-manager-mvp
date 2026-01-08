@@ -587,6 +587,43 @@ class Termination(db.Model):
 
 
 # ============================================
+# SOLICITACAO DE ADIANTAMENTO
+# ============================================
+
+class SolicitacaoAdiantamento(db.Model):
+    """Solicitacao de adiantamento salarial - fica no RH ate aprovacao"""
+    __tablename__ = 'solicitacao_adiantamento'
+
+    id = db.Column(db.Integer, primary_key=True)
+    company_id = db.Column(db.Integer, db.ForeignKey('company.id'), nullable=False)
+    employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=False)
+
+    valor = db.Column(db.Numeric(10, 2), nullable=False)
+    motivo = db.Column(db.Text)
+    data_solicitacao = db.Column(db.Date, nullable=False)
+    data_pagamento = db.Column(db.Date)
+
+    status = db.Column(db.String(20), default='pendente')  # pendente, aprovado, rejeitado, pago
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'))
+    approved_at = db.Column(db.DateTime)
+    approved_by = db.Column(db.Integer, db.ForeignKey('user.id'))
+    rejected_at = db.Column(db.DateTime)
+    rejected_by = db.Column(db.Integer, db.ForeignKey('user.id'))
+    rejection_reason = db.Column(db.Text)
+
+    company = db.relationship('Company')
+    employee = db.relationship('Employee', backref=db.backref('adiantamentos', lazy='dynamic'))
+    creator = db.relationship('User', foreign_keys=[created_by])
+    approver = db.relationship('User', foreign_keys=[approved_by])
+    rejecter = db.relationship('User', foreign_keys=[rejected_by])
+
+    def __repr__(self):
+        return f'<SolicitacaoAdiantamento {self.employee_id} R${self.valor}>'
+
+
+# ============================================
 # MODELS FINANCEIROS (mantidos iguais)
 # ============================================
 

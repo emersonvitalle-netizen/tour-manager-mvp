@@ -4,6 +4,7 @@ from config import Config
 from extensions import db, login_manager, bcrypt
 import os
 
+
 def create_models():
     """Importa todos os models na ordem correta - ORDEM BASEADA EM DEPENDENCIAS"""
 
@@ -39,6 +40,7 @@ def create_models():
 
     # NIVEL 7 - Fabricacao
     from models.fabrication import FabricationTemplate, FabricationRecord
+
 
 def migrate_database():
     """Adiciona colunas que podem estar faltando sem quebrar"""
@@ -135,6 +137,7 @@ def migrate_database():
         except Exception:
             db.session.rollback()
 
+
 def regenerate_all_qr_codes():
     """Regenera QR Codes de todos os equipamentos"""
     from models.equipment import Equipment
@@ -160,6 +163,22 @@ def regenerate_all_qr_codes():
         db.session.rollback()
         print(f'Erro ao regenerar QR Codes: {e}')
 
+
+def register_event_listeners():
+    """Registra listeners do EventBus"""
+    try:
+        from services.event_bus import EventBus
+        import services.listeners
+
+        listeners = EventBus.get_listeners()
+        total = sum(len(v) for v in listeners.values())
+        print(f'[EventBus] {total} listeners em {len(listeners)} eventos')
+    except ImportError as e:
+        print(f'[EventBus] Nao disponivel: {e}')
+    except Exception as e:
+        print(f'[EventBus] Erro: {e}')
+
+
 app = Flask(__name__)
 app.config.from_object(Config)
 
@@ -178,10 +197,12 @@ os.makedirs('static/qr/access', exist_ok=True)
 os.makedirs('static/uploads/logos', exist_ok=True)
 os.makedirs('static/qr', exist_ok=True)
 
+
 @login_manager.user_loader
 def load_user(user_id):
     from models.user import User
     return User.query.get(int(user_id))
+
 
 # Registrar blueprints
 from routes.auth import auth_bp
@@ -220,11 +241,13 @@ app.register_blueprint(maintenance_bp)
 app.register_blueprint(automation_api)
 app.register_blueprint(relatorios_bp)
 
+
 @app.route('/')
 def index():
     if current_user.is_authenticated:
         return redirect(url_for('dashboard'))
     return redirect(url_for('auth.login'))
+
 
 @app.route('/dashboard')
 def dashboard():
@@ -247,18 +270,22 @@ def dashboard():
                           alert_count=alert_count,
                           url_map=url_map)
 
+
 @app.route('/docs/project')
 def project_docs():
     if not current_user.is_authenticated:
         return redirect(url_for('auth.login'))
     return render_template('docs/project_overview.html')
 
+
 with app.app_context():
     create_models()
     db.create_all()
     migrate_database()
     regenerate_all_qr_codes()
+    register_event_listeners()
     print("Sistema pronto!")
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

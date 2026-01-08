@@ -25,7 +25,7 @@ def admin_required(f):
 
 
 def generate_code(prefix: str) -> str:
-    """Gera cÃ³digo sequencial para documentos (inclui company_id para unicidade global)"""
+    """Gera cÃƒÂ³digo sequencial para documentos (inclui company_id para unicidade global)"""
     year = datetime.now().year
     company_id = current_user.company_id
     code_prefix = f'{prefix}-{company_id}-{year}'
@@ -69,7 +69,7 @@ def index():
     mes_atual = hoje.replace(day=1)
     mes_fim = (mes_atual + timedelta(days=32)).replace(day=1)
 
-    # ========== FATURAMENTO MÃŠS ==========
+    # ========== FATURAMENTO MÃƒÅ S ==========
     faturamento_mes = float(db.session.query(func.sum(AccountReceivable.received_amount)).filter(
         AccountReceivable.company_id == company_id,
         AccountReceivable.status == 'received',
@@ -77,7 +77,7 @@ def index():
         func.date(AccountReceivable.received_at) < mes_fim
     ).scalar() or 0)
 
-    # ========== DESPESAS MÃŠS ==========
+    # ========== DESPESAS MÃƒÅ S ==========
     despesas_folha = float(db.session.query(func.sum(PayrollEntry.net_salary)).filter(
         PayrollEntry.company_id == company_id,
         PayrollEntry.reference_month == hoje.month,
@@ -177,7 +177,7 @@ def index():
 
         fluxo_despesas.append(desp_f + desp_c + desp_fl)
 
-    # ========== MÃ‰TRICAS AUXILIARES ==========
+    # ========== MÃƒâ€°TRICAS AUXILIARES ==========
     quotes_pending = Quote.query.filter_by(
         company_id=company_id,
         status='sent',
@@ -253,7 +253,7 @@ def index():
 @login_required
 @admin_required
 def quotes():
-    """Lista de orÃ§amentos"""
+    """Lista de orÃƒÂ§amentos"""
     status = request.args.get('status', 'all')
 
     query = Quote.query.filter_by(
@@ -273,7 +273,7 @@ def quotes():
 @login_required
 @admin_required
 def new_quote():
-    """Criar novo orÃ§amento"""
+    """Criar novo orÃƒÂ§amento"""
     if request.method == 'POST':
         quote = Quote(
             code=generate_code('ORC'),
@@ -299,7 +299,7 @@ def new_quote():
         db.session.add(quote)
         db.session.commit()
 
-        flash('OrÃ§amento criado! Adicione os itens.', 'success')
+        flash('OrÃƒÂ§amento criado! Adicione os itens.', 'success')
         return redirect(url_for('financial.edit_quote', id=quote.id))
 
     tours = Tour.query.filter_by(
@@ -314,7 +314,7 @@ def new_quote():
 @login_required
 @admin_required
 def view_quote(id):
-    """Visualizar orÃ§amento"""
+    """Visualizar orÃƒÂ§amento"""
     quote = Quote.query.filter_by(
         id=id,
         company_id=current_user.company_id
@@ -327,7 +327,7 @@ def view_quote(id):
 @login_required
 @admin_required
 def edit_quote(id):
-    """Editar orÃ§amento"""
+    """Editar orÃƒÂ§amento"""
     quote = Quote.query.filter_by(
         id=id,
         company_id=current_user.company_id
@@ -352,7 +352,7 @@ def edit_quote(id):
         recalculate_quote_totals(quote)
 
         db.session.commit()
-        flash('OrÃ§amento atualizado!', 'success')
+        flash('OrÃƒÂ§amento atualizado!', 'success')
         return redirect(url_for('financial.view_quote', id=quote.id))
 
     tours = Tour.query.filter_by(
@@ -367,7 +367,7 @@ def edit_quote(id):
 @login_required
 @admin_required
 def add_quote_item(id):
-    """Adicionar item ao orÃ§amento"""
+    """Adicionar item ao orÃƒÂ§amento"""
     quote = Quote.query.filter_by(
         id=id,
         company_id=current_user.company_id
@@ -393,7 +393,7 @@ def add_quote_item(id):
 @login_required
 @admin_required
 def delete_quote_item(id, item_id):
-    """Remover item do orÃ§amento"""
+    """Remover item do orÃƒÂ§amento"""
     quote = Quote.query.filter_by(
         id=id,
         company_id=current_user.company_id
@@ -412,7 +412,7 @@ def delete_quote_item(id, item_id):
 @login_required
 @admin_required
 def send_quote(id):
-    """Marcar orÃ§amento como enviado"""
+    """Marcar orÃƒÂ§amento como enviado"""
     quote = Quote.query.filter_by(
         id=id,
         company_id=current_user.company_id
@@ -421,7 +421,7 @@ def send_quote(id):
     quote.status = 'sent'
     db.session.commit()
 
-    flash('OrÃ§amento marcado como enviado!', 'success')
+    flash('OrÃƒÂ§amento marcado como enviado!', 'success')
     return redirect(url_for('financial.view_quote', id=quote.id))
 
 
@@ -429,7 +429,7 @@ def send_quote(id):
 @login_required
 @admin_required
 def approve_quote(id):
-    """Aprovar orÃ§amento"""
+    """Aprovar orÃƒÂ§amento"""
     quote = Quote.query.filter_by(
         id=id,
         company_id=current_user.company_id
@@ -440,7 +440,20 @@ def approve_quote(id):
     quote.approved_by = current_user.id
     db.session.commit()
 
-    flash('OrÃ§amento aprovado!', 'success')
+    # === EVENTBUS: QUOTE_APPROVED ===
+    try:
+        from services.event_bus import EventBus, Events
+        EventBus.emit(Events.QUOTE_APPROVED, {
+            'quote_id': quote.id,
+            'client_id': quote.client_id,
+            'total_value': float(quote.total or 0),
+            'company_id': current_user.company_id,
+            'approved_by': current_user.id
+        })
+    except ImportError:
+        pass
+
+    flash('OrÃƒÂ§amento aprovado!', 'success')
     return redirect(url_for('financial.view_quote', id=quote.id))
 
 
@@ -693,7 +706,7 @@ def register_payment(id):
 
 
 def recalculate_quote_totals(quote):
-    """Recalcula totais do orÃ§amento"""
+    """Recalcula totais do orÃƒÂ§amento"""
     subtotal = sum(item.total for item in quote.items)
     quote.subtotal = subtotal
     quote.discount_value = subtotal * (quote.discount_percent or 0) / 100
@@ -792,14 +805,14 @@ def despesas():
     mes_atual = hoje.replace(day=1)
     mes_fim = (mes_atual + timedelta(days=32)).replace(day=1)
 
-    # ========== FOLHA CLT (mÃªs atual) ==========
+    # ========== FOLHA CLT (mÃƒÂªs atual) ==========
     folha_clt = float(db.session.query(func.sum(PayrollEntry.net_salary)).filter(
         PayrollEntry.company_id == company_id,
         PayrollEntry.reference_month == hoje.month,
         PayrollEntry.reference_year == hoje.year
     ).scalar() or 0)
 
-    # ========== CONTAS PAGAS (mÃªs atual) ==========
+    # ========== CONTAS PAGAS (mÃƒÂªs atual) ==========
     contas_fixas = float(db.session.query(func.sum(AccountPayable.paid_amount)).filter(
         AccountPayable.company_id == company_id,
         AccountPayable.status == 'paid',
@@ -807,7 +820,7 @@ def despesas():
         func.date(AccountPayable.paid_at) < mes_fim
     ).scalar() or 0)
 
-    # ========== FREELANCERS (mÃªs atual) ==========
+    # ========== FREELANCERS (mÃƒÂªs atual) ==========
     freelancers_total = float(db.session.query(func.sum(FreelancerPayment.amount)).filter(
         FreelancerPayment.company_id == company_id,
         FreelancerPayment.status == 'paid',
@@ -815,7 +828,7 @@ def despesas():
         func.date(FreelancerPayment.paid_at) < mes_fim
     ).scalar() or 0)
 
-    # ========== MANUTENÃ‡ÃƒO (mÃªs atual) ==========
+    # ========== MANUTENÃƒâ€¡ÃƒÆ’O (mÃƒÂªs atual) ==========
     manutencao = float(db.session.query(func.sum(Maintenance.total_cost)).filter(
         Maintenance.company_id == company_id,
         Maintenance.status == 'completed',
@@ -823,10 +836,10 @@ def despesas():
         func.date(Maintenance.completed_at) < mes_fim
     ).scalar() or 0)
 
-    # ========== TOTAL MÃŠS ==========
+    # ========== TOTAL MÃƒÅ S ==========
     total_mes = folha_clt + contas_fixas + freelancers_total + manutencao
 
-    # ========== ÃšLTIMAS DESPESAS (10 mais recentes) ==========
+    # ========== ÃƒÅ¡LTIMAS DESPESAS (10 mais recentes) ==========
     ultimas_despesas = []
 
     # Contas pagas recentes
@@ -862,7 +875,7 @@ def despesas():
                 'data': fp.paid_at
             })
 
-    # ManutenÃ§Ãµes concluÃ­das recentes
+    # ManutenÃƒÂ§ÃƒÂµes concluÃƒÂ­das recentes
     manutencoes_recentes = Maintenance.query.filter(
         Maintenance.company_id == company_id,
         Maintenance.status == 'completed',
@@ -1003,11 +1016,11 @@ def contas_pagar():
 
     hoje = date.today()
     mes_atual = date(hoje.year, hoje.month, 1)
-    
+
     # Filtros
     status_filter = request.args.get('status', 'pending')
     categoria_filter = request.args.get('categoria', '')
-    
+
     # LISTA EXPANDIDA DE CATEGORIAS (24 categorias)
     categorias = [
         'folha_clt', 'freelancers', 'manutencao',
@@ -1020,17 +1033,17 @@ def contas_pagar():
         'materiais_consumo', 'ferramentas',
         'parcelamentos', 'outros'
     ]
-    
+
     # Helper para classificar estado da pasta
     def classify_folder_state(folder_date, has_pending):
         """Retorna: 'overdue', 'on_track', ou 'archivable'"""
         if folder_date < mes_atual:
             return 'overdue' if has_pending else 'archivable'
         return 'on_track'
-    
+
     # Base query com filtros
     query = AccountPayable.query.filter(AccountPayable.company_id == current_user.company_id)
-    
+
     if status_filter == 'pending':
         query = query.filter(AccountPayable.status.in_(['pending', 'partial']))
     elif status_filter == 'paid':
@@ -1042,21 +1055,21 @@ def contas_pagar():
         )
     elif status_filter == 'all':
         pass  # sem filtro de status
-    
+
     if categoria_filter:
         query = query.filter(AccountPayable.category == categoria_filter)
-    
+
     contas_todas = query.order_by(AccountPayable.due_date).all()
-    
+
     # Primeiro passo: identificar TODOS os meses presentes no dataset filtrado
     meses_no_dataset = set()
     for conta in contas_todas:
         if conta.due_date:
             meses_no_dataset.add(conta.due_date.strftime('%Y-%m'))
-    
+
     # Gerar pastas: todos os meses no dataset + 12 meses rolling
     pastas = OrderedDict()
-    
+
     # Adicionar meses do dataset que sao anteriores ao mes atual (ordenados)
     meses_passados = sorted([m for m in meses_no_dataset if m < mes_atual.strftime('%Y-%m')])
     for mes_key in meses_passados:
@@ -1071,7 +1084,7 @@ def contas_pagar():
             'qtd': 0,
             'state': 'on_track'  # sera recalculado depois
         }
-    
+
     # Adicionar 12 meses rolling (atual + 11 futuros)
     for i in range(12):
         mes = mes_atual + relativedelta(months=i)
@@ -1086,7 +1099,7 @@ def contas_pagar():
                 'qtd': 0,
                 'state': 'on_track'
             }
-    
+
     # Agrupar contas nas pastas
     for conta in contas_todas:
         if conta.due_date:
@@ -1095,12 +1108,12 @@ def contas_pagar():
                 pastas[mes_key]['contas'].append(conta)
                 pastas[mes_key]['total'] += conta.amount or Decimal('0')
                 pastas[mes_key]['qtd'] += 1
-    
+
     # Atualizar estado das pastas (verificar se tem pendencias vencidas)
     for mes_key, pasta in pastas.items():
         has_pending = any(c.status in ['pending', 'partial'] for c in pasta['contas'])
         pasta['state'] = classify_folder_state(pasta['inicio'], has_pending)
-    
+
     # KPIs derivados do mesmo dataset filtrado
     # Total vencidas = soma de TODAS as contas vencidas (due_date < hoje E status pendente)
     total_vencidas = sum(
@@ -1112,16 +1125,16 @@ def contas_pagar():
         1 for c in contas_todas
         if c.due_date and c.due_date < hoje and c.status in ['pending', 'partial']
     )
-    
+
     # KPI de 7 dias - calculado a partir do dataset ja filtrado
     total_7_dias = sum(
         float(c.amount or 0) for c in contas_todas 
         if c.due_date and hoje <= c.due_date <= hoje + timedelta(days=7)
     )
-    
+
     # KPI mes atual - ja calculado nas pastas
     total_mes_atual = float(pastas[mes_atual.strftime('%Y-%m')]['total']) if mes_atual.strftime('%Y-%m') in pastas else 0
-    
+
     # Contar repositorios (anos com contas pagas)
     anos_repositorio = db.session.query(
         func.strftime('%Y', AccountPayable.due_date)
@@ -1216,21 +1229,21 @@ def repositorio_contas():
     from collections import OrderedDict
 
     ano_filtro = request.args.get('ano', str(date.today().year))
-    
+
     # Buscar contas pagas do ano
     contas_pagas = AccountPayable.query.filter(
         AccountPayable.company_id == current_user.company_id,
         AccountPayable.status == 'paid',
         func.strftime('%Y', AccountPayable.due_date) == ano_filtro
     ).order_by(AccountPayable.due_date).all()
-    
+
     # Agrupar por mes
     meses_nomes = {
         '01': 'Janeiro', '02': 'Fevereiro', '03': 'Marco', '04': 'Abril',
         '05': 'Maio', '06': 'Junho', '07': 'Julho', '08': 'Agosto',
         '09': 'Setembro', '10': 'Outubro', '11': 'Novembro', '12': 'Dezembro'
     }
-    
+
     pastas = OrderedDict()
     for m in range(1, 13):
         mes_key = f"{m:02d}"
@@ -1240,7 +1253,7 @@ def repositorio_contas():
             'total': Decimal('0'),
             'qtd': 0
         }
-    
+
     for conta in contas_pagas:
         if conta.due_date:
             mes_key = conta.due_date.strftime('%m')
@@ -1248,11 +1261,11 @@ def repositorio_contas():
                 pastas[mes_key]['contas'].append(conta)
                 pastas[mes_key]['total'] += conta.amount or Decimal('0')
                 pastas[mes_key]['qtd'] += 1
-    
+
     # Total geral do ano
     total_ano = sum(float(p['total']) for p in pastas.values())
     qtd_total = sum(p['qtd'] for p in pastas.values())
-    
+
     # Anos disponiveis
     anos_disponiveis = db.session.query(
         func.strftime('%Y', AccountPayable.due_date)
@@ -1314,7 +1327,7 @@ def editar_conta_pagar(id):
 @login_required
 @admin_required
 def pagar_conta(id):
-    """Marcar conta como paga e sincronizar com RH se necessário"""
+    """Marcar conta como paga e sincronizar com RH se necessÃ¡rio"""
     from models.rh import AccountPayable, PayrollEntry
 
     conta = AccountPayable.query.filter_by(
@@ -1322,9 +1335,9 @@ def pagar_conta(id):
         company_id=current_user.company_id
     ).first_or_404()
 
-    # Verificar se já está paga
+    # Verificar se jÃ¡ estÃ¡ paga
     if conta.status == 'paid':
-        flash('Esta conta já foi paga!', 'warning')
+        flash('Esta conta jÃ¡ foi paga!', 'warning')
         return redirect(url_for('financial.contas_pagar'))
 
     valor_pago = request.form.get('paid_amount', '')
@@ -1336,7 +1349,7 @@ def pagar_conta(id):
     conta.status = 'paid'
     conta.paid_at = datetime.utcnow()
 
-    # ========== SINCRONIZAÇÃO COM RH ==========
+    # ========== SINCRONIZAÃ‡ÃƒO COM RH ==========
     # Se for folha_pagamento, atualizar PayrollEntry
     if conta.payroll_entry_id and conta.category == 'folha_pagamento':
         entry = PayrollEntry.query.get(conta.payroll_entry_id)
@@ -1670,7 +1683,7 @@ def nova_conta_receber():
 @login_required
 @admin_required
 def contas_receber_from_quote(quote_id):
-    """Gera contas a receber a partir de um orÃ§amento aprovado (wizard automation)"""
+    """Gera contas a receber a partir de um orÃƒÂ§amento aprovado (wizard automation)"""
     from models.rh import AccountReceivable
     from models.separation_list import SeparationList
     from dateutil.relativedelta import relativedelta
@@ -1714,14 +1727,14 @@ def contas_receber_from_quote(quote_id):
 
         conta = AccountReceivable(
             company_id=current_user.company_id,
-            description=f"OrÃ§amento {quote_identifier} - Parcela {i+1}/{num_parcelas}" if num_parcelas > 1 else f"OrÃ§amento {quote_identifier}",
+            description=f"OrÃƒÂ§amento {quote_identifier} - Parcela {i+1}/{num_parcelas}" if num_parcelas > 1 else f"OrÃƒÂ§amento {quote_identifier}",
             category='locacao',
             client_name=quote.client_name or '',
             amount=valor_parcela,
             due_date=due_date,
             installment_number=i + 1 if num_parcelas > 1 else None,
             total_installments=num_parcelas if num_parcelas > 1 else None,
-            notes=f"Gerado automaticamente do orÃ§amento {quote_identifier}",
+            notes=f"Gerado automaticamente do orÃƒÂ§amento {quote_identifier}",
             status='pending',
             created_by=current_user.id
         )
@@ -2398,6 +2411,23 @@ def webhook_asaas():
                 payment.status = 'refunded'
 
         db.session.commit()
+
+        # === EVENTBUS: PAYMENT_RECEIVED (webhook) ===
+        if event in ['PAYMENT_CONFIRMED', 'PAYMENT_RECEIVED']:
+            try:
+                from services.event_bus import EventBus, Events
+                EventBus.emit(Events.PAYMENT_RECEIVED, {
+                    'payment_id': payment.id if payment else None,
+                    'invoice_id': invoice.id,
+                    'invoice_code': invoice.code,
+                    'amount': float(payment_data.get('value', 0)),
+                    'method': payment_data.get('billingType', 'pix').lower(),
+                    'asaas_id': asaas_id,
+                    'event': event,
+                    'company_id': invoice.company_id
+                })
+            except ImportError:
+                pass
         return jsonify({'success': True, 'event': event}), 200
 
     except Exception as e:
@@ -2586,11 +2616,11 @@ def centros_custo():
     from models.rh import CostCenter, AccountPayable
     from sqlalchemy import func, case
     from decimal import Decimal
-    
+
     centros = CostCenter.query.filter_by(
         company_id=current_user.company_id
     ).order_by(CostCenter.code).all()
-    
+
     # Calcular totais por centro de custo usando status correto
     # Inclui pagamentos parciais corretamente
     gastos_por_centro = db.session.query(
@@ -2609,18 +2639,18 @@ def centros_custo():
         AccountPayable.company_id == current_user.company_id,
         AccountPayable.status != 'cancelled'
     ).group_by(AccountPayable.cost_center_id).all()
-    
+
     # Mapear para dict
     gastos_map = {}
     total_geral_pago = Decimal('0')
     total_geral_pendente = Decimal('0')
     sem_centro_pago = Decimal('0')
     sem_centro_pendente = Decimal('0')
-    
+
     for g in gastos_por_centro:
         pago = Decimal(str(g.total_pago or 0))
         pendente = Decimal(str(g.total_pendente or 0))
-        
+
         if g.cost_center_id:
             gastos_map[g.cost_center_id] = {
                 'pago': pago,
@@ -2632,21 +2662,21 @@ def centros_custo():
         else:
             sem_centro_pago = pago
             sem_centro_pendente = pendente
-    
+
     total_geral_pago += sem_centro_pago
     total_geral_pendente += sem_centro_pendente
     total_geral = total_geral_pago + total_geral_pendente
-    
+
     # Enriquecer centros com dados de gastos
     centros_data = []
     maior_centro = None
     maior_valor = Decimal('0')
-    
+
     for c in centros:
         dados = gastos_map.get(c.id, {'pago': Decimal('0'), 'pendente': Decimal('0'), 'qtd': 0})
         total_centro = dados['pago'] + dados['pendente']
         percent = (total_centro / total_geral * 100) if total_geral > 0 else 0
-        
+
         centro_info = {
             'obj': c,
             'pago': float(dados['pago']),
@@ -2656,23 +2686,23 @@ def centros_custo():
             'qtd': dados['qtd']
         }
         centros_data.append(centro_info)
-        
+
         if total_centro > maior_valor:
             maior_valor = total_centro
             maior_centro = c.name
-    
+
     # Pendentes mes a mes (proximos 6 meses)
     from datetime import date
     from dateutil.relativedelta import relativedelta
-    
+
     hoje = date.today()
     pendentes_mes = []
     labels_mes = []
-    
+
     for i in range(6):
         mes_inicio = date(hoje.year, hoje.month, 1) + relativedelta(months=i)
         mes_fim = mes_inicio + relativedelta(months=1, days=-1)
-        
+
         total_mes = db.session.query(
             func.sum(case(
                 (AccountPayable.status == 'paid', 0),
@@ -2685,10 +2715,10 @@ def centros_custo():
             AccountPayable.due_date >= mes_inicio,
             AccountPayable.due_date <= mes_fim
         ).scalar() or 0
-        
+
         pendentes_mes.append(float(total_mes))
         labels_mes.append(mes_inicio.strftime('%b/%y'))
-    
+
     return render_template('financial/centros_custo.html', 
         centros=centros_data,
         total_pago=float(total_geral_pago),
@@ -2708,7 +2738,7 @@ def centros_custo():
 def novo_centro_custo():
     """Criar novo centro de custo"""
     from models.rh import CostCenter
-    
+
     if request.method == 'POST':
         try:
             centro = CostCenter(
@@ -2725,7 +2755,7 @@ def novo_centro_custo():
         except Exception as e:
             db.session.rollback()
             flash(f'Erro: {str(e)}', 'danger')
-    
+
     return render_template('financial/centro_custo_form.html', centro=None)
 
 
@@ -2735,11 +2765,11 @@ def novo_centro_custo():
 def editar_centro_custo(id):
     """Editar centro de custo"""
     from models.rh import CostCenter
-    
+
     centro = CostCenter.query.filter_by(
         id=id, company_id=current_user.company_id
     ).first_or_404()
-    
+
     if request.method == 'POST':
         try:
             centro.code = request.form.get('code', '').strip().upper()
@@ -2752,7 +2782,7 @@ def editar_centro_custo(id):
         except Exception as e:
             db.session.rollback()
             flash(f'Erro: {str(e)}', 'danger')
-    
+
     return render_template('financial/centro_custo_form.html', centro=centro)
 
 
@@ -2762,11 +2792,11 @@ def editar_centro_custo(id):
 def excluir_centro_custo(id):
     """Excluir centro de custo"""
     from models.rh import CostCenter
-    
+
     centro = CostCenter.query.filter_by(
         id=id, company_id=current_user.company_id
     ).first_or_404()
-    
+
     try:
         db.session.delete(centro)
         db.session.commit()
@@ -2774,7 +2804,7 @@ def excluir_centro_custo(id):
     except Exception as e:
         db.session.rollback()
         flash(f'Erro ao excluir: {str(e)}', 'danger')
-    
+
     return redirect(url_for('financial.centros_custo'))
 
 
@@ -2783,14 +2813,14 @@ def excluir_centro_custo(id):
 def api_criar_centro_custo():
     """API para criar centro de custo inline"""
     from models.rh import CostCenter
-    
+
     data = request.get_json()
     code = data.get('code', '').strip().upper()
     name = data.get('name', '').strip()
-    
+
     if not code or not name:
         return jsonify({'success': False, 'error': 'Codigo e nome obrigatorios'})
-    
+
     try:
         centro = CostCenter(
             company_id=current_user.company_id,
