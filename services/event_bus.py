@@ -239,10 +239,12 @@ class Events:
     VACATION_APPROVED = 'vacation.approved'
     VACATION_PAID = 'vacation.paid'
 
+    THIRTEENTH_APPROVED = 'thirteenth.approved'
     THIRTEENTH_FIRST_PAID = 'thirteenth.first_paid'
     THIRTEENTH_SECOND_PAID = 'thirteenth.second_paid'
 
     TERMINATION_CREATED = 'termination.created'
+    TERMINATION_APPROVED = 'termination.approved'
     TERMINATION_PAID = 'termination.paid'
 
     ADVANCE_CREATED = 'advance.created'
