@@ -640,10 +640,10 @@ def aprovar_adiantamento(id):
     solicitacao.approved_at = datetime.utcnow()
     db.session.commit()
 
-    payable_created = False
+    listener_success = False
     try:
         from services.event_bus import EventBus, Events
-        payable_created = EventBus.emit(Events.ADVANCE_APPROVED, {
+        results = EventBus.emit(Events.ADVANCE_APPROVED, {
             'solicitacao_id': solicitacao.id,
             'employee_id': solicitacao.employee_id,
             'employee_name': employee_name,
@@ -652,10 +652,16 @@ def aprovar_adiantamento(id):
             'company_id': current_user.company_id,
             'approved_by': current_user.id
         })
+        for r in results:
+            if r.get('success'):
+                result = r.get('result', {})
+                if isinstance(result, dict) and (result.get('created') is True or result.get('reason') == 'duplicate'):
+                    listener_success = True
+                    break
     except ImportError:
-        payable_created = False
+        listener_success = False
 
-    if not payable_created:
+    if not listener_success:
         solicitacao.status = 'pendente'
         solicitacao.approved_by = None
         solicitacao.approved_at = None
@@ -995,7 +1001,7 @@ def view_payroll(id):
 @login_required
 @admin_required
 def approve_payroll(id):
-    """Aprovar folha de pagamento"""
+    """Aprovar folha de pagamento com verificação atômica do listener"""
     entry = PayrollEntry.query.filter_by(
         id=id,
         company_id=current_user.company_id
@@ -1005,9 +1011,10 @@ def approve_payroll(id):
     db.session.commit()
 
     # === EVENTBUS: PAYROLL_APPROVED (Listener cria AccountPayables) ===
+    listener_success = False
     try:
         from services.event_bus import EventBus, Events
-        EventBus.emit(Events.PAYROLL_APPROVED, {
+        results = EventBus.emit(Events.PAYROLL_APPROVED, {
             'payroll_id': entry.id,
             'employee_id': entry.employee_id,
             'employee_name': entry.employee.name if entry.employee else 'N/A',
@@ -1024,8 +1031,21 @@ def approve_payroll(id):
             'company_id': current_user.company_id,
             'approved_by': current_user.id
         })
+        for r in results:
+            if r.get('success'):
+                result = r.get('result', {})
+                if isinstance(result, dict) and (result.get('created') is True or result.get('reason') == 'duplicate'):
+                    listener_success = True
+                    break
     except ImportError:
-        pass
+        listener_success = True
+
+    if not listener_success:
+        entry.status = 'pending'
+        entry.financial_integrated = False
+        db.session.commit()
+        flash('Erro ao integrar folha com financeiro. Tente novamente.', 'danger')
+        return redirect(url_for('rh.payroll', month=entry.reference_month, year=entry.reference_year))
 
     flash('Folha aprovada!', 'success')
     return redirect(url_for('rh.payroll', month=entry.reference_month, year=entry.reference_year))
@@ -1051,16 +1071,18 @@ def pay_payroll(id):
         flash('A folha precisa ser aprovada antes de ser paga!', 'warning')
         return redirect(url_for('rh.payroll', month=entry.reference_month, year=entry.reference_year))
 
+    # Guardar status anterior para rollback
+    old_status = entry.status
+
     entry.status = 'paid'
     entry.payment_date = date.today()
     entry.payment_method = request.form.get('method', 'transfer')
 
-    db.session.commit()
-
-    # === EVENTBUS: PAYROLL_PAID (listener cria AccountPayables) ===
+    # === EVENTBUS: PAYROLL_PAID (marca AccountPayable do salário como pago) ===
+    payment_recorded = False
     try:
         from services.event_bus import EventBus, Events
-        EventBus.emit(Events.PAYROLL_PAID, {
+        results = EventBus.emit(Events.PAYROLL_PAID, {
             'payroll_id': entry.id,
             'employee_id': entry.employee_id,
             'employee_name': entry.employee.name if entry.employee else 'N/A',
@@ -1073,9 +1095,22 @@ def pay_payroll(id):
             'company_id': current_user.company_id,
             'paid_by': current_user.id
         })
+        payment_recorded = any(
+            r.get('success') and (
+                r.get('result', {}).get('updated') is True or
+                r.get('result', {}).get('reason') == 'already_paid'
+            )
+            for r in results
+        )
     except ImportError:
-        pass
+        payment_recorded = True
 
+    if not payment_recorded:
+        db.session.rollback()
+        flash('Erro ao registrar pagamento no financeiro. Tente novamente.', 'danger')
+        return redirect(url_for('rh.payroll', month=entry.reference_month, year=entry.reference_year))
+
+    db.session.commit()
     flash('Pagamento registrado e integrado ao financeiro!', 'success')
     return redirect(url_for('rh.payroll', month=entry.reference_month, year=entry.reference_year))
 
@@ -1638,9 +1673,10 @@ def ferias_agendar(id):
             db.session.commit()
 
             # === EVENTBUS: VACATION_APPROVED (listener cria AccountPayable pendente) ===
+            listener_success = False
             try:
                 from services.event_bus import EventBus, Events
-                EventBus.emit(Events.VACATION_APPROVED, {
+                results = EventBus.emit(Events.VACATION_APPROVED, {
                     'vacation_id': ferias.id,
                     'employee_id': ferias.employee_id,
                     'employee_name': ferias.employee.name if ferias.employee else 'N/A',
@@ -1649,8 +1685,22 @@ def ferias_agendar(id):
                     'company_id': current_user.company_id,
                     'approved_by': current_user.id
                 })
+                for r in results:
+                    if r.get('success'):
+                        result = r.get('result', {})
+                        if isinstance(result, dict) and (result.get('created') is True or result.get('reason') == 'duplicate'):
+                            listener_success = True
+                            break
             except ImportError:
-                pass
+                listener_success = True
+
+            if not listener_success:
+                ferias.status = 'pending'
+                ferias.financial_integrated = False
+                ferias.account_payable_id = None
+                db.session.commit()
+                flash('Erro ao integrar ferias com financeiro. Tente novamente.', 'danger')
+                return redirect(url_for('rh.ferias_agendar', id=id))
 
             flash('Ferias agendadas com sucesso!', 'success')
             return redirect(url_for('rh.ferias_view', id=id))
@@ -1676,6 +1726,9 @@ def ferias_pagar(id):
         id=id, company_id=current_user.company_id, status='scheduled'
     ).first_or_404()
 
+    # Guardar status anterior para rollback
+    old_status = ferias.status
+
     ferias.status = 'paid'
     ferias.paid_at = datetime.utcnow()
 
@@ -1683,12 +1736,11 @@ def ferias_pagar(id):
     ferias.employee.ultima_ferias_inicio = ferias.vacation_start
     ferias.employee.ultima_ferias_fim = ferias.vacation_end
 
-    db.session.commit()
-
-    # === EVENTBUS: VACATION_PAID (listener cria AccountPayable) ===
+    # === EVENTBUS: VACATION_PAID (marca AccountPayable como pago) ===
+    payment_recorded = False
     try:
         from services.event_bus import EventBus, Events
-        EventBus.emit(Events.VACATION_PAID, {
+        results = EventBus.emit(Events.VACATION_PAID, {
             'vacation_id': ferias.id,
             'employee_id': ferias.employee_id,
             'employee_name': ferias.employee.name if ferias.employee else 'N/A',
@@ -1700,9 +1752,22 @@ def ferias_pagar(id):
             'company_id': current_user.company_id,
             'paid_by': current_user.id
         })
+        payment_recorded = any(
+            r.get('success') and (
+                r.get('result', {}).get('updated') is True or
+                r.get('result', {}).get('reason') == 'already_paid'
+            )
+            for r in results
+        )
     except ImportError:
-        pass
+        payment_recorded = True
 
+    if not payment_recorded:
+        db.session.rollback()
+        flash('Erro ao registrar pagamento no financeiro. Tente novamente.', 'danger')
+        return redirect(url_for('rh.ferias_view', id=id))
+
+    db.session.commit()
     flash('Ferias pagas com sucesso!', 'success')
     return redirect(url_for('rh.ferias_view', id=id))
 
@@ -1746,7 +1811,7 @@ def decimo_terceiro_list():
 @login_required
 @admin_required
 def decimo_terceiro_gerar():
-    """Gerar 13o para todos funcionarios"""
+    """Gerar 13o para todos funcionarios com verificação atômica do listener"""
     try:
         from models.rh import ThirteenthSalary
     except ImportError:
@@ -1760,6 +1825,7 @@ def decimo_terceiro_gerar():
     ).all()
 
     created = 0
+    failed = 0
     for emp in employees:
         existing = ThirteenthSalary.query.filter_by(
             employee_id=emp.id, reference_year=year
@@ -1796,9 +1862,10 @@ def decimo_terceiro_gerar():
             db.session.flush()
 
             # === EVENTBUS: THIRTEENTH_APPROVED (listener cria 2 AccountPayables pendentes) ===
+            listener_success = False
             try:
                 from services.event_bus import EventBus, Events
-                EventBus.emit(Events.THIRTEENTH_APPROVED, {
+                results = EventBus.emit(Events.THIRTEENTH_APPROVED, {
                     'thirteenth_id': entry.id,
                     'employee_id': emp.id,
                     'employee_name': emp.name,
@@ -1808,13 +1875,27 @@ def decimo_terceiro_gerar():
                     'company_id': current_user.company_id,
                     'created_by': current_user.id
                 })
+                for r in results:
+                    if r.get('success'):
+                        result = r.get('result', {})
+                        if isinstance(result, dict) and (result.get('created') is True or result.get('reason') == 'duplicate'):
+                            listener_success = True
+                            break
             except ImportError:
-                pass
+                listener_success = True
 
-            created += 1
+            if not listener_success:
+                db.session.delete(entry)
+                db.session.flush()
+                failed += 1
+            else:
+                created += 1
 
     db.session.commit()
-    flash(f'{created} registros de 13o gerados!', 'success')
+    if failed > 0:
+        flash(f'{created} registros de 13o gerados! {failed} falharam na integracao financeira.', 'warning')
+    else:
+        flash(f'{created} registros de 13o gerados!', 'success')
     return redirect(url_for('rh.decimo_terceiro_list', year=year))
 
 
@@ -1836,18 +1917,20 @@ def decimo_terceiro_pagar_primeira(id):
         flash('1a parcela ja foi paga!', 'warning')
         return redirect(url_for('rh.decimo_terceiro_list', year=entry.reference_year))
 
+    # Guardar status anterior para rollback
+    old_status = entry.status
+
     entry.first_installment_paid = True
     entry.first_installment_paid_at = datetime.utcnow()
     entry.first_installment_date = date.today()
     entry.first_installment_method = request.form.get('method', 'transfer')
     entry.status = 'first_paid'
 
-    db.session.commit()
-
-    # === EVENTBUS: THIRTEENTH_FIRST_PAID (listener cria AccountPayable) ===
+    # === EVENTBUS: THIRTEENTH_FIRST_PAID (marca AccountPayable como pago) ===
+    payment_recorded = False
     try:
         from services.event_bus import EventBus, Events
-        EventBus.emit(Events.THIRTEENTH_FIRST_PAID, {
+        results = EventBus.emit(Events.THIRTEENTH_FIRST_PAID, {
             'thirteenth_id': entry.id,
             'employee_id': entry.employee_id,
             'employee_name': entry.employee.name if entry.employee else 'N/A',
@@ -1856,9 +1939,22 @@ def decimo_terceiro_pagar_primeira(id):
             'company_id': current_user.company_id,
             'paid_by': current_user.id
         })
+        payment_recorded = any(
+            r.get('success') and (
+                r.get('result', {}).get('updated') is True or
+                r.get('result', {}).get('reason') == 'already_paid'
+            )
+            for r in results
+        )
     except ImportError:
-        pass
+        payment_recorded = True
 
+    if not payment_recorded:
+        db.session.rollback()
+        flash('Erro ao registrar pagamento no financeiro. Tente novamente.', 'danger')
+        return redirect(url_for('rh.decimo_terceiro_list', year=entry.reference_year))
+
+    db.session.commit()
     flash('1a parcela do 13o paga!', 'success')
     return redirect(url_for('rh.decimo_terceiro_list', year=entry.reference_year))
 
@@ -1881,18 +1977,20 @@ def decimo_terceiro_pagar_segunda(id):
         flash('2a parcela ja foi paga!', 'warning')
         return redirect(url_for('rh.decimo_terceiro_list', year=entry.reference_year))
 
+    # Guardar status anterior para rollback
+    old_status = entry.status
+
     entry.second_installment_paid = True
     entry.second_installment_paid_at = datetime.utcnow()
     entry.second_installment_date = date.today()
     entry.second_installment_method = request.form.get('method', 'transfer')
     entry.status = 'completed'
 
-    db.session.commit()
-
-    # === EVENTBUS: THIRTEENTH_SECOND_PAID (listener cria AccountPayable) ===
+    # === EVENTBUS: THIRTEENTH_SECOND_PAID (marca AccountPayable como pago) ===
+    payment_recorded = False
     try:
         from services.event_bus import EventBus, Events
-        EventBus.emit(Events.THIRTEENTH_SECOND_PAID, {
+        results = EventBus.emit(Events.THIRTEENTH_SECOND_PAID, {
             'thirteenth_id': entry.id,
             'employee_id': entry.employee_id,
             'employee_name': entry.employee.name if entry.employee else 'N/A',
@@ -1902,9 +2000,22 @@ def decimo_terceiro_pagar_segunda(id):
             'company_id': current_user.company_id,
             'paid_by': current_user.id
         })
+        payment_recorded = any(
+            r.get('success') and (
+                r.get('result', {}).get('updated') is True or
+                r.get('result', {}).get('reason') == 'already_paid'
+            )
+            for r in results
+        )
     except ImportError:
-        pass
+        payment_recorded = True
 
+    if not payment_recorded:
+        db.session.rollback()
+        flash('Erro ao registrar pagamento no financeiro. Tente novamente.', 'danger')
+        return redirect(url_for('rh.decimo_terceiro_list', year=entry.reference_year))
+
+    db.session.commit()
     flash('2a parcela do 13o paga!', 'success')
     return redirect(url_for('rh.decimo_terceiro_list', year=entry.reference_year))
 
@@ -2033,7 +2144,7 @@ def rescisao_view(id):
 @login_required
 @admin_required
 def rescisao_aprovar(id):
-    """Aprovar rescisao"""
+    """Aprovar rescisao com verificação atômica do listener"""
     try:
         from models.rh import Termination
     except ImportError:
@@ -2050,9 +2161,10 @@ def rescisao_aprovar(id):
     db.session.commit()
 
     # === EVENTBUS: TERMINATION_APPROVED (listener cria AccountPayable pendente) ===
+    listener_success = False
     try:
         from services.event_bus import EventBus, Events
-        EventBus.emit(Events.TERMINATION_APPROVED, {
+        results = EventBus.emit(Events.TERMINATION_APPROVED, {
             'termination_id': rescisao.id,
             'employee_id': rescisao.employee_id,
             'employee_name': rescisao.employee.name if rescisao.employee else 'N/A',
@@ -2062,8 +2174,24 @@ def rescisao_aprovar(id):
             'company_id': current_user.company_id,
             'approved_by': current_user.id
         })
+        for r in results:
+            if r.get('success'):
+                result = r.get('result', {})
+                if isinstance(result, dict) and (result.get('created') is True or result.get('reason') == 'duplicate'):
+                    listener_success = True
+                    break
     except ImportError:
-        pass
+        listener_success = True
+
+    if not listener_success:
+        rescisao.status = 'calculated'
+        rescisao.approved_by = None
+        rescisao.approved_at = None
+        rescisao.financial_integrated = False
+        rescisao.account_payable_id = None
+        db.session.commit()
+        flash('Erro ao integrar rescisao com financeiro. Tente novamente.', 'danger')
+        return redirect(url_for('rh.rescisao_view', id=id))
 
     flash('Rescisao aprovada!', 'success')
     return redirect(url_for('rh.rescisao_view', id=id))
@@ -2083,6 +2211,10 @@ def rescisao_pagar(id):
         id=id, company_id=current_user.company_id, status='approved'
     ).first_or_404()
 
+    # Guardar status anterior para rollback
+    old_status = rescisao.status
+    old_employee_status = rescisao.employee.status
+
     rescisao.status = 'paid'
     rescisao.payment_date = date.today()
     rescisao.payment_method = request.form.get('method', 'transfer')
@@ -2092,12 +2224,11 @@ def rescisao_pagar(id):
     rescisao.employee.status = 'inactive'
     rescisao.employee.dismissal_date = rescisao.termination_date
 
-    db.session.commit()
-
-    # === EVENTBUS: TERMINATION_PAID (listener cria AccountPayable) ===
+    # === EVENTBUS: TERMINATION_PAID (marca AccountPayable como pago) ===
+    payment_recorded = False
     try:
         from services.event_bus import EventBus, Events
-        EventBus.emit(Events.TERMINATION_PAID, {
+        results = EventBus.emit(Events.TERMINATION_PAID, {
             'termination_id': rescisao.id,
             'employee_id': rescisao.employee_id,
             'employee_name': rescisao.employee.name if rescisao.employee else 'N/A',
@@ -2109,9 +2240,22 @@ def rescisao_pagar(id):
             'company_id': current_user.company_id,
             'paid_by': current_user.id
         })
+        payment_recorded = any(
+            r.get('success') and (
+                r.get('result', {}).get('updated') is True or
+                r.get('result', {}).get('reason') == 'already_paid'
+            )
+            for r in results
+        )
     except ImportError:
-        pass
+        payment_recorded = True
 
+    if not payment_recorded:
+        db.session.rollback()
+        flash('Erro ao registrar pagamento no financeiro. Tente novamente.', 'danger')
+        return redirect(url_for('rh.rescisao_view', id=id))
+
+    db.session.commit()
     flash('Rescisao paga e funcionario desligado!', 'success')
     return redirect(url_for('rh.rescisao_view', id=id))
 
