@@ -981,16 +981,23 @@ def approve_payroll(id):
     entry.status = 'approved'
     db.session.commit()
 
-    # === EVENTBUS: PAYROLL_APPROVED ===
+    # === EVENTBUS: PAYROLL_APPROVED (Listener cria AccountPayables) ===
     try:
         from services.event_bus import EventBus, Events
         EventBus.emit(Events.PAYROLL_APPROVED, {
             'payroll_id': entry.id,
             'employee_id': entry.employee_id,
             'employee_name': entry.employee.name if entry.employee else 'N/A',
+            'net_salary': float(entry.net_salary or 0),
+            'gross_salary': float(entry.gross_salary or 0),
+            'inss_employee': float(entry.inss_employee or 0),
+            'inss_employer': float(entry.inss_employer or 0),
+            'inss_rat': float(entry.inss_rat or 0),
+            'inss_terceiros': float(entry.inss_terceiros or 0),
+            'fgts': float(entry.fgts or 0),
+            'irrf': float(entry.irrf or 0),
             'reference_month': entry.reference_month,
             'reference_year': entry.reference_year,
-            'net_salary': float(entry.net_salary or 0),
             'company_id': current_user.company_id,
             'approved_by': current_user.id
         })
@@ -1011,21 +1018,14 @@ def pay_payroll(id):
         company_id=current_user.company_id
     ).first_or_404()
 
-    # Verificar se jÃ¡ estÃ¡ pago
+    # Verificar se já está pago
     if entry.status == 'paid':
-        flash('Esta folha jÃ¡ foi paga!', 'warning')
+        flash('Esta folha já foi paga!', 'warning')
         return redirect(url_for('rh.payroll', month=entry.reference_month, year=entry.reference_year))
 
-    # Verificar se jÃ¡ existe AccountPayable para esta folha
-    conta_existente = AccountPayable.query.filter_by(
-        company_id=current_user.company_id,
-        origin_type='payroll',
-        origin_id=entry.id,
-        category='folha_pagamento'
-    ).first()
-
-    if conta_existente:
-        flash('JÃ¡ existe registro financeiro para esta folha!', 'warning')
+    # Verificar se folha foi aprovada (AccountPayables devem existir)
+    if entry.status != 'approved':
+        flash('A folha precisa ser aprovada antes de ser paga!', 'warning')
         return redirect(url_for('rh.payroll', month=entry.reference_month, year=entry.reference_year))
 
     entry.status = 'paid'
@@ -1614,6 +1614,21 @@ def ferias_agendar(id):
 
             db.session.commit()
 
+            # === EVENTBUS: VACATION_APPROVED (listener cria AccountPayable pendente) ===
+            try:
+                from services.event_bus import EventBus, Events
+                EventBus.emit(Events.VACATION_APPROVED, {
+                    'vacation_id': ferias.id,
+                    'employee_id': ferias.employee_id,
+                    'employee_name': ferias.employee.name if ferias.employee else 'N/A',
+                    'net_value': float(ferias.net_value or 0),
+                    'payment_date': str(ferias.payment_date),
+                    'company_id': current_user.company_id,
+                    'approved_by': current_user.id
+                })
+            except ImportError:
+                pass
+
             flash('Ferias agendadas com sucesso!', 'success')
             return redirect(url_for('rh.ferias_view', id=id))
 
@@ -1755,6 +1770,24 @@ def decimo_terceiro_gerar():
                 created_by=current_user.id
             )
             db.session.add(entry)
+            db.session.flush()
+
+            # === EVENTBUS: THIRTEENTH_APPROVED (listener cria 2 AccountPayables pendentes) ===
+            try:
+                from services.event_bus import EventBus, Events
+                EventBus.emit(Events.THIRTEENTH_APPROVED, {
+                    'thirteenth_id': entry.id,
+                    'employee_id': emp.id,
+                    'employee_name': emp.name,
+                    'reference_year': year,
+                    'first_installment_value': float(entry.first_installment_value or 0),
+                    'second_installment_net': float(entry.second_installment_net or 0),
+                    'company_id': current_user.company_id,
+                    'created_by': current_user.id
+                })
+            except ImportError:
+                pass
+
             created += 1
 
     db.session.commit()
@@ -1992,6 +2025,23 @@ def rescisao_aprovar(id):
     rescisao.approved_at = datetime.utcnow()
 
     db.session.commit()
+
+    # === EVENTBUS: TERMINATION_APPROVED (listener cria AccountPayable pendente) ===
+    try:
+        from services.event_bus import EventBus, Events
+        EventBus.emit(Events.TERMINATION_APPROVED, {
+            'termination_id': rescisao.id,
+            'employee_id': rescisao.employee_id,
+            'employee_name': rescisao.employee.name if rescisao.employee else 'N/A',
+            'net_total': float(rescisao.net_total or 0),
+            'fgts_fine': float(rescisao.fgts_fine or 0),
+            'termination_date': str(rescisao.termination_date),
+            'company_id': current_user.company_id,
+            'approved_by': current_user.id
+        })
+    except ImportError:
+        pass
+
     flash('Rescisao aprovada!', 'success')
     return redirect(url_for('rh.rescisao_view', id=id))
 
