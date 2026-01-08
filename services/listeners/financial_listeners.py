@@ -14,9 +14,27 @@ from datetime import datetime, date, timedelta
 
 @EventBus.on(Events.ADVANCE_APPROVED)
 def create_advance_payable(data):
-    from models.rh import AccountPayable
+    """
+    Cria AccountPayable quando solicitação de adiantamento é APROVADA.
+    origin_id = solicitacao_id (não employee_id)
+    notes contém employee_id para rastreabilidade em relatórios
+    Retorna True/False para verificação atômica na rota
+    """
+    from models.rh import AccountPayable, SolicitacaoAdiantamento
     try:
+        solicitacao_id = data.get('solicitacao_id')
+        if not solicitacao_id:
+            return False
+
+        existing = AccountPayable.query.filter_by(
+            origin_type='adiantamento',
+            origin_id=solicitacao_id
+        ).first()
+        if existing:
+            return False
+
         due_date = datetime.strptime(data['due_date'], '%Y-%m-%d').date() if isinstance(data['due_date'], str) else data['due_date']
+        employee_id = data.get('employee_id')
         conta = AccountPayable(
             company_id=data['company_id'],
             description=f"Adiantamento - {data['employee_name']} ({due_date.strftime('%m/%Y')})",
@@ -25,15 +43,22 @@ def create_advance_payable(data):
             due_date=due_date,
             status='pending',
             origin_type='adiantamento',
-            origin_id=data['employee_id'],
+            origin_id=solicitacao_id,
+            notes=f"employee_id:{employee_id}" if employee_id else None,
             created_by=data.get('approved_by')
         )
         db.session.add(conta)
+        db.session.flush()
+
+        solicitacao = SolicitacaoAdiantamento.query.get(solicitacao_id)
+        if solicitacao:
+            solicitacao.status = 'integrado'
+
         db.session.commit()
-        return {'created': True, 'payable_id': conta.id}
+        return True
     except Exception as e:
         db.session.rollback()
-        return {'created': False, 'error': str(e)}
+        return False
 
 
 @EventBus.on(Events.PAYROLL_APPROVED)

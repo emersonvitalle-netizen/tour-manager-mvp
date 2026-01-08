@@ -625,35 +625,45 @@ def adiantamento():
 @login_required
 @admin_required
 def aprovar_adiantamento(id):
-    """Aprovar solicitacao de adiantamento - cria AccountPayable"""
+    """Aprovar solicitacao de adiantamento - cria AccountPayable atomicamente"""
     solicitacao = SolicitacaoAdiantamento.query.filter_by(
         id=id,
         company_id=current_user.company_id,
         status='pendente'
     ).first_or_404()
 
-    # Atualizar status para aprovado
+    employee_name = solicitacao.employee.name
+    valor = solicitacao.valor
+
     solicitacao.status = 'aprovado'
     solicitacao.approved_by = current_user.id
     solicitacao.approved_at = datetime.utcnow()
     db.session.commit()
 
-    # Emitir evento para criar AccountPayable
+    payable_created = False
     try:
         from services.event_bus import EventBus, Events
-        EventBus.emit(Events.ADVANCE_APPROVED, {
+        payable_created = EventBus.emit(Events.ADVANCE_APPROVED, {
             'solicitacao_id': solicitacao.id,
             'employee_id': solicitacao.employee_id,
-            'employee_name': solicitacao.employee.name,
-            'amount': float(solicitacao.valor),
+            'employee_name': employee_name,
+            'amount': float(valor),
             'due_date': str(solicitacao.data_pagamento),
             'company_id': current_user.company_id,
             'approved_by': current_user.id
         })
     except ImportError:
-        pass
+        payable_created = False
 
-    flash(f'Adiantamento de R$ {solicitacao.valor:.2f} aprovado para {solicitacao.employee.name}', 'success')
+    if not payable_created:
+        solicitacao.status = 'pendente'
+        solicitacao.approved_by = None
+        solicitacao.approved_at = None
+        db.session.commit()
+        flash(f'Erro ao criar conta a pagar para {employee_name}. Aprovação revertida.', 'danger')
+        return redirect(url_for('rh.adiantamento'))
+
+    flash(f'Adiantamento de R$ {valor:.2f} aprovado para {employee_name}', 'success')
     return redirect(url_for('rh.adiantamento'))
 
 
@@ -691,13 +701,18 @@ def pagar_adiantamento(id):
         category='adiantamento'
     ).first_or_404()
 
-    # Buscar funcionário
-    employee = Employee.query.get(conta.origin_id) if conta.origin_id else None
+    # Buscar solicitação e funcionário (origin_id agora é solicitacao_id)
+    solicitacao = SolicitacaoAdiantamento.query.get(conta.origin_id) if conta.origin_id else None
+    employee = solicitacao.employee if solicitacao else None
 
     conta.status = 'paid'
     conta.paid_at = datetime.utcnow()
     conta.paid_amount = conta.amount
     conta.payment_method = request.form.get('method', 'transfer')
+
+    # Atualizar status da solicitação para pago
+    if solicitacao:
+        solicitacao.status = 'pago'
 
     db.session.commit()
 
@@ -706,7 +721,8 @@ def pagar_adiantamento(id):
         from services.event_bus import EventBus, Events
         EventBus.emit(Events.ADVANCE_PAID, {
             'advance_id': conta.id,
-            'employee_id': conta.origin_id,
+            'solicitacao_id': conta.origin_id,
+            'employee_id': employee.id if employee else None,
             'employee_name': employee.name if employee else 'N/A',
             'amount': float(conta.paid_amount),
             'payment_method': conta.payment_method,
@@ -724,13 +740,20 @@ def pagar_adiantamento(id):
 @login_required
 @admin_required
 def cancelar_adiantamento(id):
-    """Cancelar adiantamento pendente"""
+    """Cancelar adiantamento aprovado (ainda pendente de pagamento)"""
     conta = AccountPayable.query.filter_by(
         id=id,
         company_id=current_user.company_id,
         category='adiantamento',
         status='pending'
     ).first_or_404()
+
+    solicitacao = SolicitacaoAdiantamento.query.get(conta.origin_id) if conta.origin_id else None
+    if solicitacao:
+        solicitacao.status = 'rejeitado'
+        solicitacao.rejected_by = current_user.id
+        solicitacao.rejected_at = datetime.utcnow()
+        solicitacao.rejection_reason = 'Cancelado após aprovação'
 
     db.session.delete(conta)
     db.session.commit()
