@@ -406,12 +406,52 @@
         </button>
     </form>
 
-    <!-- Lista de adiantamentos pendentes -->
-    <div class="section-title">Adiantamentos Pendentes</div>
+    <!-- Lista de solicitacoes pendentes de aprovacao -->
+    <div class="section-title">Aguardando Aprovacao RH</div>
 
     <div class="list-card">
-        {% if adiantamentos and adiantamentos|length > 0 %}
-            {% for ad in adiantamentos %}
+        {% if solicitacoes_pendentes and solicitacoes_pendentes|length > 0 %}
+            {% for sol in solicitacoes_pendentes %}
+            <div class="list-item">
+                <div class="list-icon" style="background: rgba(251,191,36,0.2); color: #fbbf24;">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="list-info">
+                    <h4>{{ sol.employee.name }}</h4>
+                    <p>Pagamento: {{ sol.data_pagamento.strftime('%d/%m/%Y') }}</p>
+                </div>
+                <div class="list-value">
+                    <div class="amount">R$ {{ "%.2f"|format(sol.valor) }}</div>
+                    <div class="date">Solicitado: {{ sol.data_solicitacao.strftime('%d/%m') }}</div>
+                </div>
+                <div class="list-actions">
+                    <form method="POST" action="{{ url_for('rh.aprovar_adiantamento', id=sol.id) }}" style="display:inline;">
+                        <button type="submit" class="btn-action pay" title="Aprovar">
+                            <i class="fas fa-check"></i>
+                        </button>
+                    </form>
+                    <form method="POST" action="{{ url_for('rh.rejeitar_adiantamento', id=sol.id) }}" style="display:inline;">
+                        <button type="submit" class="btn-action cancel" title="Rejeitar">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-check-circle"></i>
+                <p>Nenhuma solicitacao pendente de aprovacao</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Lista de adiantamentos aprovados (pendentes de pagamento) -->
+    <div class="section-title">Aprovados - Aguardando Pagamento</div>
+
+    <div class="list-card">
+        {% if adiantamentos_aprovados and adiantamentos_aprovados|length > 0 %}
+            {% for ad in adiantamentos_aprovados %}
             <div class="list-item">
                 <div class="list-icon">
                     <i class="fas fa-hand-holding-usd"></i>
@@ -446,7 +486,7 @@
         {% else %}
             <div class="empty-state">
                 <i class="fas fa-inbox"></i>
-                <p>Nenhum adiantamento pendente</p>
+                <p>Nenhum adiantamento aprovado pendente de pagamento</p>
             </div>
         {% endif %}
     </div>

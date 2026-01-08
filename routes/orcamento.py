@@ -203,7 +203,7 @@ def detail(id):
 @admin_required
 def approve(id):
     is_json = request.is_json or request.headers.get('Content-Type', '').startswith('application/json')
-    
+
     sep_list = SeparationList.query.filter_by(
         id=id,
         company_id=current_user.company_id
@@ -211,7 +211,7 @@ def approve(id):
 
     if sep_list.status != 'pending':
         if is_json:
-            return jsonify({'success': False, 'message': 'Este orçamento já foi processado.'})
+            return jsonify({'success': False, 'message': 'Este orÃ§amento jÃ¡ foi processado.'})
         flash('Este orcamento ja foi processado.', 'warning')
         return redirect(url_for('orcamento.detail', id=id))
 
@@ -244,7 +244,7 @@ def approve(id):
             db.session.add(work_item)
 
         db.session.commit()
-        
+
         from services.quote_automation import QuoteAutomation
         signal_amount = request.form.get('signal_amount', type=float)
         automation_result = QuoteAutomation.on_quote_approved(
@@ -252,7 +252,24 @@ def approve(id):
             signal_amount=signal_amount,
             user_id=current_user.id
         )
-        
+
+        # === EVENTBUS: QUOTE_APPROVED ===
+        try:
+            from services.event_bus import EventBus, Events
+            EventBus.emit(Events.QUOTE_APPROVED, {
+                'quote_id': sep_list.id,
+                'quote_name': sep_list.name,
+                'client_name': getattr(sep_list, 'client_name', None),
+                'total_value': float(sep_list.total_value or 0) if hasattr(sep_list, 'total_value') else 0,
+                'work_list_id': work_list.id,
+                'tour_id': sep_list.tour_id,
+                'company_id': current_user.company_id,
+                'approved_by': current_user.id,
+                'automation_result': automation_result
+            })
+        except ImportError:
+            pass
+
         msg = f'Orcamento aprovado! Lista de trabalho #{work_list.id} criada.'
         if automation_result.get('invoice_created'):
             msg += f' Fatura {automation_result.get("invoice_code", "")} gerada.'
@@ -260,7 +277,7 @@ def approve(id):
             msg += f' Evento criado.'
         if automation_result.get('equipment_allocated', 0) > 0:
             msg += f' {automation_result["equipment_allocated"]} equipamentos alocados.'
-        
+
         if is_json:
             return jsonify({
                 'success': True, 
@@ -271,7 +288,7 @@ def approve(id):
                     **automation_result
                 }
             })
-        
+
         flash(msg, 'success')
         return redirect(url_for('orcamento.detail', id=id))
 
@@ -307,14 +324,29 @@ def reject(id):
         sep_list.rejection_reason = reason
 
         db.session.commit()
-        
+
         from services.quote_automation import QuoteAutomation
         QuoteAutomation.on_quote_rejected(
             separation_list_id=id,
             reason=reason,
             user_id=current_user.id
         )
-        
+
+        # === EVENTBUS: QUOTE_REJECTED ===
+        try:
+            from services.event_bus import EventBus, Events
+            EventBus.emit(Events.QUOTE_REJECTED, {
+                'quote_id': sep_list.id,
+                'quote_name': sep_list.name,
+                'client_name': getattr(sep_list, 'client_name', None),
+                'total_value': float(sep_list.total_value or 0) if hasattr(sep_list, 'total_value') else 0,
+                'reason': reason,
+                'company_id': current_user.company_id,
+                'rejected_by': current_user.id
+            })
+        except ImportError:
+            pass
+
         flash('Orcamento rejeitado.', 'warning')
         return redirect(url_for('orcamento.detail', id=id))
 
@@ -349,13 +381,13 @@ def create_list_complete():
     tour_id = request.form.get('tour_id')
     name = request.form.get('name', '').strip()
     observations = request.form.get('observations', '').strip()
-    
+
     # Dados do cliente
     client_name = request.form.get('client_name', '').strip()
     client_phone = request.form.get('client_phone', '').strip()
     client_email = request.form.get('client_email', '').strip()
     client_address = request.form.get('client_address', '').strip()
-    
+
     # Dados do evento
     event_name = request.form.get('event_name', '').strip()
     event_date_str = request.form.get('event_date', '')
@@ -363,19 +395,19 @@ def create_list_complete():
     event_location = request.form.get('event_location', '').strip()
 
     if not name or len(name) < 3:
-        flash('Nome do orçamento deve ter pelo menos 3 caracteres.', 'danger')
+        flash('Nome do orÃ§amento deve ter pelo menos 3 caracteres.', 'danger')
         return redirect(url_for('orcamento.new_complete'))
-    
+
     if not client_name:
-        flash('Nome do cliente é obrigatório.', 'danger')
+        flash('Nome do cliente Ã© obrigatÃ³rio.', 'danger')
         return redirect(url_for('orcamento.new_complete'))
-    
+
     if not event_name:
-        flash('Nome do evento é obrigatório.', 'danger')
+        flash('Nome do evento Ã© obrigatÃ³rio.', 'danger')
         return redirect(url_for('orcamento.new_complete'))
-    
+
     if not event_date_str:
-        flash('Data do evento é obrigatória.', 'danger')
+        flash('Data do evento Ã© obrigatÃ³ria.', 'danger')
         return redirect(url_for('orcamento.new_complete'))
 
     # Converter data
@@ -383,7 +415,7 @@ def create_list_complete():
         from datetime import datetime as dt
         event_date = dt.strptime(event_date_str, '%Y-%m-%d').date()
     except ValueError:
-        flash('Data do evento inválida.', 'danger')
+        flash('Data do evento invÃ¡lida.', 'danger')
         return redirect(url_for('orcamento.new_complete'))
 
     items_data = []
@@ -397,7 +429,7 @@ def create_list_complete():
                 continue
 
             if quantity < 0 or unit_price < 0:
-                flash('Valores negativos não são permitidos.', 'danger')
+                flash('Valores negativos nÃ£o sÃ£o permitidos.', 'danger')
                 return redirect(url_for('orcamento.new_complete'))
 
             if quantity > 0:
@@ -465,13 +497,13 @@ def create_list_simple():
     tour_id = request.form.get('tour_id')
     name = request.form.get('name', '').strip()
     observations = request.form.get('observations', '').strip()
-    
+
     # Dados do cliente
     client_name = request.form.get('client_name', '').strip()
     client_phone = request.form.get('client_phone', '').strip()
     client_email = request.form.get('client_email', '').strip()
     client_address = request.form.get('client_address', '').strip()
-    
+
     # Dados do evento
     event_name = request.form.get('event_name', '').strip()
     event_date_str = request.form.get('event_date', '')
@@ -479,19 +511,19 @@ def create_list_simple():
     event_location = request.form.get('event_location', '').strip()
 
     if not name or len(name) < 3:
-        flash('Nome do orçamento deve ter pelo menos 3 caracteres.', 'danger')
+        flash('Nome do orÃ§amento deve ter pelo menos 3 caracteres.', 'danger')
         return redirect(url_for('orcamento.new_simple'))
-    
+
     if not client_name:
-        flash('Nome do cliente é obrigatório.', 'danger')
+        flash('Nome do cliente Ã© obrigatÃ³rio.', 'danger')
         return redirect(url_for('orcamento.new_simple'))
-    
+
     if not event_name:
-        flash('Nome do evento é obrigatório.', 'danger')
+        flash('Nome do evento Ã© obrigatÃ³rio.', 'danger')
         return redirect(url_for('orcamento.new_simple'))
-    
+
     if not event_date_str:
-        flash('Data do evento é obrigatória.', 'danger')
+        flash('Data do evento Ã© obrigatÃ³ria.', 'danger')
         return redirect(url_for('orcamento.new_simple'))
 
     # Converter data
@@ -499,16 +531,16 @@ def create_list_simple():
         from datetime import datetime as dt
         event_date = dt.strptime(event_date_str, '%Y-%m-%d').date()
     except ValueError:
-        flash('Data do evento inválida.', 'danger')
+        flash('Data do evento invÃ¡lida.', 'danger')
         return redirect(url_for('orcamento.new_simple'))
 
     try:
         total_value = float(request.form.get('total_value', 0))
         if total_value < 0:
-            flash('Valor total não pode ser negativo.', 'danger')
+            flash('Valor total nÃ£o pode ser negativo.', 'danger')
             return redirect(url_for('orcamento.new_simple'))
     except (ValueError, TypeError):
-        flash('Valor total inválido.', 'danger')
+        flash('Valor total invÃ¡lido.', 'danger')
         return redirect(url_for('orcamento.new_simple'))
 
     items_data = []
@@ -521,7 +553,7 @@ def create_list_simple():
                 continue
 
             if quantity < 0:
-                flash('Quantidade não pode ser negativa.', 'danger')
+                flash('Quantidade nÃ£o pode ser negativa.', 'danger')
                 return redirect(url_for('orcamento.new_simple'))
 
             if quantity > 0:
@@ -582,12 +614,12 @@ def create_list_simple():
 
 def get_category_icon(category_name):
     icons = {
-        'Som': '🎤',
-        'Luz': '💡',
-        'Materiais': '🔧',
-        'Instrumentos': '🎸'
+        'Som': 'ðŸŽ¤',
+        'Luz': 'ðŸ’¡',
+        'Materiais': 'ðŸ”§',
+        'Instrumentos': 'ðŸŽ¸'
     }
-    return icons.get(category_name, '📦')
+    return icons.get(category_name, 'ðŸ“¦')
 
 
 @orcamento_bp.route('/<int:id>/pdf')
