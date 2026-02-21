@@ -1,0 +1,274 @@
+/* ==============================================
+   GLOBAL NOIR OVERRIDE - ÚNICO ARQUIVO
+   Aplica tema Noir Dourado a TODOS os templates
+   Carregado via base.html após noir-theme.css
+   ============================================== */
+
+/* ===== 1. CONTAINERS → transparent (vinheta do base.html aparece) ===== */
+[class$="-container"],
+[class*="-container "],
+.page-container,
+.form-container,
+.detail-container,
+.settings-container,
+.scan-container,
+.scanner-container,
+.print-container,
+.list-container,
+.edit-container,
+.view-container {
+    background: transparent !important;
+}
+
+/* ===== 2. CARDS → glass noir ===== */
+[class$="-card"],
+[class*="-card "],
+.info-card,
+.form-card,
+.detail-card,
+.settings-card,
+.scan-card,
+.summary-card,
+.chart-card {
+    background: rgba(15,15,15,0.85) !important;
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255,255,255,0.04) !important;
+}
+
+/* Hover em cards clicáveis */
+a[class$="-card"]:hover,
+a[class*="-card "]:hover {
+    border-color: rgba(255,255,255,0.08) !important;
+}
+
+/* ===== 3. LIST items → glass noir ===== */
+[class$="-item"],
+[class*="-item "] {
+    background: rgba(15,15,15,0.85) !important;
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255,255,255,0.04) !important;
+}
+
+/* ===== 4. SECTIONS / FORM SECTIONS ===== */
+.form-section,
+.section-card,
+.info-grid,
+.detail-grid {
+    background: rgba(15,15,15,0.85) !important;
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255,255,255,0.04) !important;
+    border-radius: 12px;
+}
+
+/* ===== 5. LISTS wrappers ===== */
+[class$="-list"],
+[class*="-list "] {
+    background: rgba(15,15,15,0.85) !important;
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255,255,255,0.04) !important;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+/* ===== 6. RANKING ===== */
+.ranking-item,
+.ranking-position {
+    border-color: rgba(255,255,255,0.04) !important;
+}
+
+.ranking-position {
+    background: rgba(255,255,255,0.06) !important;
+}
+
+/* ===== 7. TABLES ===== */
+table {
+    border-color: rgba(255,255,255,0.04) !important;
+}
+
+thead th {
+    background: rgba(20,20,20,0.9) !important;
+    border-bottom: 1px solid rgba(255,255,255,0.06) !important;
+}
+
+tbody td {
+    border-bottom: 1px solid rgba(255,255,255,0.03) !important;
+}
+
+/* ===== 8. INPUTS ===== */
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="submit"]):not([type="button"]),
+select,
+textarea {
+    background: rgba(10,10,10,0.8) !important;
+    border-color: rgba(255,255,255,0.06) !important;
+    color: var(--white-soft, #f0ebe4) !important;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    border-color: rgba(212,165,116,0.4) !important;
+    box-shadow: 0 0 0 2px rgba(212,165,116,0.1) !important;
+    outline: none;
+}
+
+/* ===== 9. BORDERS cleanup ===== */
+[class$="-row"],
+[class*="-row "] {
+    border-bottom-color: rgba(255,255,255,0.04) !important;
+}
+
+.btn-action-row {
+    border-top-color: rgba(255,255,255,0.06) !important;
+}
+
+hr {
+    border-color: rgba(255,255,255,0.04) !important;
+}
+
+/* ===== 10. BUTTONS secundários ===== */
+.btn-edit,
+.btn-cancel,
+.btn-secondary,
+.btn-back {
+    background: rgba(255,255,255,0.06) !important;
+    border: 1px solid rgba(255,255,255,0.08) !important;
+}
+
+.btn-edit:hover,
+.btn-cancel:hover,
+.btn-secondary:hover {
+    background: rgba(255,255,255,0.1) !important;
+}
+
+/* ===== 11. MODALS ===== */
+.modal-content,
+.modal {
+    background: rgba(15,15,15,0.95) !important;
+    backdrop-filter: blur(10px);
+    border-color: rgba(255,255,255,0.06) !important;
+}
+
+/* ===== 12. BOOTSTRAP overrides ===== */
+.bg-dark {
+    background: rgba(15,15,15,0.85) !important;
+}
+
+.border-secondary {
+    border-color: rgba(255,255,255,0.04) !important;
+}
+
+.card.bg-dark {
+    backdrop-filter: blur(4px);
+}
+
+/* ===== 13. TABS ===== */
+.tabs-container,
+.tabs {
+    background: transparent !important;
+    border-bottom-color: rgba(255,255,255,0.04) !important;
+}
+
+/* ===== 14. KANBAN ===== */
+.kanban-column {
+    background: rgba(15,15,15,0.85) !important;
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255,255,255,0.04) !important;
+}
+
+.column-header {
+    border-bottom-color: rgba(255,255,255,0.06) !important;
+}
+
+.column-count {
+    background: rgba(255,255,255,0.06) !important;
+}
+
+/* ===== 15. STATUS badges → glass ===== */
+.status-active {
+    background: rgba(27,94,32,0.3) !important;
+    color: #4ade80 !important;
+    border: 1px solid rgba(27,94,32,0.4) !important;
+}
+
+.status-inactive {
+    background: rgba(183,28,28,0.3) !important;
+    color: #f87171 !important;
+    border: 1px solid rgba(183,28,28,0.4) !important;
+}
+
+/* ===== 16. SCORE badges ===== */
+.lead-score {
+    background: rgba(212,165,116,0.1) !important;
+    border: 1px solid rgba(212,165,116,0.15) !important;
+}
+
+/* ===== 17. HOLERITE / PAYROLL ===== */
+.holerite-container,
+.holerite-section {
+    background: rgba(15,15,15,0.85) !important;
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255,255,255,0.04) !important;
+}
+
+/* ===== EXCEPTIONS - Elementos que NÃO devem ter glass ===== */
+.bottom-nav,
+.bottom-nav *,
+nav,
+.btn-login,
+.btn-new,
+.btn-submit,
+.btn-approve,
+.btn-reject,
+.btn-pdf,
+.btn-despesas,
+.new-button,
+.employee-avatar,
+.freelancer-avatar,
+.fab-btn,
+.badge,
+.badge-pending,
+.badge-approved,
+.badge-rejected,
+.tab-badge,
+.progress-fill,
+.lead-score-fill,
+.maintenance-priority,
+.priority-urgent,
+.priority-high,
+.priority-medium,
+.priority-low,
+.kpi-value,
+.metric-value,
+.score-value {
+    backdrop-filter: none !important;
+}
+
+/* Botões primários mantêm seus gradientes originais */
+.btn-login,
+.btn-new,
+.btn-submit,
+.btn-approve,
+.btn-pdf,
+.btn-despesas:not(:disabled),
+.new-button,
+.fab-btn {
+    background: revert !important;
+    border: revert !important;
+}
+
+/* Avatares mantêm gradientes */
+.employee-avatar,
+.freelancer-avatar {
+    background: revert !important;
+    border: revert !important;
+}
+
+/* Badges mantêm estilo */
+.badge,
+.badge-pending,
+.badge-approved,
+.badge-rejected,
+.tab-badge {
+    background: revert !important;
+    border: revert !important;
+}

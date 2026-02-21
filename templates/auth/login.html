@@ -16,25 +16,50 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #000;
+            background: #040404;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Vinheta Noir Dourada */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(ellipse at 50% 60%, rgba(106,85,48,0.15) 0%, rgba(4,4,4,0.0) 60%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Film grain */
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 0;
         }
 
         .login-container {
             width: 100%;
             max-width: 440px;
+            position: relative;
+            z-index: 1;
         }
 
         .login-card {
-            background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+            background: linear-gradient(135deg, rgba(20,20,20,0.95) 0%, rgba(8,8,8,0.98) 100%);
             border-radius: 20px;
             padding: 48px 40px;
             box-shadow: 0 8px 32px rgba(0,0,0,0.8);
-            border: 1px solid #2a2a2a;
+            border: 1px solid rgba(255,255,255,0.04);
+            backdrop-filter: blur(10px);
         }
 
         .logo-section {
@@ -45,7 +70,7 @@
         .logo-title {
             font-size: 48px;
             font-weight: 700;
-            color: #f5f5f5;
+            color: #f0ebe4;
             letter-spacing: 4px;
             margin-bottom: 8px;
         }
@@ -73,18 +98,18 @@
         .form-input {
             width: 100%;
             padding: 14px 16px;
-            background: #0a0a0a;
-            border: 2px solid #2a2a2a;
+            background: rgba(10,10,10,0.8);
+            border: 1px solid rgba(255,255,255,0.06);
             border-radius: 10px;
-            color: #f5f5f5;
+            color: #f0ebe4;
             font-size: 15px;
             transition: all 0.3s;
         }
 
         .form-input:focus {
             outline: none;
-            border-color: #d4af37;
-            box-shadow: 0 0 0 3px rgba(212,175,55,0.1);
+            border-color: rgba(212,165,116,0.5);
+            box-shadow: 0 0 0 3px rgba(212,165,116,0.1);
         }
 
         .form-input::placeholder {
@@ -94,7 +119,7 @@
         .btn-login {
             width: 100%;
             padding: 16px;
-            background: linear-gradient(135deg, #d4af37 0%, #cd7f32 100%);
+            background: linear-gradient(135deg, #d4a574 0%, #b8863e 100%);
             border: none;
             border-radius: 10px;
             color: #000;
@@ -109,11 +134,11 @@
 
         .btn-login:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(212,175,55,0.4);
+            box-shadow: 0 8px 24px rgba(212,165,116,0.35);
         }
 
         .btn-login:active {
-            transform: translateY(0);
+            transform: translateY(0) scale(0.98);
         }
 
         .divider {
@@ -129,11 +154,11 @@
             top: 50%;
             width: 100%;
             height: 1px;
-            background: #2a2a2a;
+            background: rgba(255,255,255,0.06);
         }
 
         .divider span {
-            background: #1a1a1a;
+            background: rgba(14,14,14,0.95);
             padding: 0 16px;
             color: #707070;
             font-size: 13px;
@@ -146,14 +171,14 @@
         }
 
         .register-link a {
-            color: #d4af37;
+            color: #d4a574;
             text-decoration: none;
             font-weight: 600;
             transition: 0.3s;
         }
 
         .register-link a:hover {
-            color: #b8941f;
+            color: #b8863e;
         }
 
         .alert {
@@ -164,19 +189,19 @@
         }
 
         .alert-danger {
-            background: rgba(231,76,60,0.2);
+            background: rgba(231,76,60,0.15);
             border-left: 4px solid #e74c3c;
             color: #e74c3c;
         }
 
         .alert-success {
-            background: rgba(46,204,113,0.2);
+            background: rgba(46,204,113,0.15);
             border-left: 4px solid #2ecc71;
             color: #2ecc71;
         }
 
         .alert-info {
-            background: rgba(52,152,219,0.2);
+            background: rgba(52,152,219,0.15);
             border-left: 4px solid #3498db;
             color: #3498db;
         }
@@ -196,29 +221,29 @@
             gap: 12px;
             margin-bottom: 28px;
             padding: 16px;
-            background: #0d0d0d;
+            background: rgba(8,8,8,0.8);
             border-radius: 12px;
-            border: 1px solid #222;
+            border: 1px solid rgba(255,255,255,0.04);
         }
 
         .user-type {
             text-align: center;
             padding: 12px 8px;
             border-radius: 8px;
-            background: #1a1a1a;
-            border: 2px solid #2a2a2a;
+            background: rgba(15,15,15,0.85);
+            border: 1px solid rgba(255,255,255,0.06);
             cursor: pointer;
             transition: all 0.3s;
         }
 
         .user-type:hover {
-            border-color: #404040;
+            border-color: rgba(255,255,255,0.12);
             transform: translateY(-2px);
         }
 
         .user-type.active {
-            border-color: #d4af37;
-            background: rgba(212,175,55,0.1);
+            border-color: rgba(212,165,116,0.5);
+            background: rgba(212,165,116,0.08);
         }
 
         .user-type-icon {
@@ -226,7 +251,7 @@
             margin-bottom: 6px;
         }
 
-        .user-type-admin .user-type-icon { color: #d4af37; }
+        .user-type-admin .user-type-icon { color: #d4a574; }
         .user-type-tech .user-type-icon { color: #3498db; }
         .user-type-tour .user-type-icon { color: #2ecc71; }
 
@@ -247,14 +272,15 @@
         }
 
         .scanner-container {
-            background: #0a0a0a;
+            background: rgba(10,10,10,0.8);
+            border: 1px solid rgba(255,255,255,0.04);
             border-radius: 12px;
             padding: 20px;
             text-align: center;
         }
 
         .scanner-title {
-            color: #f5f5f5;
+            color: #f0ebe4;
             font-size: 18px;
             margin-bottom: 16px;
         }
@@ -291,7 +317,7 @@
 
         .btn-back {
             background: transparent;
-            border: 1px solid #404040;
+            border: 1px solid rgba(255,255,255,0.1);
             color: #a0a0a0;
             padding: 12px 24px;
             border-radius: 8px;
@@ -301,8 +327,8 @@
         }
 
         .btn-back:hover {
-            border-color: #d4af37;
-            color: #d4af37;
+            border-color: rgba(212,165,116,0.4);
+            color: #d4a574;
         }
 
         @media (max-width: 480px) {
@@ -418,17 +444,17 @@
 
         function selectUserType(type) {
             document.querySelectorAll('.user-type').forEach(el => el.classList.remove('active'));
-            
+
             const adminForm = document.getElementById('admin-form');
             const scannerSection = document.getElementById('scanner-section');
-            
+
             if (html5QrCode) {
                 html5QrCode.stop().catch(err => console.log('Scanner stop error:', err));
                 html5QrCode = null;
             }
-            
+
             currentType = type;
-            
+
             if (type === 'admin') {
                 document.querySelector('.user-type-admin').classList.add('active');
                 adminForm.classList.add('active');
@@ -437,14 +463,14 @@
                 document.querySelector(`.user-type-${type}`).classList.add('active');
                 adminForm.classList.remove('active');
                 scannerSection.classList.add('active');
-                
+
                 const subtitle = document.getElementById('scanner-subtitle');
                 if (type === 'tech') {
                     subtitle.textContent = 'Escaneie seu QR Code de Tecnico';
                 } else {
                     subtitle.textContent = 'Escaneie seu QR Code de Acesso a Tour';
                 }
-                
+
                 startScanner();
             } else {
                 adminForm.classList.remove('active');
@@ -456,15 +482,15 @@
             const qrReader = document.getElementById('qr-reader');
             const messageDiv = document.getElementById('scanner-message');
             messageDiv.innerHTML = '';
-            
+
             html5QrCode = new Html5Qrcode("qr-reader");
-            
+
             const config = {
                 fps: 10,
                 qrbox: { width: 250, height: 250 },
                 aspectRatio: 1.0
             };
-            
+
             html5QrCode.start(
                 { facingMode: "environment" },
                 config,
@@ -483,24 +509,24 @@
 
         function onScanSuccess(decodedText, decodedResult) {
             const messageDiv = document.getElementById('scanner-message');
-            
+
             if (html5QrCode) {
                 html5QrCode.stop().catch(err => console.log('Scanner stop error:', err));
             }
-            
+
             messageDiv.innerHTML = `
                 <div class="scanner-success">
                     <i class="fas fa-spinner fa-spin"></i> Verificando acesso...
                 </div>
             `;
-            
+
             let token = decodedText;
             if (decodedText.includes('/invite/')) {
                 token = decodedText.split('/invite/').pop();
             } else if (decodedText.includes('/auth/')) {
                 token = decodedText.split('/').pop();
             }
-            
+
             fetch('{{ url_for("auth.login_qr") }}', {
                 method: 'POST',
                 headers: {

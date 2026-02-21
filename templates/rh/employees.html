@@ -7,7 +7,7 @@
     .employees-container {
         padding: 16px;
         padding-bottom: 100px;
-        background: #0a0a0a;
+        background: transparent;
         min-height: 100vh;
     }
 
@@ -19,7 +19,7 @@
     }
 
     .page-title {
-        color: #f5f5f5;
+        color: var(--white-soft, #f0ebe4);
         font-size: 1.3rem;
         font-weight: 600;
     }
@@ -35,13 +35,20 @@
     }
 
     .employee-card {
-        background: #1a1a1a;
+        background: rgba(15,15,15,0.85);
+        backdrop-filter: blur(4px);
+        border: 1px solid rgba(255,255,255,0.04);
         border-radius: 12px;
         padding: 16px;
         margin-bottom: 12px;
         display: flex;
         align-items: center;
         text-decoration: none;
+        transition: all 0.2s;
+    }
+
+    .employee-card:hover {
+        border-color: rgba(255,255,255,0.08);
     }
 
     .employee-avatar {
@@ -63,7 +70,7 @@
     }
 
     .employee-name {
-        color: #f5f5f5;
+        color: var(--white-soft, #f0ebe4);
         font-weight: 600;
         font-size: 1rem;
         margin-bottom: 4px;
@@ -89,8 +96,8 @@
         margin-left: 8px;
     }
 
-    .status-active { background: #1b5e20; color: white; }
-    .status-inactive { background: #b71c1c; color: white; }
+    .status-active { background: rgba(27,94,32,0.3); color: #4ade80; border: 1px solid rgba(27,94,32,0.4); }
+    .status-inactive { background: rgba(183,28,28,0.3); color: #f87171; border: 1px solid rgba(183,28,28,0.4); }
 
     .empty-state {
         text-align: center;
@@ -104,20 +111,25 @@
         gap: 8px;
         margin-top: 12px;
         padding-top: 12px;
-        border-top: 1px solid #333;
+        border-top: 1px solid rgba(255,255,255,0.06);
     }
 
     .btn-edit {
         flex: 1;
-        background: #333;
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(255,255,255,0.08);
         color: #fff;
         padding: 8px;
         border-radius: 6px;
         text-align: center;
         text-decoration: none;
         font-size: 0.85rem;
-        border: none;
         cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .btn-edit:hover {
+        background: rgba(255,255,255,0.1);
     }
 
     .btn-despesas {
@@ -132,7 +144,7 @@
     }
 
     .btn-despesas:disabled {
-        background: #444;
+        background: rgba(255,255,255,0.06);
         color: #666;
         cursor: not-allowed;
     }

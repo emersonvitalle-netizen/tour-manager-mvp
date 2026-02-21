@@ -8,12 +8,13 @@
         padding: 0;
         min-height: 100vh;
         padding-bottom: calc(var(--bottom-nav-height) + var(--spacing-md));
+        background: transparent;
     }
 
     .page-header {
-        background: linear-gradient(135deg, rgba(212, 165, 116, 0.3) 0%, rgba(180, 130, 80, 0.2) 100%);
+        background: linear-gradient(135deg, rgba(212, 165, 116, 0.12) 0%, rgba(10,10,10,0.9) 100%);
         padding: var(--spacing-lg) var(--spacing-md);
-        border-bottom: 1px solid var(--border-subtle);
+        border-bottom: 1px solid rgba(255,255,255,0.04);
     }
 
     .header-content {
@@ -59,8 +60,8 @@
 
     .tabs {
         display: flex;
-        border-bottom: 1px solid var(--border-subtle);
-        background-color: var(--bg-secondary);
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+        background: transparent;
     }
 
     .tab {
@@ -74,6 +75,11 @@
         position: relative;
         text-transform: uppercase;
         font-size: 0.85rem;
+        transition: all 0.2s;
+    }
+
+    .tab:hover {
+        color: var(--text-primary);
     }
 
     .tab.active {
@@ -105,7 +111,9 @@
     }
 
     .list-card {
-        background-color: var(--bg-secondary);
+        background: rgba(15,15,15,0.85);
+        backdrop-filter: blur(4px);
+        border: 1px solid rgba(255,255,255,0.04);
         border-radius: var(--radius-lg);
         padding: var(--spacing-lg);
         text-decoration: none;
@@ -114,6 +122,17 @@
         flex-direction: column;
         gap: var(--spacing-sm);
         border-left: 4px solid #d4a574;
+        transition: all 0.2s;
+    }
+
+    .list-card:hover {
+        border-color: rgba(255,255,255,0.08);
+        transform: translateY(-2px);
+    }
+
+    .list-card:active {
+        transform: scale(0.98);
+        transition: transform 0.1s ease;
     }
 
     .list-header {
@@ -158,9 +177,9 @@
         text-transform: uppercase;
     }
 
-    .badge-pending { background: rgba(243, 156, 18, 0.2); color: #f39c12; }
-    .badge-approved { background: rgba(46, 204, 113, 0.2); color: #2ecc71; }
-    .badge-rejected { background: rgba(231, 76, 60, 0.2); color: #e74c3c; }
+    .badge-pending { background: rgba(243, 156, 18, 0.15); color: #f39c12; border: 1px solid rgba(243,156,18,0.2); }
+    .badge-approved { background: rgba(46, 204, 113, 0.15); color: #2ecc71; border: 1px solid rgba(46,204,113,0.2); }
+    .badge-rejected { background: rgba(231, 76, 60, 0.15); color: #e74c3c; border: 1px solid rgba(231,76,60,0.2); }
 </style>
 {% endblock %}
 

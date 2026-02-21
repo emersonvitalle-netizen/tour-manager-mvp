@@ -1,0 +1,86 @@
+/*
+ * TOUR Manager - Noir Dourado Theme
+ * ====================================
+ * Tema cinematográfico com grain de película e vinheta
+ * Fundo: #6a5530 centro → #040404 bordas
+ * Accent: #d4a574 (dourado)
+ * 
+ * Para ajustar intensidade da vinheta, edite o body background em base.html
+ * Para ajustar grain, edite body::before opacity em base.html
+ *
+ * REFERÊNCIA RÁPIDA DAS VARIÁVEIS:
+ * --noir-center: #6a5530  (centro da vinheta)
+ * --noir-mid:    #3d2e18  (meio)
+ * --noir-outer:  #1a1008  (exterior)
+ * --noir-edge:   #040404  (bordas)
+ * --gold:        #d4a574  (dourado principal)
+ * --bronze:      #b8863e  (dourado escuro)
+ * --bg-card:     rgba(15,15,15,0.85)  (fundo dos cards)
+ * --border-subtle: rgba(255,255,255,0.04)
+ */
+
+/* ===================================================
+   NOIR OVERRIDES
+   Classes para usar nos templates existentes
+   que ainda usam cores hardcoded
+   =================================================== */
+
+/* Override para backgrounds hardcoded #0a0a0a */
+.page-container {
+    background-color: transparent !important;
+}
+
+/* Override para cards com background #1a1a1a */
+.summary-card,
+.funcionario-card,
+.chart-card,
+.kpi-card,
+.action-card,
+.module-card,
+.stat-card {
+    background: var(--bg-card, rgba(15,15,15,0.85)) !important;
+    backdrop-filter: blur(4px);
+    border: 1px solid var(--border-subtle, rgba(255,255,255,0.04)) !important;
+}
+
+/* Override para page-headers com gradientes coloridos
+   Mantém o gradiente de cor mas adiciona transparência */
+.page-header {
+    background-color: transparent;
+}
+
+/* Override para forms com background #0a0a0a */
+.form-section {
+    background: var(--bg-card, rgba(15,15,15,0.85)) !important;
+    border-color: var(--border-subtle, rgba(255,255,255,0.04)) !important;
+}
+
+/* Override para inputs com background #0a0a0a */
+.form-input,
+.form-select,
+.form-textarea {
+    background: var(--bg-input, rgba(10,10,10,0.8)) !important;
+    border-color: rgba(255,255,255,0.06) !important;
+}
+
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
+    border-color: var(--gold, #d4a574) !important;
+    box-shadow: 0 0 0 3px rgba(212, 165, 116, 0.1) !important;
+}
+
+/* ===================================================
+   WIZARD MODAL - Noir Update
+   =================================================== */
+.wizard-modal-overlay {
+    background: rgba(0, 0, 0, 0.7) !important;
+    backdrop-filter: blur(8px);
+}
+
+.wizard-modal {
+    background: linear-gradient(180deg, #1e1e1e 0%, #0e0e0e 100%) !important;
+    border: 2px solid var(--gold, #d4a574) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6) !important;
+}

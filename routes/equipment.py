@@ -176,7 +176,37 @@ def new_equipment():
         photo_url = None
         selected_model_id = None
 
-        if brand and model:
+        # Verificar se veio foto da IA (cadastro inteligente)
+        ai_photo_url = request.form.get('ai_photo_url', '').strip()
+
+        if ai_photo_url and brand and model:
+            # Foto da IA (minha foto ou oficial) - entrar no fluxo EquipmentModel
+            photo_url = ai_photo_url
+
+            existing_model = EquipmentModel.query.filter_by(
+                company_id=current_user.company_id,
+                brand=brand,
+                model=model,
+                is_active=True
+            ).first()
+
+            if existing_model:
+                if not existing_model.photo_url:
+                    existing_model.photo_url = photo_url
+                selected_model_id = existing_model.id
+            else:
+                new_model = EquipmentModel(
+                    company_id=current_user.company_id,
+                    brand=brand,
+                    model=model,
+                    photo_url=photo_url,
+                    is_active=True
+                )
+                db.session.add(new_model)
+                db.session.flush()
+                selected_model_id = new_model.id
+
+        elif brand and model:
             existing_model = EquipmentModel.query.filter_by(
                 company_id=current_user.company_id,
                 brand=brand,
@@ -272,14 +302,14 @@ def new_equipment():
                 prefix=prefix,
                 category_id=int(category_id) if category_id else None,
                 type_id=final_type_id,
-                model_id=int(equipment_model_id) if equipment_model_id else None,
+                model_id=int(equipment_model_id) if equipment_model_id else (selected_model_id if selected_model_id else None),
                 brand=brand if brand else None,
                 model=model if model else None,
                 serial_number=serial_number if serial_number else None,
                 notes=notes if notes else None,
                 value=value,
                 purchase_date=purchase_date,
-                primary_photo_url=photo_url if not equipment_model_id else None,
+                primary_photo_url=photo_url,
                 status='available',
                 company_id=current_user.company_id,
                 created_by=current_user.id,
@@ -417,7 +447,7 @@ def upload_photo(id):
 @login_required
 def update_serial(id):
     if current_user.role != 'admin':
-        flash('Apenas administradores podem atualizar o número de série.', 'danger')
+        flash('Apenas administradores podem atualizar o nÃºmero de sÃ©rie.', 'danger')
         return redirect(url_for('equipment.detail_equipment', id=id))
 
     equipment = Equipment.query.filter_by(
@@ -429,7 +459,7 @@ def update_serial(id):
     if serial:
         equipment.serial_number = serial
         db.session.commit()
-        flash('Número de série atualizado!', 'success')
+        flash('NÃºmero de sÃ©rie atualizado!', 'success')
 
     return redirect(url_for('equipment.detail_equipment', id=id))
 
@@ -583,7 +613,7 @@ def complete_maintenance(id):
     except:
         cost = Decimal('0')
 
-    # CORRIGIDO: Gravar em total_cost ao invés de cost
+    # CORRIGIDO: Gravar em total_cost ao invÃ©s de cost
     maintenance.total_cost = float(cost)
     maintenance.completed_at = datetime.now()
     maintenance.completed_by = current_user.id
@@ -676,7 +706,7 @@ def add_model():
     type_id = request.form.get('type_id')
 
     if not brand or not model:
-        flash('Marca e modelo são obrigatórios.', 'danger')
+        flash('Marca e modelo sÃ£o obrigatÃ³rios.', 'danger')
         return redirect(url_for('equipment.models'))
 
     existing = EquipmentModel.query.filter_by(
@@ -686,7 +716,7 @@ def add_model():
     ).first()
 
     if existing:
-        flash('Este modelo já existe.', 'warning')
+        flash('Este modelo jÃ¡ existe.', 'warning')
         return redirect(url_for('equipment.models'))
 
     new_model = EquipmentModel(
@@ -772,6 +802,299 @@ def update_model_photo(id):
         db.session.commit()
         flash('Foto atualizada para todos os equipamentos deste modelo!', 'success')
     else:
-        flash('Formato de arquivo não suportado.', 'danger')
+        flash('Formato de arquivo nÃ£o suportado.', 'danger')
 
     return redirect(url_for('equipment.models'))
+
+# ============================================
+# CADASTRO INTELIGENTE - GEMINI VISION API
+# ============================================
+
+@equipment_bp.route('/ai-identify', methods=['POST'])
+@login_required
+def ai_identify():
+    """Recebe foto do equipamento, envia a IA Vision, retorna dados identificados."""
+    if current_user.role != 'admin':
+        return jsonify({'error': 'Acesso negado'}), 403
+
+    if 'photo' not in request.files:
+        return jsonify({'error': 'Nenhuma foto enviada'}), 400
+
+    file = request.files['photo']
+    if not file or not file.filename:
+        return jsonify({'error': 'Arquivo invalido'}), 400
+
+    try:
+        image_bytes = file.read()
+
+        # Ler configuracoes de IA do banco (Company)
+        from models.company import Company
+        company = Company.query.get(current_user.company_id)
+
+        provider = 'gemini'  # default
+        api_key = None
+
+        if company and company.ai_enabled and company.ai_api_key:
+            provider = company.ai_provider or 'groq'
+            api_key = company.ai_api_key
+
+        from services.ai_vision_service import identify_equipment
+        result = identify_equipment(image_bytes, provider=provider, api_key=api_key)
+
+        if 'error' in result:
+            return jsonify(result), 400
+
+        # Buscar category_id pelo nome da categoria
+        category_name = result.get('category', '')
+        category = Category.query.filter_by(
+            company_id=current_user.company_id,
+            name=category_name
+        ).first()
+
+        if not category:
+            # Tentar busca case-insensitive
+            categories = Category.query.filter_by(
+                company_id=current_user.company_id
+            ).all()
+            for cat in categories:
+                if cat.name.upper() == category_name.upper():
+                    category = cat
+                    break
+
+        result['category_id'] = category.id if category else None
+
+        # Buscar type_id pelo nome do tipo
+        if category:
+            type_name = result.get('type', '')
+            eq_type = EquipmentType.query.filter_by(
+                category_id=category.id,
+                company_id=current_user.company_id
+            ).filter(
+                db.func.upper(EquipmentType.name) == type_name.upper()
+            ).first()
+            result['type_id'] = eq_type.id if eq_type else None
+        else:
+            result['type_id'] = None
+
+        # Salvar foto com nome baseado em marca+modelo (padrao EquipmentModel)
+        ai_brand = result.get('brand', 'unknown').upper().replace(' ', '_')
+        ai_model = result.get('model', 'unknown').upper().replace(' ', '_')
+        filename = secure_filename(f"{ai_brand}_{ai_model}_ai.jpg")
+        upload_folder = os.path.join('static', 'uploads', 'models')
+        os.makedirs(upload_folder, exist_ok=True)
+        filepath = os.path.join(upload_folder, filename)
+        with open(filepath, 'wb') as f:
+            f.write(image_bytes)
+        result['temp_photo_url'] = f"/{filepath}"
+
+        return jsonify(result)
+
+    except Exception as e:
+        return jsonify({'error': f'Erro ao processar: {str(e)}'}), 500
+
+
+@equipment_bp.route('/ai-official-photo', methods=['POST'])
+@login_required
+def ai_official_photo():
+    """Busca foto oficial do produto via Gemini ou Google Custom Search."""
+    if current_user.role != 'admin':
+        return jsonify({'error': 'Acesso negado'}), 403
+
+    data = request.get_json()
+    brand = data.get('brand', '').strip()
+    model_name = data.get('model', '').strip()
+
+    if not brand or not model_name:
+        return jsonify({'error': 'Marca e modelo obrigatorios'}), 400
+
+    try:
+        # Ler configuracoes do banco
+        from models.company import Company
+        company = Company.query.get(current_user.company_id)
+
+        api_key = None
+        cse_cx = None
+
+        if company:
+            api_key = company.gemini_api_key
+            cse_cx = company.google_cse_cx  # opcional
+
+        from services.ai_vision_service import search_product_image
+        photo_url = search_product_image(brand, model_name, api_key=api_key, cse_cx=cse_cx)
+
+        if photo_url:
+            return jsonify({'success': True, 'photo_url': photo_url})
+        else:
+            return jsonify({'success': False, 'error': 'Nao foi possivel encontrar foto oficial deste produto.'})
+
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Erro: {str(e)}'}), 500
+
+
+@equipment_bp.route('/upload-official-photo', methods=['POST'])
+@login_required
+def upload_official_photo():
+    """Recebe foto oficial enviada pelo usuario (salva do Google Imagens)."""
+    if current_user.role != 'admin':
+        return jsonify({'success': False, 'error': 'Acesso negado'}), 403
+
+    if 'photo' not in request.files:
+        return jsonify({'success': False, 'error': 'Nenhuma foto enviada'}), 400
+
+    file = request.files['photo']
+    if not file or not file.filename:
+        return jsonify({'success': False, 'error': 'Arquivo invalido'}), 400
+
+    brand = request.form.get('brand', 'unknown').strip().upper().replace(' ', '_')
+    model_name = request.form.get('model', 'unknown').strip().upper().replace(' ', '_')
+
+    try:
+        # Salvar em static/uploads/models/ (mesmo padrao do projeto)
+        filename = secure_filename(f"{brand}_{model_name}_official.jpg")
+        upload_folder = os.path.join('static', 'uploads', 'models')
+        os.makedirs(upload_folder, exist_ok=True)
+        filepath = os.path.join(upload_folder, filename)
+
+        file.save(filepath)
+
+        photo_url = f"/{filepath}"
+        return jsonify({'success': True, 'photo_url': photo_url})
+
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Erro ao salvar: {str(e)}'}), 500
+
+
+# ============================================
+# ROTAS DE DELETE (SOFT DELETE)
+# ============================================
+
+@equipment_bp.route('/<int:id>/delete', methods=['POST'])
+@login_required
+def delete_equipment(id):
+    """Soft delete de equipamento individual (is_active = False)."""
+    if current_user.role != 'admin':
+        return jsonify({'success': False, 'error': 'Apenas administradores podem deletar.'}), 403
+
+    equipment = Equipment.query.filter_by(
+        id=id,
+        company_id=current_user.company_id
+    ).first_or_404()
+
+    # Verificar se esta em Tour ativa
+    from models.tour import TourEquipment
+    active_allocation = TourEquipment.query.filter_by(
+        equipment_id=id,
+        returned_at=None
+    ).first()
+
+    if active_allocation:
+        return jsonify({
+            'success': False,
+            'error': f'{equipment.code} esta alocado em uma Tour ativa. Devolva primeiro.'
+        }), 400
+
+    # Verificar manutencao ativa
+    active_maintenance = Maintenance.query.filter_by(
+        equipment_id=id,
+        status='in_progress'
+    ).first()
+
+    if active_maintenance:
+        return jsonify({
+            'success': False,
+            'error': f'{equipment.code} esta em manutencao. Conclua primeiro.'
+        }), 400
+
+    # Soft delete
+    equipment.is_active = False
+    db.session.commit()
+
+    return jsonify({
+        'success': True,
+        'message': f'{equipment.code} removido com sucesso.'
+    })
+
+
+@equipment_bp.route('/delete-brand-model', methods=['POST'])
+@login_required
+def delete_brand_model():
+    """Soft delete de todos equipamentos de uma marca+modelo dentro de um tipo."""
+    if current_user.role != 'admin':
+        return jsonify({'success': False, 'error': 'Apenas administradores podem deletar.'}), 403
+
+    data = request.get_json()
+    brand = data.get('brand', '').strip()
+    model_name = data.get('model', '').strip()
+    category_id = data.get('category_id')
+
+    if not brand or not model_name:
+        return jsonify({'success': False, 'error': 'Marca e modelo obrigatorios.'}), 400
+
+    # Buscar todos equipamentos desta marca+modelo
+    equipments = Equipment.query.filter_by(
+        company_id=current_user.company_id,
+        brand=brand,
+        model=model_name,
+        is_active=True
+    ).all()
+
+    if not equipments:
+        return jsonify({'success': False, 'error': 'Nenhum equipamento encontrado.'}), 404
+
+    # Verificar se algum esta em Tour ativa
+    from models.tour import TourEquipment
+    blocked = []
+    for eq in equipments:
+        active_allocation = TourEquipment.query.filter_by(
+            equipment_id=eq.id,
+            returned_at=None
+        ).first()
+        if active_allocation:
+            blocked.append(eq.code)
+
+    if blocked:
+        return jsonify({
+            'success': False,
+            'error': f'Equipamentos em Tour ativa: {", ".join(blocked)}. Devolva primeiro.'
+        }), 400
+
+    # Verificar manutencao ativa
+    maintenance_blocked = []
+    for eq in equipments:
+        active_maintenance = Maintenance.query.filter_by(
+            equipment_id=eq.id,
+            status='in_progress'
+        ).first()
+        if active_maintenance:
+            maintenance_blocked.append(eq.code)
+
+    if maintenance_blocked:
+        return jsonify({
+            'success': False,
+            'error': f'Equipamentos em manutencao: {", ".join(maintenance_blocked)}. Conclua primeiro.'
+        }), 400
+
+    # Soft delete de todos
+    count = 0
+    for eq in equipments:
+        eq.is_active = False
+        count += 1
+
+    # Soft delete do EquipmentModel se existir
+    from models.equipment_model import EquipmentModel
+    eq_model = EquipmentModel.query.filter_by(
+        company_id=current_user.company_id,
+        brand=brand,
+        model=model_name,
+        is_active=True
+    ).first()
+
+    if eq_model:
+        eq_model.is_active = False
+
+    db.session.commit()
+
+    return jsonify({
+        'success': True,
+        'message': f'{count} equipamento(s) {brand} {model_name} removido(s).'
+    })

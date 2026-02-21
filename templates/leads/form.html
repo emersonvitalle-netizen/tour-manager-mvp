@@ -7,7 +7,7 @@
     .form-container {
         padding: 16px;
         padding-bottom: 100px;
-        background: #0a0a0a;
+        background: transparent;
         min-height: 100vh;
     }
 
@@ -16,13 +16,15 @@
     }
 
     .page-title {
-        color: #f5f5f5;
+        color: var(--white-soft, #f0ebe4);
         font-size: 1.3rem;
         font-weight: 600;
     }
 
     .form-card {
-        background: #1a1a1a;
+        background: rgba(15,15,15,0.85);
+        backdrop-filter: blur(4px);
+        border: 1px solid rgba(255,255,255,0.04);
         border-radius: 12px;
         padding: 20px;
     }
@@ -40,17 +42,18 @@
 
     .form-control {
         width: 100%;
-        background: #252525;
-        border: 1px solid #333;
+        background: rgba(10,10,10,0.8);
+        border: 1px solid rgba(255,255,255,0.06);
         border-radius: 8px;
         padding: 12px;
-        color: #f5f5f5;
+        color: var(--white-soft, #f0ebe4);
         font-size: 1rem;
     }
 
     .form-control:focus {
         outline: none;
-        border-color: #1565c0;
+        border-color: rgba(212,165,116,0.4);
+        box-shadow: 0 0 0 2px rgba(212,165,116,0.1);
     }
 
     .btn-submit {
@@ -64,13 +67,19 @@
         font-weight: 600;
         cursor: pointer;
         margin-top: 16px;
+        transition: all 0.2s;
+    }
+
+    .btn-submit:active {
+        transform: scale(0.97);
+        transition: transform 0.1s ease;
     }
 
     .btn-cancel {
         width: 100%;
-        background: #333;
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(255,255,255,0.08);
         color: #888;
-        border: none;
         padding: 14px;
         border-radius: 8px;
         font-size: 1rem;
@@ -152,7 +161,7 @@
         <button type="submit" class="btn-submit">
             <i class="fas fa-save"></i> Salvar
         </button>
-        
+
         <a href="{{ url_for('leads.index') }}" class="btn-cancel">Cancelar</a>
     </form>
 </div>

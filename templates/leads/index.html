@@ -7,7 +7,7 @@
     .comercial-container {
         padding: 16px;
         padding-bottom: 100px;
-        background: #0a0a0a;
+        background: transparent;
         min-height: 100vh;
     }
 
@@ -19,7 +19,7 @@
     }
 
     .page-title {
-        color: #f5f5f5;
+        color: var(--white-soft, #f0ebe4);
         font-size: 1.5rem;
         font-weight: 600;
     }
@@ -42,7 +42,9 @@
     }
 
     .kpi-card {
-        background: #1a1a1a;
+        background: rgba(15,15,15,0.85);
+        backdrop-filter: blur(4px);
+        border: 1px solid rgba(255,255,255,0.04);
         border-radius: 12px;
         padding: 16px;
         text-align: center;
@@ -51,7 +53,7 @@
     .kpi-value {
         font-size: 1.8rem;
         font-weight: 700;
-        color: #f5f5f5;
+        color: var(--white-soft, #f0ebe4);
     }
 
     .kpi-value.green { color: #2e7d32; }
@@ -73,7 +75,9 @@
 
     .kanban-column {
         min-width: 280px;
-        background: #1a1a1a;
+        background: rgba(15,15,15,0.85);
+        backdrop-filter: blur(4px);
+        border: 1px solid rgba(255,255,255,0.04);
         border-radius: 12px;
         padding: 12px;
     }
@@ -84,17 +88,17 @@
         align-items: center;
         margin-bottom: 12px;
         padding-bottom: 8px;
-        border-bottom: 2px solid #2a2a2a;
+        border-bottom: 2px solid rgba(255,255,255,0.06);
     }
 
     .column-title {
-        color: #f5f5f5;
+        color: var(--white-soft, #f0ebe4);
         font-weight: 600;
         font-size: 0.9rem;
     }
 
     .column-count {
-        background: #333;
+        background: rgba(255,255,255,0.06);
         color: #888;
         padding: 2px 8px;
         border-radius: 10px;
@@ -102,17 +106,26 @@
     }
 
     .lead-card {
-        background: #252525;
+        background: rgba(30,30,30,0.8);
+        border: 1px solid rgba(255,255,255,0.04);
         border-radius: 8px;
         padding: 12px;
         margin-bottom: 8px;
         border-left: 3px solid #d4a574;
         cursor: grab;
-        transition: transform 0.2s;
+        transition: all 0.2s;
+        text-decoration: none;
+        display: block;
     }
 
     .lead-card:hover {
         transform: translateX(4px);
+        border-color: rgba(255,255,255,0.08);
+    }
+
+    .lead-card:active {
+        transform: scale(0.97);
+        transition: transform 0.1s ease;
     }
 
     .lead-card.hot { border-left-color: #e53935; }
@@ -120,7 +133,7 @@
     .lead-card.cold { border-left-color: #1e88e5; }
 
     .lead-name {
-        color: #f5f5f5;
+        color: var(--white-soft, #f0ebe4);
         font-weight: 600;
         font-size: 0.9rem;
         margin-bottom: 4px;
@@ -145,7 +158,8 @@
     }
 
     .lead-score {
-        background: #333;
+        background: rgba(212,165,116,0.1);
+        border: 1px solid rgba(212,165,116,0.15);
         color: #d4a574;
         padding: 2px 8px;
         border-radius: 10px;
@@ -199,7 +213,7 @@
                 <span class="column-title">{{ stage_data.name }}</span>
                 <span class="column-count">{{ stage_data.leads|length }}</span>
             </div>
-            
+
             {% if stage_data.leads %}
                 {% for lead in stage_data.leads %}
                 <a href="{{ url_for('leads.view', id=lead.id) }}" class="lead-card {% if lead.ai_score >= 75 %}hot{% elif lead.ai_score >= 50 %}warm{% else %}cold{% endif %}" draggable="true" data-lead-id="{{ lead.id }}">

@@ -8,15 +8,16 @@
         padding: 0;
         min-height: 100vh;
         padding-bottom: calc(var(--bottom-nav-height) + 80px);
+        background-color: transparent;
     }
 
     .page-header {
-        background: linear-gradient(135deg, rgba(102, 126, 234, 0.3) 0%, rgba(118, 75, 162, 0.2) 100%);
+        background: linear-gradient(135deg, rgba(212,165,116,0.12) 0%, rgba(10,10,10,0.9) 100%);
         padding: var(--spacing-lg) var(--spacing-md);
         display: flex;
         align-items: center;
         justify-content: space-between;
-        border-bottom: 1px solid var(--border-subtle);
+        border-bottom: 1px solid rgba(255,255,255,0.04);
     }
 
     .header-left {
@@ -50,9 +51,9 @@
         align-items: center;
         gap: var(--spacing-xs);
         padding: var(--spacing-sm) var(--spacing-md);
-        background-color: rgba(102, 126, 234, 0.2);
+        background: rgba(212,165,116,0.1);
         color: var(--text-primary);
-        border: 1px solid rgba(102, 126, 234, 0.3);
+        border: 1px solid rgba(212,165,116,0.15);
         border-radius: var(--radius-md);
         text-decoration: none;
         font-size: 0.9rem;
@@ -61,7 +62,7 @@
     }
 
     .scan-button:hover {
-        background-color: rgba(102, 126, 234, 0.3);
+        background: rgba(212,165,116,0.2);
         transform: translateY(-2px);
     }
 
@@ -92,11 +93,17 @@
         overflow: hidden;
         transition: transform 0.3s ease, box-shadow 0.3s ease;
         box-shadow: var(--shadow-md);
+        backdrop-filter: blur(4px);
     }
 
     .category-card:hover {
         transform: translateY(-6px);
         box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+    }
+
+    .category-card:active {
+        transform: scale(0.96);
+        transition: transform 0.1s ease;
     }
 
     .category-card::before {
@@ -106,38 +113,39 @@
         left: 0;
         right: 0;
         bottom: 0;
-        background: linear-gradient(135deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.1) 100%);
+        background: linear-gradient(135deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.2) 100%);
         z-index: 0;
     }
 
+    /* Noir glass com borda de cor da categoria */
     .category-som {
-        background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%);
-        border: 1px solid #2ecc71;
-        box-shadow: 0 4px 20px rgba(46, 204, 113, 0.2);
+        background: linear-gradient(135deg, rgba(46,204,113,0.15) 0%, rgba(10,10,10,0.85) 100%);
+        border: 1px solid rgba(46,204,113,0.4);
+        box-shadow: 0 4px 20px rgba(46, 204, 113, 0.15);
     }
 
     .category-luz {
-        background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%);
-        border: 1px solid #d4a574;
-        box-shadow: 0 4px 20px rgba(212, 165, 116, 0.2);
+        background: linear-gradient(135deg, rgba(212,165,116,0.15) 0%, rgba(10,10,10,0.85) 100%);
+        border: 1px solid rgba(212,165,116,0.4);
+        box-shadow: 0 4px 20px rgba(212, 165, 116, 0.15);
     }
 
     .category-materiais {
-        background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%);
-        border: 1px solid #3498db;
-        box-shadow: 0 4px 20px rgba(52, 152, 219, 0.2);
+        background: linear-gradient(135deg, rgba(52,152,219,0.15) 0%, rgba(10,10,10,0.85) 100%);
+        border: 1px solid rgba(52,152,219,0.4);
+        box-shadow: 0 4px 20px rgba(52, 152, 219, 0.15);
     }
 
     .category-instrumentos {
-        background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%);
-        border: 1px solid #e74c3c;
-        box-shadow: 0 4px 20px rgba(231, 76, 60, 0.2);
+        background: linear-gradient(135deg, rgba(231,76,60,0.15) 0%, rgba(10,10,10,0.85) 100%);
+        border: 1px solid rgba(231,76,60,0.4);
+        box-shadow: 0 4px 20px rgba(231, 76, 60, 0.15);
     }
 
     .category-kits {
-        background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%);
-        border: 1px solid #9b59b6;
-        box-shadow: 0 4px 20px rgba(155, 89, 182, 0.2);
+        background: linear-gradient(135deg, rgba(155,89,182,0.15) 0%, rgba(10,10,10,0.85) 100%);
+        border: 1px solid rgba(155,89,182,0.4);
+        box-shadow: 0 4px 20px rgba(155, 89, 182, 0.15);
     }
 
     .category-content {
@@ -171,22 +179,22 @@
         right: var(--spacing-lg);
         width: 60px;
         height: 60px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
+        border-radius: 16px;
+        background: linear-gradient(135deg, #d4a574 0%, #b8863e 100%);
+        color: #000;
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 1.8rem;
         text-decoration: none;
-        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        box-shadow: 0 6px 20px rgba(212, 165, 116, 0.35);
         transition: transform 0.3s ease, box-shadow 0.3s ease;
         z-index: 100;
     }
 
     .fab:hover {
         transform: scale(1.1);
-        box-shadow: 0 8px 28px rgba(102, 126, 234, 0.6);
+        box-shadow: 0 8px 28px rgba(212, 165, 116, 0.5);
     }
 
     @media (min-width: 768px) {
@@ -214,7 +222,7 @@
             <h1 class="header-title">🎒 HARDCASE</h1>
         </div>
         <div style="display: flex; gap: 8px;">
-            <a href="{{ url_for('scanner.rfid_batch_associate') }}" class="scan-button" style="background: rgba(155, 89, 182, 0.2); border-color: rgba(155, 89, 182, 0.3);">
+            <a href="{{ url_for('scanner.rfid_batch_associate') }}" class="scan-button" style="background: rgba(155, 89, 182, 0.15); border-color: rgba(155, 89, 182, 0.25);">
                 📡 RFID Lote
             </a>
             <a href="{{ url_for('equipment.scan') }}" class="scan-button">
@@ -227,7 +235,7 @@
         {% for category in categories %}
             {% set cat_name = category.name.lower() %}
             {% set cat_class = 'category-' + cat_name %}
-            
+
             {% if cat_name == 'som' %}
                 {% set icon = '🎤' %}
             {% elif cat_name == 'luz' %}
@@ -249,7 +257,7 @@
                 </div>
             </a>
         {% endfor %}
-        
+
         <a href="{{ url_for('kit.list_kits') }}" class="category-card category-kits">
             <div class="category-content">
                 <div class="category-icon">📦</div>

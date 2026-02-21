@@ -62,6 +62,11 @@
         border-bottom-color: rgba(0, 191, 166, 0.3);
     }
 
+    .section-title.ai {
+        color: #a855f7;
+        border-bottom-color: rgba(168, 85, 247, 0.3);
+    }
+
     .form-group {
         margin-bottom: var(--spacing-lg);
     }
@@ -227,9 +232,27 @@
         color: #ef4444;
     }
 
+    .status-badge.ai-active {
+        background: rgba(168, 85, 247, 0.2);
+        color: #a855f7;
+    }
+
     .btn-test {
         background: #00bfa6;
         color: #000;
+        border: none;
+        padding: 10px 20px;
+        border-radius: var(--radius-md);
+        font-weight: 600;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-test-ai {
+        background: #a855f7;
+        color: #fff;
         border: none;
         padding: 10px 20px;
         border-radius: var(--radius-md);
@@ -269,13 +292,62 @@
         word-break: break-all;
         margin-top: 8px;
     }
+
+    .provider-card {
+        border: 2px solid #333;
+        border-radius: var(--radius-md);
+        padding: var(--spacing-md);
+        margin-bottom: var(--spacing-md);
+        cursor: pointer;
+        transition: border-color 0.3s;
+    }
+
+    .provider-card.selected {
+        border-color: #a855f7;
+        background: rgba(168, 85, 247, 0.05);
+    }
+
+    .provider-card:hover {
+        border-color: #666;
+    }
+
+    .provider-name {
+        font-weight: 600;
+        color: #f5f5f5;
+        font-size: 1rem;
+    }
+
+    .provider-detail {
+        color: #888;
+        font-size: 0.8rem;
+        margin-top: 4px;
+    }
+
+    .provider-badge {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        margin-left: 8px;
+    }
+
+    .provider-badge.recommended {
+        background: rgba(16, 185, 129, 0.2);
+        color: #10b981;
+    }
+
+    .provider-badge.fallback {
+        background: rgba(234, 179, 8, 0.2);
+        color: #eab308;
+    }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="page-container">
     <div class="page-header">
-        <a href="{{ url_for('dashboard') }}" class="back-link">← Voltar para Dashboard</a>
+        <a href="{{ url_for('dashboard') }}" class="back-link">&#8592; Voltar para Dashboard</a>
         <h1 class="page-title"><i class="fas fa-cog"></i> Configuracoes da Empresa</h1>
     </div>
 
@@ -459,6 +531,116 @@
         {% endif %}
     </div>
 
+    <!-- INTELIGENCIA ARTIFICIAL -->
+    <div class="form-section" style="margin-top: var(--spacing-lg); border-color: rgba(168, 85, 247, 0.3);">
+        <div class="section-title ai">
+            <i class="fas fa-brain"></i> Inteligencia Artificial (Cadastro Inteligente)
+            {% if company.ai_enabled and company.ai_configured %}
+            <span class="status-badge ai-active">ATIVO</span>
+            {% else %}
+            <span class="status-badge inactive">INATIVO</span>
+            {% endif %}
+        </div>
+
+        <p style="color: #888; font-size: 0.9rem; margin-bottom: var(--spacing-lg); line-height: 1.6;">
+            Configure a IA para identificar equipamentos automaticamente por foto.
+            Tire uma foto e o sistema preenche marca, modelo e categoria.
+        </p>
+
+        <form method="POST" action="{{ url_for('company.ai_config') }}">
+            <!-- Selecao do Provedor -->
+            <div class="form-group">
+                <label class="form-label">Provedor de IA</label>
+
+                <div class="provider-card {% if (company.ai_provider or 'gemini') == 'gemini' %}selected{% endif %}"
+                     onclick="selectProvider('gemini')" id="card-gemini">
+                    <div>
+                        <span class="provider-name">Google Gemini (Flash-Lite)</span>
+                        <span class="provider-badge recommended">RECOMENDADO</span>
+                    </div>
+                    <div class="provider-detail">Melhor identificacao de produtos. 15 req/min, ~1.000/dia gratis.</div>
+                    <div class="provider-detail" style="margin-top: 4px;">
+                        <a href="https://aistudio.google.com/apikey" target="_blank" style="color: #a855f7;">Gerar API Key Google</a>
+                    </div>
+                </div>
+
+                <div class="provider-card {% if company.ai_provider == 'groq' %}selected{% endif %}"
+                     onclick="selectProvider('groq')" id="card-groq">
+                    <div>
+                        <span class="provider-name">Groq (Llama 4 Scout)</span>
+                        <span class="provider-badge fallback">ALTERNATIVA</span>
+                    </div>
+                    <div class="provider-detail">1.000 identificacoes/dia gratis. Mais rapido, menos preciso em modelos.</div>
+                    <div class="provider-detail" style="margin-top: 4px;">
+                        <a href="https://console.groq.com" target="_blank" style="color: #a855f7;">Criar conta Groq</a>
+                    </div>
+                </div>
+
+                <input type="hidden" name="ai_provider" id="ai_provider" value="{{ company.ai_provider or 'gemini' }}">
+            </div>
+
+            <!-- API Key Gemini -->
+            <div class="form-group" id="gemini-key-group" style="{% if company.ai_provider == 'groq' %}display:none{% endif %}">
+                <label class="form-label">Chave API Google Gemini</label>
+                <input type="password" name="gemini_api_key" value="{{ company.gemini_api_key or '' }}"
+                       class="form-input" placeholder="AIzaSyxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                       style="font-family: monospace;">
+                <div class="file-hint">Encontre em: aistudio.google.com > Get API Key</div>
+            </div>
+
+            <!-- API Key Groq -->
+            <div class="form-group" id="groq-key-group" style="{% if (company.ai_provider or 'gemini') == 'gemini' %}display:none{% endif %}">
+                <label class="form-label">Chave API Groq</label>
+                <input type="password" name="groq_api_key" value="{{ company.groq_api_key or '' }}"
+                       class="form-input" placeholder="gsk_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                       style="font-family: monospace;">
+                <div class="file-hint">Encontre em: console.groq.com > API Keys > Create API Key</div>
+            </div>
+
+            <!-- Google Custom Search (opcional) -->
+            <div class="form-group">
+                <label class="form-label">Google Custom Search ID (opcional)</label>
+                <input type="text" name="google_cse_cx" value="{{ company.google_cse_cx or '' }}"
+                       class="form-input" placeholder="xxxxxxxxxxxxxxxxx:xxxxxxxxxxx"
+                       style="font-family: monospace;">
+                <div class="file-hint">Para buscar fotos oficiais dos produtos. Requer API Key Google + Custom Search Engine configurado.</div>
+            </div>
+
+            <div class="toggle-switch">
+                <input type="checkbox" name="ai_enabled" id="ai_enabled"
+                       {% if company.ai_enabled %}checked{% endif %}
+                       style="{% if company.ai_enabled %}background: #a855f7{% endif %}">
+                <label class="toggle-label" for="ai_enabled">
+                    Habilitar Cadastro Inteligente por IA
+                </label>
+            </div>
+
+            <div style="display: flex; gap: 12px; margin-top: var(--spacing-md);">
+                <button type="submit" class="submit-button" style="flex: 1; margin-top: 0; background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%); color: white;">
+                    Salvar Configuracao IA
+                </button>
+                <button type="button" class="btn-test-ai" onclick="testarIA()" id="btnTestarIA">
+                    <i class="fas fa-plug"></i> Testar
+                </button>
+            </div>
+        </form>
+
+        <div id="aiTestResult"></div>
+
+        {% if company.ai_enabled and company.ai_configured %}
+        <div style="margin-top: var(--spacing-lg); padding: var(--spacing-md); background: rgba(168, 85, 247, 0.1); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: var(--radius-md);">
+            <h4 style="color: #a855f7; margin-bottom: 10px; font-size: 0.9rem;">
+                <i class="fas fa-camera"></i> Como usar
+            </h4>
+            <p style="color: #888; font-size: 0.85rem; line-height: 1.8;">
+                Ao cadastrar equipamento, clique no botao da camera para tirar uma foto.
+                A IA identifica automaticamente marca, modelo e categoria.
+                Provedor ativo: <strong style="color: #a855f7;">{{ (company.ai_provider or 'groq').upper() }}</strong>
+            </p>
+        </div>
+        {% endif %}
+    </div>
+
     <!-- API RFID -->
     <div class="form-section" style="margin-top: var(--spacing-lg);">
         <div class="section-title"><i class="fas fa-key"></i> API para Leitores RFID</div>
@@ -507,6 +689,22 @@
 </div>
 
 <script>
+/* ============================================
+   SELECAO DE PROVEDOR IA
+   ============================================ */
+function selectProvider(provider) {
+    document.getElementById('ai_provider').value = provider;
+
+    document.getElementById('card-groq').classList.toggle('selected', provider === 'groq');
+    document.getElementById('card-gemini').classList.toggle('selected', provider === 'gemini');
+
+    document.getElementById('groq-key-group').style.display = provider === 'groq' ? '' : 'none';
+    document.getElementById('gemini-key-group').style.display = provider === 'gemini' ? '' : 'none';
+}
+
+/* ============================================
+   RFID
+   ============================================ */
 function copyApiKey() {
     const input = document.getElementById('apiKeyDisplay');
     input.select();
@@ -568,6 +766,9 @@ async function revokeApiKey() {
     }
 }
 
+/* ============================================
+   TESTE ASAAS
+   ============================================ */
 async function testarAsaas() {
     const btn = document.getElementById('btnTestar');
     const resultDiv = document.getElementById('testResult');
@@ -582,6 +783,39 @@ async function testarAsaas() {
         if (data.success) {
             resultDiv.innerHTML = `<div class="alert-box success">
                 <i class="fas fa-check-circle"></i> ${data.message} - Ambiente: ${data.ambiente}
+            </div>`;
+        } else {
+            resultDiv.innerHTML = `<div class="alert-box error">
+                <i class="fas fa-times-circle"></i> ${data.error}
+            </div>`;
+        }
+    } catch (error) {
+        resultDiv.innerHTML = `<div class="alert-box error">
+            <i class="fas fa-times-circle"></i> Erro de conexao
+        </div>`;
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-plug"></i> Testar';
+}
+
+/* ============================================
+   TESTE IA
+   ============================================ */
+async function testarIA() {
+    const btn = document.getElementById('btnTestarIA');
+    const resultDiv = document.getElementById('aiTestResult');
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Testando...';
+
+    try {
+        const response = await fetch('/company/ai/test', { method: 'POST' });
+        const data = await response.json();
+
+        if (data.success) {
+            resultDiv.innerHTML = `<div class="alert-box success">
+                <i class="fas fa-check-circle"></i> ${data.message} - Provedor: ${data.provider}
             </div>`;
         } else {
             resultDiv.innerHTML = `<div class="alert-box error">

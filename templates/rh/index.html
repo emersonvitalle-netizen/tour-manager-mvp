@@ -7,7 +7,7 @@
     .rh-container {
         padding: 16px;
         padding-bottom: 100px;
-        background: #0a0a0a;
+        background: transparent;
         min-height: 100vh;
     }
 
@@ -19,7 +19,7 @@
     }
 
     .page-title {
-        color: #f5f5f5;
+        color: var(--white-soft, #f0ebe4);
         font-size: 1.5rem;
         font-weight: 600;
     }
@@ -32,7 +32,9 @@
     }
 
     .kpi-card {
-        background: #1a1a1a;
+        background: rgba(15,15,15,0.85);
+        backdrop-filter: blur(4px);
+        border: 1px solid rgba(255,255,255,0.04);
         border-radius: 12px;
         padding: 16px;
         text-align: center;
@@ -41,7 +43,7 @@
     .kpi-value {
         font-size: 1.8rem;
         font-weight: 700;
-        color: #f5f5f5;
+        color: var(--white-soft, #f0ebe4);
     }
 
     .kpi-value.purple { color: #7b1fa2; }
@@ -57,7 +59,7 @@
     }
 
     .section-title {
-        color: #f5f5f5;
+        color: var(--white-soft, #f0ebe4);
         font-size: 1rem;
         font-weight: 600;
         margin: 24px 0 12px;
@@ -80,17 +82,26 @@
     }
 
     .action-card {
-        background: #1a1a1a;
+        background: rgba(15,15,15,0.85);
+        backdrop-filter: blur(4px);
+        border: 1px solid rgba(255,255,255,0.04);
         border-radius: 12px;
         padding: 20px;
         text-align: center;
         text-decoration: none;
-        color: #f5f5f5;
-        transition: transform 0.2s;
+        color: var(--white-soft, #f0ebe4);
+        transition: all 0.2s;
     }
 
     .action-card:hover {
         transform: translateY(-2px);
+        border-color: rgba(255,255,255,0.08);
+    }
+
+    .action-card:active {
+        transform: scale(0.96);
+        border-color: rgba(212,165,116,0.3);
+        transition: transform 0.1s ease;
     }
 
     .action-card i {
@@ -124,7 +135,9 @@
     }
 
     .ranking-list {
-        background: #1a1a1a;
+        background: rgba(15,15,15,0.85);
+        backdrop-filter: blur(4px);
+        border: 1px solid rgba(255,255,255,0.04);
         border-radius: 12px;
         padding: 16px;
     }
@@ -133,7 +146,7 @@
         display: flex;
         align-items: center;
         padding: 12px 0;
-        border-bottom: 1px solid #2a2a2a;
+        border-bottom: 1px solid rgba(255,255,255,0.04);
     }
 
     .ranking-item:last-child {
@@ -143,7 +156,7 @@
     .ranking-position {
         width: 30px;
         height: 30px;
-        background: #333;
+        background: rgba(255,255,255,0.06);
         border-radius: 50%;
         display: flex;
         align-items: center;
@@ -163,7 +176,7 @@
     }
 
     .ranking-name {
-        color: #f5f5f5;
+        color: var(--white-soft, #f0ebe4);
         font-weight: 600;
         font-size: 0.9rem;
     }
@@ -186,19 +199,20 @@
     }
 
     .alert-card {
-        background: linear-gradient(135deg, #331a00 0%, #4d2600 100%);
-        border: 1px solid #ff9800;
+        background: linear-gradient(135deg, rgba(51,26,0,0.6) 0%, rgba(15,15,15,0.85) 100%);
+        border: 1px solid rgba(255,152,0,0.3);
         border-radius: 12px;
         padding: 16px;
         margin-bottom: 16px;
         display: flex;
         align-items: center;
         gap: 12px;
+        backdrop-filter: blur(4px);
     }
 
     .alert-card.danger {
-        background: linear-gradient(135deg, #330000 0%, #4d0000 100%);
-        border-color: #f44336;
+        background: linear-gradient(135deg, rgba(51,0,0,0.6) 0%, rgba(15,15,15,0.85) 100%);
+        border-color: rgba(244,67,54,0.3);
     }
 
     .alert-card i {

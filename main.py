@@ -1,7 +1,7 @@
 from flask import Flask, render_template, redirect, url_for
 from flask_login import current_user
 from config import Config
-from extensions import db, login_manager, bcrypt
+from extensions import db, login_manager, bcrypt, migrate
 import os
 
 
@@ -42,17 +42,36 @@ def create_models():
     from models.fabrication import FabricationTemplate, FabricationRecord
 
 
-def migrate_database():
-    """Adiciona colunas que podem estar faltando sem quebrar"""
+def ensure_columns():
+    """
+    Rede de seguranca: garante que TODAS as colunas dos models existem no banco.
+    Roda SEMPRE na inicializacao, antes de qualquer query.
+    Se a coluna ja existe, ignora silenciosamente.
+
+    FLUXO DE DESENVOLVIMENTO:
+    ─────────────────────────
+    1. Adiciona campo no model (.py)
+    2. Adiciona ALTER TABLE aqui (seguranca imediata)
+    3. Gera migracao Alembic:  flask db migrate -m "descricao"
+    4. Commita migrations/ no Git
+
+    FLUXO DE DEPLOY/TESTES:
+    ───────────────────────
+    1. Git pull (traz migrations/ atualizadas)
+    2. App inicia → ensure_columns() corrige qualquer gap
+    3. flask db upgrade aplica migracoes formais
+    4. Sistema funciona sem erros
+    """
     from sqlalchemy import text
 
     migrations = [
-        # Company - campos originais
+        # ============================================
+        # COMPANY
+        # ============================================
         'ALTER TABLE company ADD COLUMN logo_url VARCHAR(500)',
         'ALTER TABLE company ADD COLUMN email VARCHAR(120)',
         'ALTER TABLE company ADD COLUMN phone VARCHAR(20)',
         'ALTER TABLE company ADD COLUMN address TEXT',
-        # Company - novos campos de endereco
         'ALTER TABLE company ADD COLUMN cellphone VARCHAR(20)',
         'ALTER TABLE company ADD COLUMN website VARCHAR(200)',
         'ALTER TABLE company ADD COLUMN inscricao_estadual VARCHAR(20)',
@@ -63,38 +82,52 @@ def migrate_database():
         'ALTER TABLE company ADD COLUMN city VARCHAR(100)',
         'ALTER TABLE company ADD COLUMN state VARCHAR(2)',
         'ALTER TABLE company ADD COLUMN zipcode VARCHAR(10)',
-        # Maintenance
-        'ALTER TABLE maintenance ADD COLUMN created_at DATETIME',
-        # Equipment
+        'ALTER TABLE company ADD COLUMN api_key VARCHAR(64)',
+        'ALTER TABLE company ADD COLUMN asaas_api_key VARCHAR(200)',
+        'ALTER TABLE company ADD COLUMN asaas_sandbox BOOLEAN DEFAULT 1',
+        'ALTER TABLE company ADD COLUMN asaas_webhook_token VARCHAR(64)',
+        'ALTER TABLE company ADD COLUMN asaas_enabled BOOLEAN DEFAULT 0',
+
+        # ============================================
+        # EQUIPMENT
+        # ============================================
         'ALTER TABLE equipment ADD COLUMN qr_code_url VARCHAR(500)',
         'ALTER TABLE equipment ADD COLUMN type_id INTEGER',
-        # SeparationList - dados do cliente
-        'ALTER TABLE separation_list ADD COLUMN client_name VARCHAR(200)',
-        'ALTER TABLE separation_list ADD COLUMN client_phone VARCHAR(20)',
-        'ALTER TABLE separation_list ADD COLUMN client_email VARCHAR(120)',
-        'ALTER TABLE separation_list ADD COLUMN client_address TEXT',
-        # SeparationList - dados do evento
-        'ALTER TABLE separation_list ADD COLUMN event_name VARCHAR(200)',
-        'ALTER TABLE separation_list ADD COLUMN event_date DATE',
-        'ALTER TABLE separation_list ADD COLUMN event_time VARCHAR(10)',
-        'ALTER TABLE separation_list ADD COLUMN event_location TEXT',
-        # SeparationList - outros
-        'ALTER TABLE separation_list ADD COLUMN validity_date DATE',
-        'ALTER TABLE separation_list ADD COLUMN observations TEXT',
-        'ALTER TABLE separation_list ADD COLUMN discount_percent DECIMAL(5,2)',
-        'ALTER TABLE separation_list ADD COLUMN discount_value DECIMAL(10,2)',
-        # SeparationListItem
-        'ALTER TABLE separation_list_item ADD COLUMN item_description VARCHAR(500)',
-        # Equipment - RFID/NFC
         'ALTER TABLE equipment ADD COLUMN nfc_tag_id VARCHAR(64)',
         'ALTER TABLE equipment ADD COLUMN rfid_uhf_tag VARCHAR(128)',
         'ALTER TABLE equipment ADD COLUMN tag_associated_at DATETIME',
         'ALTER TABLE equipment ADD COLUMN tag_associated_by INTEGER',
-        # Company - API Key
-        'ALTER TABLE company ADD COLUMN api_key VARCHAR(64)',
-        # Quote - client_id
+
+        # ============================================
+        # MAINTENANCE
+        # ============================================
+        'ALTER TABLE maintenance ADD COLUMN created_at DATETIME',
+
+        # ============================================
+        # SEPARATION LIST
+        # ============================================
+        'ALTER TABLE separation_list ADD COLUMN client_name VARCHAR(200)',
+        'ALTER TABLE separation_list ADD COLUMN client_phone VARCHAR(20)',
+        'ALTER TABLE separation_list ADD COLUMN client_email VARCHAR(120)',
+        'ALTER TABLE separation_list ADD COLUMN client_address TEXT',
+        'ALTER TABLE separation_list ADD COLUMN event_name VARCHAR(200)',
+        'ALTER TABLE separation_list ADD COLUMN event_date DATE',
+        'ALTER TABLE separation_list ADD COLUMN event_time VARCHAR(10)',
+        'ALTER TABLE separation_list ADD COLUMN event_location TEXT',
+        'ALTER TABLE separation_list ADD COLUMN validity_date DATE',
+        'ALTER TABLE separation_list ADD COLUMN observations TEXT',
+        'ALTER TABLE separation_list ADD COLUMN discount_percent DECIMAL(5,2)',
+        'ALTER TABLE separation_list ADD COLUMN discount_value DECIMAL(10,2)',
+        'ALTER TABLE separation_list_item ADD COLUMN item_description VARCHAR(500)',
+
+        # ============================================
+        # QUOTE
+        # ============================================
         'ALTER TABLE quote ADD COLUMN client_id INTEGER',
-        # AccountPayable - novos campos
+
+        # ============================================
+        # ACCOUNT PAYABLE
+        # ============================================
         'ALTER TABLE account_payable ADD COLUMN custom_category VARCHAR(100)',
         'ALTER TABLE account_payable ADD COLUMN payment_method VARCHAR(50)',
         'ALTER TABLE account_payable ADD COLUMN installment_number INTEGER',
@@ -106,15 +139,127 @@ def migrate_database():
         'ALTER TABLE account_payable ADD COLUMN origin_id INTEGER',
 
         # ============================================
-        # INTEGRACAO ASAAS - PIX/Boleto
+        # ACCOUNT RECEIVABLE
         # ============================================
-        'ALTER TABLE company ADD COLUMN asaas_api_key VARCHAR(200)',
-        'ALTER TABLE company ADD COLUMN asaas_sandbox BOOLEAN DEFAULT 1',
-        'ALTER TABLE company ADD COLUMN asaas_webhook_token VARCHAR(64)',
-        'ALTER TABLE company ADD COLUMN asaas_enabled BOOLEAN DEFAULT 0',
+        'ALTER TABLE account_receivable ADD COLUMN category VARCHAR(50)',
+        'ALTER TABLE account_receivable ADD COLUMN client_id INTEGER',
+        'ALTER TABLE account_receivable ADD COLUMN received_amount DECIMAL(10,2)',
+        'ALTER TABLE account_receivable ADD COLUMN received_at DATETIME',
+        'ALTER TABLE account_receivable ADD COLUMN payment_method VARCHAR(50)',
+        'ALTER TABLE account_receivable ADD COLUMN bank_account_id INTEGER',
+        'ALTER TABLE account_receivable ADD COLUMN origin_type VARCHAR(50)',
+        'ALTER TABLE account_receivable ADD COLUMN origin_id INTEGER',
+        'ALTER TABLE account_receivable ADD COLUMN notes TEXT',
+        'ALTER TABLE account_receivable ADD COLUMN created_by INTEGER',
+        'ALTER TABLE account_receivable ADD COLUMN asaas_payment_id VARCHAR(100)',
+        'ALTER TABLE account_receivable ADD COLUMN asaas_invoice_url VARCHAR(500)',
+        'ALTER TABLE account_receivable ADD COLUMN asaas_pix_qrcode TEXT',
+        'ALTER TABLE account_receivable ADD COLUMN asaas_pix_payload TEXT',
+        'ALTER TABLE account_receivable ADD COLUMN asaas_boleto_url VARCHAR(500)',
 
         # ============================================
-        # NFSE - NOTA FISCAL DE SERVICO
+        # CLIENT
+        # ============================================
+        'ALTER TABLE client ADD COLUMN cnpj_cpf VARCHAR(18)',
+        'ALTER TABLE client ADD COLUMN email VARCHAR(120)',
+        'ALTER TABLE client ADD COLUMN phone VARCHAR(20)',
+        'ALTER TABLE client ADD COLUMN address TEXT',
+        'ALTER TABLE client ADD COLUMN contact_name VARCHAR(100)',
+        'ALTER TABLE client ADD COLUMN contact_phone VARCHAR(20)',
+        'ALTER TABLE client ADD COLUMN asaas_customer_id VARCHAR(100)',
+        'ALTER TABLE client ADD COLUMN notes TEXT',
+        'ALTER TABLE client ADD COLUMN is_active BOOLEAN DEFAULT 1',
+        'ALTER TABLE client ADD COLUMN created_at DATETIME',
+
+        # ============================================
+        # SUPPLIER
+        # ============================================
+        'ALTER TABLE supplier ADD COLUMN cnpj_cpf VARCHAR(18)',
+        'ALTER TABLE supplier ADD COLUMN email VARCHAR(120)',
+        'ALTER TABLE supplier ADD COLUMN phone VARCHAR(20)',
+        'ALTER TABLE supplier ADD COLUMN address TEXT',
+        'ALTER TABLE supplier ADD COLUMN category VARCHAR(50)',
+        'ALTER TABLE supplier ADD COLUMN contact_name VARCHAR(100)',
+        'ALTER TABLE supplier ADD COLUMN contact_phone VARCHAR(20)',
+        'ALTER TABLE supplier ADD COLUMN notes TEXT',
+        'ALTER TABLE supplier ADD COLUMN is_active BOOLEAN DEFAULT 1',
+        'ALTER TABLE supplier ADD COLUMN created_at DATETIME',
+
+        # ============================================
+        # BANK ACCOUNT
+        # ============================================
+        'ALTER TABLE bank_account ADD COLUMN bank_name VARCHAR(100)',
+        'ALTER TABLE bank_account ADD COLUMN bank_code VARCHAR(10)',
+        'ALTER TABLE bank_account ADD COLUMN agency VARCHAR(20)',
+        'ALTER TABLE bank_account ADD COLUMN account_number VARCHAR(30)',
+        'ALTER TABLE bank_account ADD COLUMN account_type VARCHAR(20)',
+        'ALTER TABLE bank_account ADD COLUMN initial_balance DECIMAL(10,2) DEFAULT 0',
+        'ALTER TABLE bank_account ADD COLUMN current_balance DECIMAL(10,2) DEFAULT 0',
+        'ALTER TABLE bank_account ADD COLUMN is_active BOOLEAN DEFAULT 1',
+        'ALTER TABLE bank_account ADD COLUMN is_default BOOLEAN DEFAULT 0',
+        'ALTER TABLE bank_account ADD COLUMN created_at DATETIME',
+
+        # ============================================
+        # VEHICLE
+        # ============================================
+        'ALTER TABLE vehicle ADD COLUMN plate VARCHAR(10)',
+        'ALTER TABLE vehicle ADD COLUMN brand VARCHAR(50)',
+        'ALTER TABLE vehicle ADD COLUMN model VARCHAR(100)',
+        'ALTER TABLE vehicle ADD COLUMN year INTEGER',
+        'ALTER TABLE vehicle ADD COLUMN color VARCHAR(30)',
+        'ALTER TABLE vehicle ADD COLUMN vehicle_type VARCHAR(30)',
+        'ALTER TABLE vehicle ADD COLUMN fuel_type VARCHAR(20)',
+        'ALTER TABLE vehicle ADD COLUMN capacity VARCHAR(50)',
+        'ALTER TABLE vehicle ADD COLUMN status VARCHAR(20)',
+        'ALTER TABLE vehicle ADD COLUMN notes TEXT',
+
+        # ============================================
+        # CONSUMABLE
+        # ============================================
+        'ALTER TABLE consumable ADD COLUMN category VARCHAR(50)',
+        'ALTER TABLE consumable ADD COLUMN unit VARCHAR(20)',
+        'ALTER TABLE consumable ADD COLUMN quantity DECIMAL(10,2) DEFAULT 0',
+        'ALTER TABLE consumable ADD COLUMN min_quantity DECIMAL(10,2) DEFAULT 0',
+        'ALTER TABLE consumable ADD COLUMN unit_cost DECIMAL(10,2) DEFAULT 0',
+        'ALTER TABLE consumable ADD COLUMN supplier_id INTEGER',
+
+        # ============================================
+        # CONTRACT TEMPLATE
+        # ============================================
+        'ALTER TABLE contract_template ADD COLUMN contract_type VARCHAR(50)',
+        'ALTER TABLE contract_template ADD COLUMN content TEXT',
+        'ALTER TABLE contract_template ADD COLUMN is_active BOOLEAN DEFAULT 1',
+        'ALTER TABLE contract_template ADD COLUMN created_at DATETIME',
+
+        # ============================================
+        # CASH REGISTER
+        # ============================================
+        'ALTER TABLE cash_register ADD COLUMN current_balance DECIMAL(10,2) DEFAULT 0',
+        'ALTER TABLE cash_register ADD COLUMN is_open BOOLEAN DEFAULT 0',
+        'ALTER TABLE cash_register ADD COLUMN opened_at DATETIME',
+        'ALTER TABLE cash_register ADD COLUMN opened_by INTEGER',
+        'ALTER TABLE cash_register ADD COLUMN opening_balance DECIMAL(10,2) DEFAULT 0',
+        'ALTER TABLE cash_register ADD COLUMN created_at DATETIME',
+
+        # ============================================
+        # CASH ENTRY
+        # ============================================
+        'ALTER TABLE cash_entry ADD COLUMN entry_type VARCHAR(20)',
+        'ALTER TABLE cash_entry ADD COLUMN description VARCHAR(200)',
+        'ALTER TABLE cash_entry ADD COLUMN category VARCHAR(50)',
+        'ALTER TABLE cash_entry ADD COLUMN reference_type VARCHAR(50)',
+        'ALTER TABLE cash_entry ADD COLUMN reference_id INTEGER',
+
+        # ============================================
+        # COST CENTER
+        # ============================================
+        'ALTER TABLE cost_center ADD COLUMN code VARCHAR(20)',
+        'ALTER TABLE cost_center ADD COLUMN description TEXT',
+        'ALTER TABLE cost_center ADD COLUMN is_active BOOLEAN DEFAULT 1',
+        'ALTER TABLE cost_center ADD COLUMN created_at DATETIME',
+
+        # ============================================
+        # INVOICE - NFSe
         # ============================================
         'ALTER TABLE invoice ADD COLUMN nfse_id VARCHAR(100)',
         'ALTER TABLE invoice ADD COLUMN nfse_number VARCHAR(50)',
@@ -123,19 +268,57 @@ def migrate_database():
         'ALTER TABLE invoice ADD COLUMN nfse_xml_url VARCHAR(500)',
 
         # ============================================
-        # PAYMENT - Campos adicionais Asaas
+        # PAYMENT - Asaas
         # ============================================
         'ALTER TABLE payment ADD COLUMN external_id VARCHAR(100)',
         'ALTER TABLE payment ADD COLUMN provider VARCHAR(30)',
         'ALTER TABLE payment ADD COLUMN provider_data TEXT',
     ]
 
-    for migration in migrations:
+    added = 0
+    for m in migrations:
         try:
-            db.session.execute(text(migration))
+            db.session.execute(text(m))
             db.session.commit()
+            added += 1
         except Exception:
             db.session.rollback()
+
+    if added > 0:
+        print(f'[ensure_columns] {added} colunas adicionadas')
+
+
+def apply_migrations():
+    """
+    Aplica migracoes Alembic pendentes.
+    NAO gera migracoes novas - apenas aplica as que ja existem em migrations/.
+
+    Para gerar novas migracoes (somente em DEV):
+        flask db migrate -m "descricao da mudanca"
+        flask db upgrade
+        git add migrations/
+        git commit -m "nova migracao"
+    """
+    migrations_dir = os.path.join(os.path.dirname(__file__), 'migrations')
+
+    if not os.path.exists(migrations_dir):
+        # Primeira execucao: inicializa e marca estado atual
+        try:
+            from flask_migrate import init, stamp
+            print('[Alembic] Inicializando migrations/...')
+            init()
+            stamp(revision='head')
+            print('[Alembic] Inicializado e marcado como HEAD')
+        except Exception as e:
+            print(f'[Alembic] Init: {e}')
+        return
+
+    try:
+        from flask_migrate import upgrade
+        upgrade()
+        print('[Alembic] Migracoes aplicadas')
+    except Exception as e:
+        print(f'[Alembic] Upgrade: {e}')
 
 
 def regenerate_all_qr_codes():
@@ -179,12 +362,17 @@ def register_event_listeners():
         print(f'[EventBus] Erro: {e}')
 
 
+# ============================================
+# APP
+# ============================================
+
 app = Flask(__name__)
 app.config.from_object(Config)
 
 db.init_app(app)
 login_manager.init_app(app)
 bcrypt.init_app(app)
+migrate.init_app(app, db)  # Flask-Migrate / Alembic
 
 login_manager.login_view = 'auth.login'
 login_manager.login_message = 'Faca login para acessar.'
@@ -193,8 +381,8 @@ from utils.permissions import inject_permissions
 app.context_processor(inject_permissions)
 
 os.makedirs('static/uploads', exist_ok=True)
-os.makedirs('static/qr/access', exist_ok=True)
 os.makedirs('static/uploads/logos', exist_ok=True)
+os.makedirs('static/qr/access', exist_ok=True)
 os.makedirs('static/qr', exist_ok=True)
 
 
@@ -266,7 +454,7 @@ def dashboard():
 
     url_map = {rule.endpoint for rule in app.url_map.iter_rules()}
 
-    return render_template('dashboard.html', 
+    return render_template('dashboard.html',
                           alert_count=alert_count,
                           url_map=url_map)
 
@@ -278,10 +466,20 @@ def project_docs():
     return render_template('docs/project_overview.html')
 
 
+# ============================================
+# INICIALIZACAO
+# ============================================
+
 with app.app_context():
     create_models()
     db.create_all()
-    migrate_database()
+
+    # 1. Rede de seguranca: garante colunas ANTES de qualquer query
+    ensure_columns()
+
+    # 2. Alembic: aplica migracoes formais (so upgrade, nunca gera)
+    apply_migrations()
+
     regenerate_all_qr_codes()
     register_event_listeners()
     print("Sistema pronto!")

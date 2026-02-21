@@ -190,3 +190,56 @@ def generate_webhook_token():
         'token': company.asaas_webhook_token,
         'message': 'Token regenerado'
     })
+
+
+# ============================================
+# CONFIGURACOES IA (Groq / Gemini)
+# ============================================
+
+@company_bp.route('/ai/config', methods=['POST'])
+@login_required
+def ai_config():
+    """Configurar integracao com IA (Groq / Gemini)"""
+    if current_user.role != 'admin':
+        flash('Apenas administradores podem configurar integracoes.', 'danger')
+        return redirect(url_for('dashboard'))
+
+    company = Company.query.get(current_user.company_id)
+
+    # Salva configuracoes
+    company.ai_provider = request.form.get('ai_provider', 'groq').strip()
+    company.groq_api_key = request.form.get('groq_api_key', '').strip() or None
+    company.gemini_api_key = request.form.get('gemini_api_key', '').strip() or None
+    company.google_cse_cx = request.form.get('google_cse_cx', '').strip() or None
+    company.ai_enabled = request.form.get('ai_enabled') == 'on'
+
+    db.session.commit()
+    flash('Configuracoes de IA salvas!', 'success')
+    return redirect(url_for('company.settings'))
+
+
+@company_bp.route('/ai/test', methods=['POST'])
+@login_required
+def ai_test():
+    """Testa conexao com provedor de IA"""
+    if current_user.role != 'admin':
+        return jsonify({'success': False, 'error': 'Acesso negado'}), 403
+
+    company = Company.query.get(current_user.company_id)
+
+    provider = company.ai_provider or 'groq'
+    api_key = company.ai_api_key
+
+    if not api_key:
+        return jsonify({'success': False, 'error': f'API Key do {provider.upper()} nao configurada'})
+
+    try:
+        from services.ai_vision_service import test_ai_connection
+        result = test_ai_connection(provider=provider, api_key=api_key)
+        return jsonify(result)
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        })

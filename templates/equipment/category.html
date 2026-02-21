@@ -1,35 +1,31 @@
 {% extends "base.html" %}
 
-{% block title %}{{ category.name }} - HARDCASE{% endblock %}
+{% block title %}{{ category.name }} - TOUR{% endblock %}
 
 {% block extra_css %}
 <style>
     .page-container {
-        padding: 0;
-        min-height: 100vh;
-        padding-bottom: calc(var(--bottom-nav-height) + var(--spacing-md));
+        padding-bottom: calc(var(--bottom-nav-height) + var(--spacing-lg));
     }
 
     .page-header {
-        {% if category.name.lower() == 'som' %}
-            background: linear-gradient(135deg, rgba(46, 204, 113, 0.3) 0%, rgba(39, 174, 96, 0.2) 100%);
-        {% elif category.name.lower() == 'luz' %}
-            background: linear-gradient(135deg, rgba(243, 156, 18, 0.3) 0%, rgba(230, 126, 34, 0.2) 100%);
-        {% elif category.name.lower() == 'materiais' %}
-            background: linear-gradient(135deg, rgba(52, 152, 219, 0.3) 0%, rgba(41, 128, 185, 0.2) 100%);
-        {% elif category.name.lower() == 'instrumentos' %}
-            background: linear-gradient(135deg, rgba(231, 76, 60, 0.3) 0%, rgba(192, 57, 43, 0.2) 100%);
-        {% else %}
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.3) 0%, rgba(118, 75, 162, 0.2) 100%);
-        {% endif %}
-        padding: var(--spacing-lg) var(--spacing-md);
-        border-bottom: 1px solid var(--border-subtle);
+        background: linear-gradient(135deg, 
+            {% if category.name.lower() == 'som' %}rgba(46,204,113,0.2), rgba(10,10,10,0.9)
+            {% elif category.name.lower() == 'luz' %}rgba(243,156,18,0.2), rgba(10,10,10,0.9)
+            {% elif category.name.lower() == 'materiais' %}rgba(52,152,219,0.2), rgba(10,10,10,0.9)
+            {% elif category.name.lower() == 'instrumentos' %}rgba(231,76,60,0.2), rgba(10,10,10,0.9)
+            {% else %}rgba(102,126,234,0.2), rgba(10,10,10,0.9){% endif %});
+        padding: var(--spacing-xl) var(--spacing-md);
+        color: white;
+        border-bottom: 1px solid rgba(255,255,255,0.04);
     }
 
     .header-content {
+        max-width: 1200px;
+        margin: 0 auto;
         display: flex;
-        align-items: center;
         justify-content: space-between;
+        align-items: center;
     }
 
     .header-left {
@@ -39,89 +35,76 @@
     }
 
     .back-button {
-        color: var(--text-primary);
-        font-size: 1.5rem;
+        color: white;
         text-decoration: none;
-        transition: transform 0.2s ease;
+        font-size: 1.5rem;
+        padding: var(--spacing-sm);
+        border-radius: var(--radius-md);
+        transition: background 0.3s ease;
     }
 
     .back-button:hover {
-        transform: translateX(-4px);
+        background: rgba(255, 255, 255, 0.2);
     }
 
     .header-title {
-        display: flex;
-        align-items: center;
-        gap: var(--spacing-sm);
         font-size: 1.5rem;
         font-weight: var(--font-weight-bold);
-        color: var(--text-primary);
+        margin: 0;
     }
 
     .action-section {
-        padding: var(--spacing-md);
+        padding: var(--spacing-lg) var(--spacing-md);
+        max-width: 1200px;
+        margin: 0 auto;
         display: flex;
         flex-direction: column;
-        gap: var(--spacing-sm);
+        gap: var(--spacing-md);
     }
 
     .new-button {
-        width: 100%;
-        padding: var(--spacing-md);
-        background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
-        color: white;
-        border: none;
-        border-radius: var(--radius-md);
-        font-size: 1rem;
-        font-weight: var(--font-weight-semibold);
-        text-decoration: none;
+        display: block;
         text-align: center;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: var(--spacing-xs);
-        box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
+        padding: var(--spacing-md) var(--spacing-lg);
+        background: linear-gradient(135deg, #2ecc71, #27ae60);
+        color: white;
+        text-decoration: none;
+        border-radius: var(--radius-md);
+        font-weight: var(--font-weight-bold);
         transition: all 0.3s ease;
     }
 
     .new-button:hover {
         transform: translateY(-2px);
-        box-shadow: 0 6px 16px rgba(46, 204, 113, 0.4);
+        box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
     }
 
     .search-box {
         width: 100%;
-        padding: var(--spacing-sm) var(--spacing-md);
-        background-color: var(--bg-secondary);
+        padding: var(--spacing-md);
         border: 1px solid var(--border-subtle);
         border-radius: var(--radius-md);
+        background: var(--bg-secondary);
         color: var(--text-primary);
-        font-size: 0.95rem;
-    }
-
-    .search-box::placeholder {
-        color: var(--text-secondary);
+        font-size: 1rem;
     }
 
     .types-list {
-        padding: var(--spacing-md);
-        display: flex;
-        flex-direction: column;
-        gap: var(--spacing-sm);
+        padding: 0 var(--spacing-md);
+        max-width: 1200px;
+        margin: 0 auto;
     }
 
     .type-card {
-        background-color: var(--bg-secondary);
-        border-radius: var(--radius-md);
+        background: var(--bg-secondary);
+        border-radius: var(--radius-lg);
+        margin-bottom: var(--spacing-md);
         overflow: hidden;
         box-shadow: var(--shadow-sm);
-        transition: all 0.3s ease;
     }
 
     .type-header {
-        padding: var(--spacing-md);
-        background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.1) 100%);
-        border-bottom: 1px solid var(--border-subtle);
+        padding: var(--spacing-lg) var(--spacing-md);
         cursor: pointer;
         display: flex;
         align-items: center;
@@ -130,7 +113,7 @@
     }
 
     .type-header:hover {
-        background: linear-gradient(135deg, rgba(102, 126, 234, 0.3) 0%, rgba(118, 75, 162, 0.2) 100%);
+        background: rgba(255, 255, 255, 0.05);
     }
 
     .type-info {
@@ -225,85 +208,212 @@
         max-height: 3000px;
     }
 
-    .equipment-grid {
-        padding: var(--spacing-sm);
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: var(--spacing-sm);
-    }
-
-    @media (min-width: 480px) {
-        .equipment-grid {
-            grid-template-columns: repeat(3, 1fr);
-        }
-    }
-
-    @media (min-width: 768px) {
-        .equipment-grid {
-            grid-template-columns: repeat(4, 1fr);
-            gap: var(--spacing-md);
-        }
+    /* === LAYOUT HORIZONTAL - OPÇÃO A === */
+    .equipment-list {
+        padding: 8px var(--spacing-md);
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
     }
 
     .equipment-card {
-        background-color: var(--bg-primary);
-        border: 1px solid var(--border-subtle);
-        border-radius: var(--radius-md);
-        padding: var(--spacing-sm);
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        background: rgba(15,15,15,0.85);
+        border: 1px solid rgba(255,255,255,0.04);
+        backdrop-filter: blur(4px);
+        border-radius: 12px;
+        padding: 12px;
         text-decoration: none;
         color: inherit;
-        transition: all 0.3s ease;
-        display: flex;
-        flex-direction: column;
+        position: relative;
+        transition: all 0.2s ease;
     }
 
     .equipment-card:hover {
-        transform: translateY(-4px);
-        box-shadow: var(--shadow-lg);
-        border-color: var(--accent-gold);
+        border-color: var(--accent-gold, #d4a574);
     }
 
     .equipment-photo {
-        width: 100%;
-        height: 80px;
-        object-fit: cover;
-        border-radius: var(--radius-sm);
-        margin-bottom: var(--spacing-xs);
-        background-color: var(--bg-secondary);
+        width: 72px;
+        height: 72px;
+        border-radius: 10px;
+        object-fit: contain;
+        background: rgba(30,30,30,0.8);
+        flex-shrink: 0;
     }
 
-    @media (min-width: 768px) {
-        .equipment-photo {
-            height: 120px;
-        }
+    .equipment-photo-placeholder {
+        width: 72px;
+        height: 72px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, rgba(20,20,20,0.9), rgba(30,30,30,0.9));
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: var(--text-secondary, #666);
+    }
+
+    .equipment-info {
+        flex: 1;
+        min-width: 0;
     }
 
     .equipment-name {
-        font-size: 0.8rem;
-        font-weight: var(--font-weight-semibold);
-        color: var(--text-primary);
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #f0f0f0;
         margin-bottom: 2px;
-        line-height: 1.2;
+        white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        white-space: nowrap;
     }
 
     .equipment-code {
-        font-size: 0.7rem;
-        color: var(--text-secondary);
-        margin-bottom: var(--spacing-xs);
+        font-size: 0.75rem;
+        color: #888;
+        margin-bottom: 6px;
+        font-family: monospace;
     }
 
+    .equipment-status {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 12px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .status-available { background: rgba(40, 167, 69, 0.15); color: #4ade80; border: 1px solid rgba(40, 167, 69, 0.3); }
+    .status-maintenance { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .status-repair { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+    .status-tour { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
+
+    /* === ADICIONADO: Botao delete === */
+    .btn-delete-brand {
+        background: none;
+        border: none;
+        color: #94a3b8;
+        font-size: 1.1rem;
+        cursor: pointer;
+        padding: 4px 8px;
+        border-radius: 4px;
+        transition: all 0.2s ease;
+        margin-left: 8px;
+    }
+
+    .btn-delete-brand:hover {
+        color: #ef4444;
+        background: rgba(239, 68, 68, 0.1);
+    }
+
+    .btn-delete-equip {
+        position: absolute;
+        top: 50%;
+        right: 12px;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: #555;
+        font-size: 1rem;
+        cursor: pointer;
+        padding: 6px;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+        z-index: 2;
+    }
+
+    .btn-delete-equip:hover {
+        color: #ef4444;
+        background: rgba(239, 68, 68, 0.1);
+    }
+
+    /* Modal de confirmacao - PADRAO WIZARD */
+    .delete-modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        z-index: 9999;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .delete-modal-overlay.active {
+        display: flex;
+    }
+
+    .delete-modal {
+        background: linear-gradient(180deg, #1e1e1e 0%, #141414 100%);
+        border: 2px solid #d4a574;
+        border-radius: 16px;
+        padding: 24px;
+        max-width: 420px;
+        width: 90%;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        text-align: center;
+    }
+
+    .delete-modal h3 {
+        color: #f5f5f5;
+        font-size: 1.3rem;
+        font-weight: 600;
+        margin-bottom: 16px;
+    }
+
+    .delete-modal p {
+        color: #aaa;
+        margin-bottom: 24px;
+        font-size: 0.95rem;
+        line-height: 1.5;
+    }
+
+    .delete-modal-actions {
+        display: flex;
+        gap: 12px;
+    }
+
+    .delete-modal-actions button {
+        flex: 1;
+        padding: 14px 20px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        cursor: pointer;
+        border: none;
+        transition: all 0.2s ease;
+    }
+
+    .btn-cancel {
+        background: transparent;
+        border: 1px solid #444 !important;
+        color: #888;
+    }
+
+    .btn-cancel:hover {
+        background: rgba(30,30,30,0.8);
+        color: #fff;
+    }
+
+    .btn-confirm-delete {
+        background: #ef4444;
+        color: white;
+    }
+
+    .btn-confirm-delete:hover {
+        background: #dc2626;
+    }
+    /* === FIM ADICIONADO === */
+
     @media (min-width: 768px) {
-        .equipment-name {
-            font-size: 0.9rem;
-        }
-        
-        .equipment-code {
-            font-size: 0.8rem;
-        }
-        
         .action-section {
             flex-direction: row;
         }
@@ -315,6 +425,10 @@
 
         .search-box {
             flex: 1;
+        }
+
+        .equipment-card {
+            max-width: 600px;
         }
     }
 </style>
@@ -362,31 +476,49 @@
                                 <span class="brand-name">{{ brand_data.brand }} • {{ brand_data.model }}</span>
                                 <span class="brand-count">{{ brand_data.total }} total / {{ brand_data.available }} disponíveis</span>
                             </div>
+                            <!-- ADICIONADO: Botao delete nivel 2 (marca/modelo) - so admin -->
+                            {% if current_user.role == 'admin' %}
+                            <button class="btn-delete-brand" 
+                                    onclick="event.stopPropagation(); confirmDeleteBrandModel('{{ brand_data.brand }}', '{{ brand_data.model }}', {{ brand_data.total }}, {{ category.id }})"
+                                    title="Deletar {{ brand_data.brand }} {{ brand_data.model }}">
+                                🗑️
+                            </button>
+                            {% endif %}
                             <div class="brand-collapse-icon" id="brand-icon-{{ type_id }}-{{ loop.index }}">▼</div>
                         </div>
                         <div class="brand-content" id="brand-content-{{ type_id }}-{{ loop.index }}">
-                            <div class="equipment-grid">
+                            <div class="equipment-list">
                                 {% for equipment in brand_data['items'] %}
                                 <a href="{{ url_for('equipment.detail_equipment', id=equipment.id) }}" class="equipment-card">
                                     {% if equipment.primary_photo_url %}
                                     <img src="{{ equipment.primary_photo_url }}" alt="{{ equipment.name }}" class="equipment-photo">
                                     {% else %}
-                                    <div class="equipment-photo" style="display: flex; align-items: center; justify-content: center; color: var(--text-secondary);">
-                                        Sem foto
+                                    <div class="equipment-photo-placeholder">
+                                        📦
                                     </div>
                                     {% endif %}
 
-                                    <div class="equipment-name">{{ equipment.name }}</div>
-                                    <div class="equipment-code">{{ equipment.code }}</div>
+                                    <div class="equipment-info">
+                                        <div class="equipment-name">{{ equipment.name }}</div>
+                                        <div class="equipment-code">{{ equipment.code }}</div>
+                                        {% if equipment.status == 'available' %}
+                                            <span class="equipment-status status-available">✓ Disponível</span>
+                                        {% elif equipment.status == 'maintenance' %}
+                                            <span class="equipment-status status-maintenance">🔧 Manutenção</span>
+                                        {% elif equipment.status == 'in_repair' %}
+                                            <span class="equipment-status status-repair">⚠️ Conserto</span>
+                                        {% elif equipment.status == 'in_tour' %}
+                                            <span class="equipment-status status-tour">🎸 Em Tour</span>
+                                        {% endif %}
+                                    </div>
 
-                                    {% if equipment.status == 'available' %}
-                                        <span class="badge badge-success">Disponível</span>
-                                    {% elif equipment.status == 'maintenance' %}
-                                        <span class="badge badge-warning">Manutenção</span>
-                                    {% elif equipment.status == 'in_repair' %}
-                                        <span class="badge badge-danger">Conserto</span>
-                                    {% elif equipment.status == 'in_tour' %}
-                                        <span class="badge badge-info">Em Tour</span>
+                                    <!-- Botao delete nivel 3 (equipamento) - so admin -->
+                                    {% if current_user.role == 'admin' %}
+                                    <button class="btn-delete-equip"
+                                            onclick="event.preventDefault(); event.stopPropagation(); confirmDeleteEquipment({{ equipment.id }}, '{{ equipment.code }}')"
+                                            title="Deletar {{ equipment.code }}">
+                                        🗑️
+                                    </button>
                                     {% endif %}
                                 </a>
                                 {% endfor %}
@@ -405,7 +537,23 @@
     </div>
 </div>
 
+<!-- ADICIONADO: Modal de confirmacao de delete - PADRAO WIZARD -->
+<div class="delete-modal-overlay" id="deleteModal">
+    <div class="delete-modal">
+        <div style="margin-bottom: 16px;">
+            <span style="font-size: 3rem;">⚠️</span>
+        </div>
+        <h3>CONFIRMAR EXCLUSÃO</h3>
+        <p id="deleteModalMsg"></p>
+        <div class="delete-modal-actions">
+            <button class="btn-cancel" onclick="closeDeleteModal()">Cancelar</button>
+            <button class="btn-confirm-delete" id="deleteModalConfirm">Deletar</button>
+        </div>
+    </div>
+</div>
+
 <script>
+/* === COPIADO SEM MUDAR === */
 function toggleType(typeId) {
     const content = document.getElementById('content-' + typeId);
     const icon = document.getElementById('icon-' + typeId);
@@ -420,7 +568,7 @@ function toggleType(typeId) {
 }
 
 function toggleBrand(typeId, brandIndex) {
-    event.stopPropagation(); // Não propaga para o toggleType
+    event.stopPropagation();
 
     const content = document.getElementById('brand-content-' + typeId + '-' + brandIndex);
     const icon = document.getElementById('brand-icon-' + typeId + '-' + brandIndex);
@@ -448,5 +596,66 @@ document.getElementById('searchInput').addEventListener('input', function(e) {
         }
     });
 });
+
+/* === ADICIONADO: Funcoes de delete === */
+
+function closeDeleteModal() {
+    document.getElementById('deleteModal').classList.remove('active');
+}
+
+function confirmDeleteEquipment(equipmentId, code) {
+    document.getElementById('deleteModalMsg').textContent = 'Deletar equipamento ' + code + '? Esta acao nao pode ser desfeita.';
+    document.getElementById('deleteModalConfirm').onclick = function() {
+        executeDeleteEquipment(equipmentId);
+    };
+    document.getElementById('deleteModal').classList.add('active');
+}
+
+function confirmDeleteBrandModel(brand, model, count, categoryId) {
+    document.getElementById('deleteModalMsg').textContent = 'Deletar ' + brand + ' ' + model + '? (' + count + ' equipamento(s) serao removidos)';
+    document.getElementById('deleteModalConfirm').onclick = function() {
+        executeDeleteBrandModel(brand, model, categoryId);
+    };
+    document.getElementById('deleteModal').classList.add('active');
+}
+
+async function executeDeleteEquipment(equipmentId) {
+    closeDeleteModal();
+    try {
+        const response = await fetch('/equipment/' + equipmentId + '/delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        const data = await response.json();
+        if (data.success) {
+            alert(data.message);
+            location.reload();
+        } else {
+            alert('ERRO: ' + data.error);
+        }
+    } catch (error) {
+        alert('Erro de conexao: ' + error.message);
+    }
+}
+
+async function executeDeleteBrandModel(brand, model, categoryId) {
+    closeDeleteModal();
+    try {
+        const response = await fetch('/equipment/delete-brand-model', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ brand: brand, model: model, category_id: categoryId })
+        });
+        const data = await response.json();
+        if (data.success) {
+            alert(data.message);
+            location.reload();
+        } else {
+            alert('ERRO: ' + data.error);
+        }
+    } catch (error) {
+        alert('Erro de conexao: ' + error.message);
+    }
+}
 </script>
 {% endblock %}

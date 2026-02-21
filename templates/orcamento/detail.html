@@ -8,12 +8,13 @@
         padding: 0;
         min-height: 100vh;
         padding-bottom: calc(var(--bottom-nav-height) + var(--spacing-md));
+        background: transparent;
     }
 
     .page-header {
-        background: linear-gradient(135deg, rgba(212, 165, 116, 0.3) 0%, rgba(180, 130, 80, 0.2) 100%);
+        background: linear-gradient(135deg, rgba(212, 165, 116, 0.12) 0%, rgba(10,10,10,0.9) 100%);
         padding: var(--spacing-lg) var(--spacing-md);
-        border-bottom: 1px solid var(--border-subtle);
+        border-bottom: 1px solid rgba(255,255,255,0.04);
     }
 
     .header-content {
@@ -32,7 +33,7 @@
     .header-title {
         font-size: 1.3rem;
         font-weight: var(--font-weight-bold);
-        color: #f5f5f5;
+        color: var(--white-soft, #f0ebe4);
         text-transform: uppercase;
         letter-spacing: 1px;
         flex: 1;
@@ -46,38 +47,39 @@
         text-transform: uppercase;
     }
 
-    .badge-pending { background: rgba(243, 156, 18, 0.2); color: #f39c12; }
-    .badge-approved { background: rgba(46, 204, 113, 0.2); color: #2ecc71; }
-    .badge-rejected { background: rgba(231, 76, 60, 0.2); color: #e74c3c; }
+    .badge-pending { background: rgba(243, 156, 18, 0.15); color: #f39c12; border: 1px solid rgba(243,156,18,0.2); }
+    .badge-approved { background: rgba(46, 204, 113, 0.15); color: #2ecc71; border: 1px solid rgba(46,204,113,0.2); }
+    .badge-rejected { background: rgba(231, 76, 60, 0.15); color: #e74c3c; border: 1px solid rgba(231,76,60,0.2); }
 
     .info-section {
         padding: var(--spacing-md);
     }
 
     .info-card {
-        background-color: #111111;
+        background: rgba(15,15,15,0.85);
+        backdrop-filter: blur(4px);
         border-radius: var(--radius-lg);
         padding: var(--spacing-lg);
         margin-bottom: var(--spacing-md);
-        border: 1px solid #2a2a2a;
+        border: 1px solid rgba(255,255,255,0.04);
     }
 
     .info-row {
         display: flex;
         justify-content: space-between;
         padding: var(--spacing-sm) 0;
-        border-bottom: 1px solid #222;
+        border-bottom: 1px solid rgba(255,255,255,0.04);
         font-size: 0.95rem;
     }
 
     .info-row:last-child { border-bottom: none; }
     .info-label { color: #888; text-transform: uppercase; font-size: 0.85rem; }
-    .info-value { color: #f5f5f5; font-weight: var(--font-weight-medium); }
+    .info-value { color: var(--white-soft, #f0ebe4); font-weight: var(--font-weight-medium); }
 
     .section-title {
         font-size: 1.1rem;
         font-weight: var(--font-weight-bold);
-        color: #e0e0e0;
+        color: var(--white-soft, #f0ebe4);
         text-transform: uppercase;
         letter-spacing: 1px;
         margin-bottom: var(--spacing-md);
@@ -86,7 +88,7 @@
     }
 
     .item-row {
-        background-color: #0d0d0d;
+        background: rgba(10,10,10,0.6);
         border-radius: var(--radius-md);
         padding: var(--spacing-md);
         margin-bottom: 8px;
@@ -94,18 +96,19 @@
         align-items: center;
         justify-content: space-between;
         gap: var(--spacing-md);
+        border: 1px solid rgba(255,255,255,0.03);
     }
 
-    .item-name { font-weight: var(--font-weight-semibold); color: #f5f5f5; flex: 1; }
-    .item-qty { background: #1a1a1a; padding: 6px 14px; border-radius: 20px; font-size: 0.9rem; color: #d4a574; font-weight: var(--font-weight-bold); }
+    .item-name { font-weight: var(--font-weight-semibold); color: var(--white-soft, #f0ebe4); flex: 1; }
+    .item-qty { background: rgba(212,165,116,0.1); padding: 6px 14px; border-radius: 20px; font-size: 0.9rem; color: #d4a574; font-weight: var(--font-weight-bold); border: 1px solid rgba(212,165,116,0.15); }
     .item-price { color: #d4a574; font-weight: var(--font-weight-bold); min-width: 80px; text-align: right; }
 
     .total-section {
-        background: linear-gradient(135deg, rgba(212, 165, 116, 0.2) 0%, rgba(180, 130, 80, 0.1) 100%);
+        background: linear-gradient(135deg, rgba(212, 165, 116, 0.1) 0%, rgba(15,15,15,0.85) 100%);
         border-radius: var(--radius-lg);
         padding: var(--spacing-lg);
         margin-top: var(--spacing-md);
-        border: 1px solid #d4a574;
+        border: 1px solid rgba(212,165,116,0.3);
     }
 
     .total-row {
@@ -122,7 +125,7 @@
         padding-top: var(--spacing-md);
         font-size: 1.3rem;
         font-weight: var(--font-weight-bold);
-        color: #f5f5f5;
+        color: var(--white-soft, #f0ebe4);
     }
 
     .total-row.grand span:last-child { color: #d4a574; font-size: 1.5rem; }
@@ -145,10 +148,16 @@
         letter-spacing: 0.5px;
         text-align: center;
         text-decoration: none;
+        transition: all 0.2s;
+    }
+
+    .btn:active {
+        transform: scale(0.97);
+        transition: transform 0.1s ease;
     }
 
     .btn-approve { background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%); color: #000; }
-    .btn-reject { background: rgba(231, 76, 60, 0.2); color: #e74c3c; border: 2px solid #e74c3c; }
+    .btn-reject { background: rgba(231, 76, 60, 0.15); color: #e74c3c; border: 2px solid rgba(231,76,60,0.4); }
     .btn-pdf { background: linear-gradient(135deg, #d4a574 0%, #b8860b 100%); color: #000; }
 
     .modal-overlay {
@@ -166,29 +175,31 @@
     .modal-overlay.show { display: flex; }
 
     .modal {
-        background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%);
+        background: linear-gradient(135deg, rgba(20,20,20,0.95) 0%, rgba(10,10,10,0.98) 100%);
         border-radius: var(--radius-lg);
         padding: var(--spacing-xl);
         width: 100%;
         max-width: 420px;
-        border: 2px solid #d4a574;
+        border: 2px solid rgba(212,165,116,0.4);
+        backdrop-filter: blur(10px);
     }
 
     .modal-title {
         font-size: 1.2rem;
         font-weight: var(--font-weight-bold);
-        color: #f5f5f5;
+        color: var(--white-soft, #f0ebe4);
         text-transform: uppercase;
         margin-bottom: var(--spacing-lg);
         text-align: center;
     }
 
     .form-group { margin-bottom: var(--spacing-md); }
-    .form-label { display: block; font-size: 0.9rem; font-weight: var(--font-weight-bold); margin-bottom: var(--spacing-xs); color: #e0e0e0; text-transform: uppercase; }
-    .form-input { width: 100%; padding: var(--spacing-md); background-color: #0a0a0a; border: 2px solid #333; border-radius: var(--radius-md); color: #f5f5f5; font-size: 1rem; }
+    .form-label { display: block; font-size: 0.9rem; font-weight: var(--font-weight-bold); margin-bottom: var(--spacing-xs); color: var(--white-soft, #f0ebe4); text-transform: uppercase; }
+    .form-input { width: 100%; padding: var(--spacing-md); background: rgba(10,10,10,0.8); border: 1px solid rgba(255,255,255,0.06); border-radius: var(--radius-md); color: var(--white-soft, #f0ebe4); font-size: 1rem; }
+    .form-input:focus { border-color: rgba(212,165,116,0.4); outline: none; box-shadow: 0 0 0 2px rgba(212,165,116,0.1); }
 
     .modal-buttons { display: flex; gap: var(--spacing-md); margin-top: var(--spacing-lg); }
-    .btn-secondary { background-color: #333; color: #f5f5f5; flex: 1; padding: var(--spacing-md); border-radius: var(--radius-md); border: none; font-weight: var(--font-weight-bold); cursor: pointer; }
+    .btn-secondary { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); color: var(--white-soft, #f0ebe4); flex: 1; padding: var(--spacing-md); border-radius: var(--radius-md); font-weight: var(--font-weight-bold); cursor: pointer; }
     .btn-primary { background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%); color: #000; flex: 1; padding: var(--spacing-md); border-radius: var(--radius-md); border: none; font-weight: var(--font-weight-bold); cursor: pointer; }
 </style>
 {% endblock %}
@@ -356,14 +367,14 @@ async function shareOrcamento() {
     {% else %}
     const valorTotal = "R$ {{ '%.2f'|format(sep_list.total_value or 0)|replace('.', ',') }}";
     {% endif %}
-    
+
     const mensagem = `*${companyName}*\n\n` +
         `Orçamento: *${orcamentoNome}*\n` +
         `Valor Total: *${valorTotal}*\n\n` +
         `Acesse o link para visualizar os detalhes completos.`;
-    
+
     const pdfUrl = window.location.origin + "{{ url_for('orcamento.generate_pdf', id=sep_list.id) }}";
-    
+
     if (navigator.share) {
         try {
             await navigator.share({
